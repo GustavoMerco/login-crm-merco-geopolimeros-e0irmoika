@@ -1,0 +1,220 @@
+/* Global styles - Theme, font, utilities, animations and global components */
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 147 14% 97%;
+    --foreground: 168 35% 9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 168 35% 9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 168 35% 9%;
+
+    --primary: 158 64% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 150 15% 94%;
+    --secondary-foreground: 168 35% 9%;
+
+    --muted: 154 11% 92%;
+    --muted-foreground: 162 8% 39%;
+
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 154 12% 89%;
+    --input: 154 12% 89%;
+    --ring: 158 64% 40%;
+
+    --radius: 0.75rem;
+
+    font-family:
+      'Manrope',
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      sans-serif;
+  }
+
+  body {
+    background-color: #f6f8f7;
+    color: #0f1f1c;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Focus visible accessibility styling */
+  *:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px #ffffff,
+      0 0 0 4px #10b981;
+  }
+
+  /* NEVER REMOVE THIS */
+  section[aria-label='Notifications alt+T'] {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+@layer utilities {
+  /* Keyframes for Merco CRM visual specification */
+  @keyframes glow-drift {
+    0% {
+      background-position:
+        0% 0%,
+        100% 100%;
+      transform: scale(1);
+    }
+    50% {
+      background-position:
+        15% 10%,
+        85% 90%;
+      transform: scale(1.05);
+    }
+    100% {
+      background-position:
+        30% 20%,
+        70% 80%;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes drift {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 0.35;
+    }
+    50% {
+      transform: translateY(-28px) rotate(18deg);
+      opacity: 0.75;
+    }
+    100% {
+      transform: translateY(-56px) rotate(36deg);
+      opacity: 0.35;
+    }
+  }
+
+  @keyframes assemble {
+    0% {
+      opacity: 0;
+      transform: translateY(14px) scale(0.99);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20%,
+    60% {
+      transform: translateX(-6px);
+    }
+    40%,
+    80% {
+      transform: translateX(6px);
+    }
+  }
+
+  @keyframes spin-hex {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes check-scale-in {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-glow-drift {
+    animation: glow-drift 18s ease-in-out infinite alternate;
+  }
+
+  .animate-drift-1 {
+    animation: drift 10s ease-in-out infinite alternate;
+  }
+  .animate-drift-2 {
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+  .animate-drift-3 {
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  .animate-drift-4 {
+    animation: drift 9s ease-in-out infinite alternate;
+  }
+  .animate-drift-5 {
+    animation: drift 11s ease-in-out infinite alternate;
+  }
+  .animate-drift-6 {
+    animation: drift 13s ease-in-out infinite alternate;
+  }
+
+  .animate-assemble {
+    animation: assemble 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .animate-shake {
+    animation: shake 400ms ease-in-out;
+  }
+
+  .animate-spin-hex {
+    animation: spin-hex 1s linear infinite;
+  }
+
+  .animate-check-in {
+    animation: check-scale-in 150ms ease-out forwards;
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-glow-drift,
+    .animate-drift-1,
+    .animate-drift-2,
+    .animate-drift-3,
+    .animate-drift-4,
+    .animate-drift-5,
+    .animate-drift-6,
+    .animate-assemble {
+      animation: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+  }
+}

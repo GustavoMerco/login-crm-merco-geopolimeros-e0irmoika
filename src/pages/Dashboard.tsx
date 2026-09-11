@@ -364,16 +364,31 @@ export const Dashboard: React.FC = () => {
                           : 'exceção autorizada'}
                     </div>
 
-                    {aptitudeResult.pendingItems.length > 0 && (
-                      <div className="text-[12px] text-[#5B6B66]">
-                        <p className="font-semibold text-[#0F1F1C]">Pendências</p>
-                        <ul className="list-disc pl-5 mt-1 space-y-0.5">
-                          {aptitudeResult.pendingItems.map((item) => (
-                            <li key={item}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    <div className="text-[12px] text-[#5B6B66]">
+                      <p className="font-semibold text-[#0F1F1C]">Checklist</p>
+                      <ul className="mt-1 space-y-0.5">
+                        {Object.entries(aptitudeResult.checklist).map(([field, complete]) => (
+                          <li
+                            key={field}
+                            className={complete ? 'text-[#047857]' : 'text-[#C2410C]'}
+                          >
+                            {complete ? '✓' : '•'} {field}: {complete ? 'preenchido' : 'pendente'}
+                          </li>
+                        ))}
+                      </ul>
+                      {aptitudeResult.pendingItems.length > 0 ? (
+                        <div className="mt-2">
+                          <p className="font-semibold text-[#C2410C]">Pendências</p>
+                          <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                            {aptitudeResult.pendingItems.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-[#047857]">Nenhuma pendência encontrada.</p>
+                      )}
+                    </div>
 
                     {aptitudeResult.aptitudeStatus === 'blocked' &&
                       (role === 'engenharia' || role === 'admin') && (
@@ -474,9 +489,15 @@ export const Dashboard: React.FC = () => {
                           {item.aptitude_status || item.status}
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#5B6B66] mt-1 truncate">
-                        {item.service_family} · {item.location}
-                      </p>
+                      <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                        <span>Contato: {item.contact_name}</span>
+                        <span>Origem: {item.origin}</span>
+                        <span>Família: {item.service_family}</span>
+                        <span>Local: {item.location}</span>
+                        <span>Demanda: {item.demand_date}</span>
+                        <span>Recebida: {item.received_at}</span>
+                        {item.deadline_date && <span>Prazo: {item.deadline_date}</span>}
+                      </div>
                     </button>
                   ))}
                 </div>

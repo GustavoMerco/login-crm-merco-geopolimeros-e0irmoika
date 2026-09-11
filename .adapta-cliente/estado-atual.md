@@ -6,8 +6,8 @@
 - etapa: em_correcao
 - autorizacao_implementacao: confirmada em 2026-09-11 15:27 - "Sim"
 - teste_humano: pendente
-- verificacao_automatica: falhou - teste humano encontrou "The requested resource wasn't found" após a correção da listagem/aptidão
+- verificacao_automatica: falhou - backend de aptidão retorna HTTP 200, mas checklist completo não é renderizado sem pendências e card omite detalhes da oportunidade
 - aprendizado: pendente
-- ultima_acao: falha reportada pelo champion; diagnóstico iniciado
-- proxima_acao: identificar se o 404 vem da listagem ou da avaliação de aptidão
-- atualizado_em: 2026-09-11T16:03:00-03:00
+- ultima_acao: causa raiz de apresentação confirmada; correção de UI em andamento
+- proxima_acao: renderizar checklist completo e informações detalhadas no card
+- atualizado_em: 2026-09-11T16:12:00-03:00

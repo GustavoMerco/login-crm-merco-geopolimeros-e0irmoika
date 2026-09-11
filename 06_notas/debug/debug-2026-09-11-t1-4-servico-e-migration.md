@@ -1,13 +1,13 @@
 # Debug Summary — T1.4 — 2026-09-11
 
-**Problema:** demandas criadas não apareciam para o usuário no dashboard.
+**Problema:** ao selecionar uma demanda persistida e avaliar aptidão, o preview retornava `The requested resource wasn't found`.
 
-**Reprodução:** o backend possuía a collection `opportunities` e registros persistidos, mas `Dashboard.tsx` só mantinha `createdOpportunity` em memória e não executava nenhuma consulta/listagem de oportunidades.
+**Reprodução:** logs mostraram `GET /api/collections/opportunities/records` com HTTP 200, seguido de `POST /backend/v1/opportunities/{id}/aptitude` com HTTP 404.
 
-**Causa raiz:** ausência de serviço frontend para listar `opportunities` e ausência de componente de lista; o cadastro funcionava, mas a tela não recarregava nem mostrava registros existentes.
+**Causa raiz:** a rota customizada com parâmetro de caminho `{id}` não era encontrada pelo roteador do backend nesse formato, embora a listagem e a collection existissem.
 
-**Correção:** adicionada `getOpportunities()` com consulta paginada/autenticada, lista de demandas no dashboard, atualização após novo cadastro e seleção de uma oportunidade persistida para avaliação de aptidão.
+**Correção:** substituída por rota fixa `POST /backend/v1/opportunities/aptitude`; o ID da oportunidade agora é enviado no corpo autenticado. O frontend foi ajustado para usar a nova rota.
 
-**Verificação:** QA SKIP 0.0.11 passou; acesso direto não autenticado não expôs dados; collection mantém leitura restrita ao responsável autenticado.
+**Verificação:** QA SKIP 0.0.12 passou; nova rota sem autenticação retorna HTTP 401; listagem permanece HTTP 200.
 
-**Gate:** aguardando novo teste humano do dashboard/listagem e avaliação.
+**Gate:** aguardando novo teste humano autenticado da avaliação, bloqueio e exceção.

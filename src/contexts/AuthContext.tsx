@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import pb from '@/lib/pocketbase/client'
 import type { RecordModel } from 'pocketbase'
+import type { UserRole } from '@/lib/auth/permissions'
 
 export interface AuthUser extends RecordModel {
   name?: string
   email?: string
   avatar?: string
   verified?: boolean
+  role: UserRole
 }
 
 interface AuthContextType {
@@ -27,13 +29,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  // Restore session on mount
   useEffect(() => {
     try {
       const remember = localStorage.getItem(REMEMBER_KEY)
-      // If remember me is explicitly set to false and the session was closed, we check session validity
       if (pb.authStore.isValid && pb.authStore.record) {
-        // If user logged in without remember me in a previous session, clear if marked session-only
         if (remember === 'false' && !sessionStorage.getItem('merco_session_active')) {
           pb.authStore.clear()
           setUser(null)
@@ -41,7 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setUser(pb.authStore.record as unknown as AuthUser)
           setToken(pb.authStore.token)
-          // Mark this session tab as active
           sessionStorage.setItem('merco_session_active', 'true')
         }
       } else {
@@ -69,7 +67,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async (email: string, pass: string, rememberMe = false): Promise<AuthUser> => {
       const authData = await pb.collection('users').authWithPassword(email.trim(), pass)
 
-      // Save persistence preference
       if (rememberMe) {
         localStorage.setItem(REMEMBER_KEY, 'true')
       } else {

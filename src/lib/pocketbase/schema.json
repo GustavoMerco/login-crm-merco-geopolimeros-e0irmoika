@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01T13:45:32.738Z",
+  "generatedAt": "2026-09-11T17:01:58.266Z",
   "collections": [
     {
       "name": "users",
@@ -29,14 +29,33 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        },
+        {
+          "name": "role",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "comercial",
+            "engenharia",
+            "financeiro",
+            "aprovador",
+            "gestao",
+            "admin"
+          ]
         }
       ],
       "indexes": [

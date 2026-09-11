@@ -1,6 +1,5 @@
 onRecordCreateRequest((e) => {
   const record = e.record
-  const body = e.requestInfo().body || {}
 
   const writeRejectedAudit = (reason) => {
     const rejectedAudit = new Record($app.findCollectionByNameOrId('audit_logs'))
@@ -11,6 +10,44 @@ onRecordCreateRequest((e) => {
     rejectedAudit.set('details', { reason, source: 'server_tech_sheet_create' })
     rejectedAudit.set('retention_days', 365)
     $app.save(rejectedAudit)
+  }
+
+  // Campos JSON chegam como bytes brutos (types.JsonRaw): .length é o tamanho
+  // em bytes e os itens são códigos de caractere. Decodifica para valor real.
+  const decodeJsonField = (value) => {
+    if (value === undefined || value === null) return value
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value)
+      } catch (_) {
+        return value
+      }
+    }
+    if (Array.isArray(value)) return value
+    if (typeof value === 'object' && typeof value.length === 'number') {
+      const copy = []
+      let allBytes = value.length > 0
+      for (let index = 0; index < value.length; index++) {
+        const element = value[index]
+        copy.push(element)
+        if (typeof element !== 'number' || element < 0 || element > 255) {
+          allBytes = false
+        }
+      }
+      if (allBytes) {
+        let text = ''
+        for (let index = 0; index < copy.length; index++) {
+          text += String.fromCharCode(copy[index])
+        }
+        try {
+          return JSON.parse(text)
+        } catch (_) {
+          return copy
+        }
+      }
+      return copy
+    }
+    return value
   }
 
   const opportunityId = record.getString('opportunity_id') || ''
@@ -33,17 +70,7 @@ onRecordCreateRequest((e) => {
     )
   }
 
-  // O campo JSON chega como bytes brutos via record.get; o corpo da requisição
-  // traz o valor já interpretado (array em JSON, string em multipart).
-  let rawParameters = body.parameters !== undefined ? body.parameters : record.get('parameters')
-  if (typeof rawParameters === 'string') {
-    try {
-      rawParameters = JSON.parse(rawParameters)
-    } catch (_) {
-      writeRejectedAudit('parameters_invalid_json')
-      throw new BadRequestError('Os parâmetros devem ser uma lista válida.')
-    }
-  }
+  const rawParameters = decodeJsonField(record.get('parameters'))
   if (!Array.isArray(rawParameters) || rawParameters.length === 0) {
     writeRejectedAudit('parameters_required')
     throw new BadRequestError('Informe pelo menos um parâmetro técnico.')
@@ -95,28 +122,18 @@ onRecordCreateRequest((e) => {
     seenNames[key] = true
   }
 
+  const decodedPending = decodeJsonField(record.get('pending_items'))
   let pendingItems = []
-  const rawPending =
-    body.pending_items !== undefined ? body.pending_items : record.get('pending_items')
-  if (rawPending !== undefined && rawPending !== null && rawPending !== '') {
-    let parsedPending = rawPending
-    if (typeof parsedPending === 'string') {
-      try {
-        parsedPending = JSON.parse(parsedPending)
-      } catch (_) {
-        writeRejectedAudit('pending_items_invalid_json')
-        throw new BadRequestError('As pendências devem ser uma lista válida.')
-      }
-    }
-    if (!Array.isArray(parsedPending)) {
+  if (decodedPending !== undefined && decodedPending !== null && decodedPending !== '') {
+    if (!Array.isArray(decodedPending)) {
       writeRejectedAudit('pending_items_invalid')
       throw new BadRequestError('As pendências devem ser uma lista de textos.')
     }
-    if (parsedPending.length > 50) {
+    if (decodedPending.length > 50) {
       writeRejectedAudit('pending_items_too_many')
       throw new BadRequestError('Envie no máximo 50 pendências por versão.')
     }
-    for (const item of parsedPending) {
+    for (const item of decodedPending) {
       if (typeof item !== 'string') {
         writeRejectedAudit('pending_items_invalid')
         throw new BadRequestError('Cada pendência deve ser um texto.')

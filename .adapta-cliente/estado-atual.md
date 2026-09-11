@@ -6,8 +6,8 @@
 - etapa: aguardando_teste_humano
 - autorizacao_implementacao: confirmada em 2026-09-11 17:48 - "Sim, implementar a T1.5"
 - teste_humano: pendente
-- verificacao_automatica: passou - QA SKIP 0.0.15; causa raiz do erro corrigida (conversão multipart dos anexos e filtro do histórico); build, análise estática, integrações e testes passaram
+- verificacao_automatica: passou - QA SKIP 0.0.16; upload migrado para o fluxo nativo do PocketBase com validação server-side no hook de requisição; migration 0007 aplicada; build, análise estática, integrações e testes passaram
 - aprendizado: pendente
-- ultima_acao: debug concluído com correção de dois erros server-side da ficha técnica
+- ultima_acao: segunda correção de debug concluída com troca de estratégia de upload
 - proxima_acao: aguardar novo teste humano da ficha técnica no preview
-- atualizado_em: 2026-09-11T18:40:00-03:00
+- atualizado_em: 2026-09-11T18:42:00-03:00

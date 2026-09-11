@@ -33,6 +33,19 @@ onRecordCreateRequest((e) => {
   }
 
   let rawParameters = record.get('parameters')
+  $app
+    .logger()
+    .error(
+      'tech_sheet_debug_parameters',
+      'type',
+      typeof rawParameters,
+      'isArray',
+      Array.isArray(rawParameters),
+      'length',
+      String(rawParameters && rawParameters.length),
+      'json',
+      JSON.stringify(rawParameters).slice(0, 200),
+    )
   if (typeof rawParameters === 'string') {
     try {
       rawParameters = JSON.parse(rawParameters)

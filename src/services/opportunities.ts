@@ -1,25 +1,23 @@
 import pb from '@/lib/pocketbase/client'
 
-export type CreateOpportunityInput = {
-  customer_name: string
-  contact_name: string
-  contact_email?: string
-  origin: string
-  service_family: string
-  location: string
-  demand_date: string
-  deadline_date?: string
-}
-
-export type CreatedOpportunity = {
+export type AptitudeResult = {
   id: string
-  receivedAt: string
-  status: 'received'
+  aptitudeStatus: 'blocked' | 'apt' | 'exception_approved'
+  status: 'blocked' | 'apt'
+  checklist: Record<string, boolean>
+  pendingItems: string[]
+  evaluatedAt: string
 }
 
-export const createOpportunity = (input: CreateOpportunityInput) =>
-  pb.send<CreatedOpportunity>('/backend/v1/opportunities', {
+export const evaluateOpportunityAptitude = (
+  id: string,
+  options?: { allowException?: boolean; exceptionJustification?: string },
+) =>
+  pb.send<AptitudeResult>(`/backend/v1/opportunities/${id}/aptitude`, {
     method: 'POST',
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      allow_exception: options?.allowException ?? false,
+      exception_justification: options?.exceptionJustification,
+    }),
     headers: { 'Content-Type': 'application/json' },
   })

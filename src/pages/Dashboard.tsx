@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { checkPermission } from '@/services/security'
-import { createOpportunity, type CreateOpportunityInput } from '@/services/opportunities'
+import {
+  createOpportunity,
+  evaluateOpportunityAptitude,
+  type CreateOpportunityInput,
+  type AptitudeResult,
+} from '@/services/opportunities'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -44,6 +49,10 @@ export const Dashboard: React.FC = () => {
     receivedAt: string
     status: string
   } | null>(null)
+  const [aptitudeResult, setAptitudeResult] = useState<AptitudeResult | null>(null)
+  const [aptitudeError, setAptitudeError] = useState<string | null>(null)
+  const [exceptionJustification, setExceptionJustification] = useState('')
+  const [isEvaluatingAptitude, setIsEvaluatingAptitude] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -72,12 +81,16 @@ export const Dashboard: React.FC = () => {
     setOpportunity((current) => ({ ...current, [field]: value }))
     setOpportunityError(null)
     setCreatedOpportunity(null)
+    setAptitudeResult(null)
+    setAptitudeError(null)
   }
 
   const handleOpportunitySubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setOpportunityError(null)
     setCreatedOpportunity(null)
+    setAptitudeResult(null)
+    setAptitudeError(null)
     setIsSubmittingOpportunity(true)
 
     try {
@@ -97,6 +110,27 @@ export const Dashboard: React.FC = () => {
       setOpportunityError(getErrorMessage(error))
     } finally {
       setIsSubmittingOpportunity(false)
+    }
+  }
+
+  const handleAptitudeEvaluation = async (allowException = false) => {
+    if (!createdOpportunity) return
+
+    setAptitudeError(null)
+    setIsEvaluatingAptitude(true)
+    try {
+      const result = await evaluateOpportunityAptitude(createdOpportunity.id, {
+        allowException,
+        exceptionJustification: allowException ? exceptionJustification : undefined,
+      })
+      setAptitudeResult(result)
+      if (result.aptitudeStatus !== 'exception_approved') {
+        setExceptionJustification('')
+      }
+    } catch (error: unknown) {
+      setAptitudeError(getErrorMessage(error))
+    } finally {
+      setIsEvaluatingAptitude(false)
     }
   }
 
@@ -243,6 +277,93 @@ export const Dashboard: React.FC = () => {
                   <p>Demanda registrada com recebimento verificável.</p>
                   <p className="font-normal mt-1">Status: recebida · ID: {createdOpportunity.id}</p>
                 </div>
+              </div>
+            )}
+
+            {createdOpportunity && (
+              <div className="mb-5 rounded-[12px] border border-[#D1FAE5] bg-[#F0FDF4] p-4 text-left">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-[14px] font-bold text-[#0F1F1C]">Checklist de aptidão</h3>
+                    <p className="text-[12px] text-[#5B6B66] mt-1">
+                      A avaliação é feita pelo servidor e não escolhe a solução técnica.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleAptitudeEvaluation()}
+                    disabled={isEvaluatingAptitude}
+                    className="h-[38px] px-3 rounded-[9px] bg-[#064E3B] text-white text-[12px] font-semibold disabled:opacity-70 disabled:pointer-events-none"
+                  >
+                    {isEvaluatingAptitude ? 'Avaliando...' : 'Avaliar aptidão'}
+                  </button>
+                </div>
+
+                {aptitudeError && (
+                  <div
+                    className="mt-3 rounded-[9px] bg-[#FEF2F2] border-l-4 border-[#DC2626] p-3 text-[12px] text-[#B91C1C]"
+                    role="alert"
+                  >
+                    {aptitudeError}
+                  </div>
+                )}
+
+                {aptitudeResult && (
+                  <div className="mt-3 space-y-3">
+                    <div
+                      className={`rounded-[9px] p-3 text-[13px] font-semibold ${
+                        aptitudeResult.aptitudeStatus === 'blocked'
+                          ? 'bg-[#FFF7ED] text-[#C2410C]'
+                          : 'bg-[#ECFDF5] text-[#047857]'
+                      }`}
+                    >
+                      Estado:{' '}
+                      {aptitudeResult.aptitudeStatus === 'blocked'
+                        ? 'bloqueada'
+                        : aptitudeResult.aptitudeStatus === 'apt'
+                          ? 'apta'
+                          : 'exceção autorizada'}
+                    </div>
+
+                    {aptitudeResult.pendingItems.length > 0 && (
+                      <div className="text-[12px] text-[#5B6B66]">
+                        <p className="font-semibold text-[#0F1F1C]">Pendências</p>
+                        <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                          {aptitudeResult.pendingItems.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {aptitudeResult.aptitudeStatus === 'blocked' &&
+                      (role === 'engenharia' || role === 'admin') && (
+                        <div className="space-y-2 pt-2 border-t border-[#D1FAE5]">
+                          <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                            Justificativa da exceção
+                            <textarea
+                              minLength={10}
+                              maxLength={1000}
+                              value={exceptionJustification}
+                              onChange={(event) => setExceptionJustification(event.target.value)}
+                              className="mt-1.5 w-full min-h-[76px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                              placeholder="Explique por que a oportunidade pode avançar apesar das pendências."
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => void handleAptitudeEvaluation(true)}
+                            disabled={
+                              isEvaluatingAptitude || exceptionJustification.trim().length < 10
+                            }
+                            className="h-[36px] px-3 rounded-[9px] bg-[#EA580C] text-white text-[12px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                          >
+                            Autorizar exceção e liberar
+                          </button>
+                        </div>
+                      )}
+                  </div>
+                )}
               </div>
             )}
 

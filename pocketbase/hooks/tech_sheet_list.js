@@ -6,8 +6,8 @@ routerAdd(
     const opportunityId =
       typeof query.opportunity_id === 'string' ? query.opportunity_id.trim() : ''
 
-    if (!opportunityId) {
-      return e.badRequestError('Informe a oportunidade para consultar a ficha técnica.')
+    if (!/^[a-z0-9]{15}$/.test(opportunityId)) {
+      return e.badRequestError('Informe uma oportunidade válida para consultar a ficha técnica.')
     }
 
     let opportunity
@@ -24,11 +24,10 @@ routerAdd(
     const techSheetsId = $app.findCollectionByNameOrId('tech_sheets').id
     const sheets = $app.findRecordsByFilter(
       'tech_sheets',
-      'opportunity_id = {:id}',
+      'opportunity_id = "' + opportunityId + '"',
       '-version',
       100,
       0,
-      opportunityId,
     )
 
     const items = []

@@ -22,7 +22,7 @@ routerAdd(
     }
 
     const opportunityId = typeof body.opportunity_id === 'string' ? body.opportunity_id.trim() : ''
-    if (!opportunityId) {
+    if (!/^[a-z0-9]{15}$/.test(opportunityId)) {
       return reject('opportunity_id_required', 'Informe a oportunidade da ficha técnica.')
     }
 
@@ -146,18 +146,21 @@ routerAdd(
       }
     }
 
-    const files = e.findUploadedFiles('attachments') || []
-    if (files.length > 10) {
+    const uploaded = e.findUploadedFiles('attachments') || []
+    if (uploaded.length > 10) {
       return reject('too_many_attachments', 'Envie no máximo 10 anexos por versão.')
+    }
+    const files = []
+    for (const fileHeader of uploaded) {
+      files.push($filesystem.fileFromMultipart(fileHeader))
     }
 
     const existing = $app.findRecordsByFilter(
       'tech_sheets',
-      'opportunity_id = {:id}',
+      'opportunity_id = "' + opportunityId + '"',
       '-version',
       1,
       0,
-      opportunityId,
     )
     const nextVersion = existing.length > 0 ? existing[0].getInt('version') + 1 : 1
     const createdAt = new Date().toISOString()

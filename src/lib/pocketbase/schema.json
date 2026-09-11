@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T17:46:15.192Z",
+  "generatedAt": "2026-09-11T18:04:26.654Z",
   "collections": [
     {
       "name": "users",
@@ -29,21 +29,33 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         },
         {
           "name": "role",
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["comercial", "engenharia", "financeiro", "aprovador", "gestao", "admin"]
+          "selectValues": [
+            "comercial",
+            "engenharia",
+            "financeiro",
+            "aprovador",
+            "gestao",
+            "admin"
+          ]
         }
       ],
       "indexes": [
@@ -86,7 +98,12 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["allowed", "denied", "success", "failure"]
+          "selectValues": [
+            "allowed",
+            "denied",
+            "success",
+            "failure"
+          ]
         },
         {
           "name": "details",
@@ -105,19 +122,128 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
         "CREATE INDEX idx_audit_logs_created ON audit_logs (created)",
         "CREATE INDEX idx_audit_logs_actor_created ON audit_logs (actor_id, created)"
+      ]
+    },
+    {
+      "name": "opportunities",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != \"\" && responsible_user_id = @request.auth.id",
+        "view": "@request.auth.id != \"\" && responsible_user_id = @request.auth.id",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "customer_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "contact_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "contact_email",
+          "type": "email",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "origin",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "service_family",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "location",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "responsible_user_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "demand_date",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "deadline_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "received_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_opportunities_responsible ON opportunities (responsible_user_id)",
+        "CREATE INDEX idx_opportunities_received_at ON opportunities (received_at)",
+        "CREATE INDEX idx_opportunities_status ON opportunities (status)"
       ]
     }
   ]

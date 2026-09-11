@@ -2,16 +2,48 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { checkPermission } from '@/services/security'
+import { createOpportunity, type CreateOpportunityInput } from '@/services/opportunities'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
-import { LogOut, ShieldCheck, User as UserIcon, LockKeyhole } from 'lucide-react'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ClipboardPlus,
+  LockKeyhole,
+  LogOut,
+  MapPin,
+  ShieldCheck,
+  User as UserIcon,
+} from 'lucide-react'
 
 type ServerPermissionState = 'loading' | 'allowed' | 'denied' | 'unavailable'
+
+type OpportunityForm = CreateOpportunityInput
+
+const emptyOpportunity: OpportunityForm = {
+  customer_name: '',
+  contact_name: '',
+  contact_email: '',
+  origin: '',
+  service_family: '',
+  location: '',
+  demand_date: '',
+  deadline_date: '',
+}
 
 export const Dashboard: React.FC = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [serverPermission, setServerPermission] = useState<ServerPermissionState>('loading')
+  const [opportunity, setOpportunity] = useState<OpportunityForm>(emptyOpportunity)
+  const [isSubmittingOpportunity, setIsSubmittingOpportunity] = useState(false)
+  const [opportunityError, setOpportunityError] = useState<string | null>(null)
+  const [createdOpportunity, setCreatedOpportunity] = useState<{
+    id: string
+    receivedAt: string
+    status: string
+  } | null>(null)
 
   useEffect(() => {
     let active = true
@@ -34,6 +66,38 @@ export const Dashboard: React.FC = () => {
   const handleLogout = async () => {
     await logout()
     navigate('/', { replace: true })
+  }
+
+  const handleOpportunityChange = (field: keyof OpportunityForm, value: string) => {
+    setOpportunity((current) => ({ ...current, [field]: value }))
+    setOpportunityError(null)
+    setCreatedOpportunity(null)
+  }
+
+  const handleOpportunitySubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setOpportunityError(null)
+    setCreatedOpportunity(null)
+    setIsSubmittingOpportunity(true)
+
+    try {
+      const result = await createOpportunity({
+        customer_name: opportunity.customer_name.trim(),
+        contact_name: opportunity.contact_name.trim(),
+        contact_email: opportunity.contact_email?.trim() || undefined,
+        origin: opportunity.origin.trim(),
+        service_family: opportunity.service_family.trim(),
+        location: opportunity.location.trim(),
+        demand_date: opportunity.demand_date,
+        deadline_date: opportunity.deadline_date || undefined,
+      })
+      setCreatedOpportunity(result)
+      setOpportunity(emptyOpportunity)
+    } catch (error: unknown) {
+      setOpportunityError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingOpportunity(false)
+    }
   }
 
   const rawName = user?.name || user?.email?.split('@')[0] || 'Usuário'
@@ -81,73 +145,236 @@ export const Dashboard: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-10">
-        <div className="w-full max-w-xl bg-white rounded-[16px] p-8 sm:p-10 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)] text-center animate-assemble">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-b from-[#064E3B] to-[#022C22] p-4 flex items-center justify-center shadow-[0_8px_20px_rgba(2,44,34,0.18)]">
-            <MercoLogo size={48} showWordmark={false} />
-          </div>
+      <main className="flex-1 p-4 sm:p-6 lg:p-10">
+        <div className="mx-auto w-full max-w-5xl grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
+          <section className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+            <div className="w-16 h-16 mb-5 rounded-2xl bg-gradient-to-b from-[#064E3B] to-[#022C22] p-3 flex items-center justify-center shadow-[0_8px_20px_rgba(2,44,34,0.18)]">
+              <MercoLogo size={40} showWordmark={false} />
+            </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10B981]/12 text-[#047857] text-[12px] font-bold uppercase tracking-wider mb-4">
-            <ShieldCheck className="w-4 h-4 text-[#10B981]" />
-            <span>Acesso Autorizado</span>
-          </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10B981]/12 text-[#047857] text-[12px] font-bold uppercase tracking-wider mb-4">
+              <ShieldCheck className="w-4 h-4 text-[#10B981]" />
+              <span>Acesso Autorizado</span>
+            </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F1F1C] tracking-tight mb-3">
-            Olá, {user?.name || firstName}!
-          </h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F1F1C] tracking-tight mb-3">
+              Olá, {user?.name || firstName}!
+            </h1>
 
-          <p className="text-[16px] font-semibold text-[#10B981] mb-4">
-            Seu acesso foi validado com sucesso.
-          </p>
+            <p className="text-[16px] font-semibold text-[#10B981] mb-4">
+              Seu acesso foi validado com sucesso.
+            </p>
 
-          <p className="text-[14px] sm:text-[15px] text-[#5B6B66] leading-relaxed mb-8 max-w-md mx-auto">
-            Em breve, os módulos do CRM — Clientes, Propostas e Projetos — estarão disponíveis neste
-            painel.
-          </p>
+            <p className="text-[14px] sm:text-[15px] text-[#5B6B66] leading-relaxed mb-6 max-w-md">
+              Registre uma nova demanda técnico-comercial. O recebimento e o responsável serão
+              definidos pelo servidor para manter a rastreabilidade.
+            </p>
 
-          <div className="bg-[#F6F8F7] rounded-[12px] p-4 border border-[#E1E8E5] mb-4 text-left flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white border border-[#E1E8E5] flex items-center justify-center text-[#5B6B66]">
-                <UserIcon className="w-5 h-5" />
+            <div className="bg-[#F6F8F7] rounded-[12px] p-4 border border-[#E1E8E5] mb-4 text-left flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-full bg-white border border-[#E1E8E5] flex items-center justify-center text-[#5B6B66] shrink-0">
+                  <UserIcon className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[14px] font-bold text-[#0F1F1C] truncate">
+                    {user?.name || 'Usuário'}
+                  </p>
+                  <p className="text-[12px] text-[#5B6B66] truncate">{user?.email}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[14px] font-bold text-[#0F1F1C]">{user?.name || 'Usuário'}</p>
-                <p className="text-[12px] text-[#5B6B66]">{user?.email}</p>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#10B981] bg-[#10B981]/10 px-2.5 py-1 rounded-full shrink-0">
+                {role ? ROLE_LABELS[role] : 'Papel não definido'}
+              </span>
+            </div>
+
+            <div
+              className={`rounded-[12px] p-4 border text-left ${
+                canHomologateCatalog
+                  ? 'border-[#A7F3D0] bg-[#ECFDF5]'
+                  : 'border-[#FED7AA] bg-[#FFF7ED]'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                {canHomologateCatalog ? (
+                  <ShieldCheck className="w-5 h-5 text-[#059669] mt-0.5 shrink-0" />
+                ) : (
+                  <LockKeyhole className="w-5 h-5 text-[#EA580C] mt-0.5 shrink-0" />
+                )}
+                <div>
+                  <p className="text-[14px] font-bold text-[#0F1F1C]">Homologação de catálogo</p>
+                  <p className="text-[13px] text-[#5B6B66] mt-1">{permissionMessage}</p>
+                </div>
               </div>
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#10B981] bg-[#10B981]/10 px-2.5 py-1 rounded-full">
-              {role ? ROLE_LABELS[role] : 'Papel não definido'}
-            </span>
-          </div>
+          </section>
 
-          <div
-            className={`rounded-[12px] p-4 border text-left mb-8 ${
-              canHomologateCatalog
-                ? 'border-[#A7F3D0] bg-[#ECFDF5]'
-                : 'border-[#FED7AA] bg-[#FFF7ED]'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              {canHomologateCatalog ? (
-                <ShieldCheck className="w-5 h-5 text-[#059669] mt-0.5" />
-              ) : (
-                <LockKeyhole className="w-5 h-5 text-[#EA580C] mt-0.5" />
-              )}
+          <section className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+            <div className="flex items-start gap-3 mb-6">
+              <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+                <ClipboardPlus className="w-5 h-5" />
+              </div>
               <div>
-                <p className="text-[14px] font-bold text-[#0F1F1C]">Homologação de catálogo</p>
-                <p className="text-[13px] text-[#5B6B66] mt-1">{permissionMessage}</p>
+                <h2 className="text-xl font-extrabold text-[#0F1F1C]">Nova demanda</h2>
+                <p className="text-[13px] text-[#5B6B66] mt-1">
+                  Campos com * são necessários para registrar o recebimento.
+                </p>
               </div>
             </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => void handleLogout()}
-            className="w-full sm:w-auto px-8 h-[48px] rounded-[12px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[15px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sair da conta</span>
-          </button>
+            {opportunityError && (
+              <div
+                className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+                role="alert"
+                aria-live="assertive"
+              >
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{opportunityError}</span>
+              </div>
+            )}
+
+            {createdOpportunity && (
+              <div
+                className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium flex items-start gap-2.5"
+                role="status"
+                aria-live="polite"
+              >
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                <div>
+                  <p>Demanda registrada com recebimento verificável.</p>
+                  <p className="font-normal mt-1">Status: recebida · ID: {createdOpportunity.id}</p>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleOpportunitySubmit} className="space-y-4" noValidate>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Cliente *
+                  <input
+                    required
+                    maxLength={200}
+                    value={opportunity.customer_name}
+                    onChange={(event) =>
+                      handleOpportunityChange('customer_name', event.target.value)
+                    }
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Nome da empresa ou cliente"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Contato *
+                  <input
+                    required
+                    maxLength={200}
+                    value={opportunity.contact_name}
+                    onChange={(event) =>
+                      handleOpportunityChange('contact_name', event.target.value)
+                    }
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Nome do contato"
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  E-mail do contato
+                  <input
+                    type="email"
+                    maxLength={200}
+                    value={opportunity.contact_email}
+                    onChange={(event) =>
+                      handleOpportunityChange('contact_email', event.target.value)
+                    }
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="contato@empresa.com"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Origem da demanda *
+                  <input
+                    required
+                    maxLength={120}
+                    value={opportunity.origin}
+                    onChange={(event) => handleOpportunityChange('origin', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Indicação, portal, recorrência..."
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Família de serviço *
+                  <input
+                    required
+                    maxLength={120}
+                    value={opportunity.service_family}
+                    onChange={(event) =>
+                      handleOpportunityChange('service_family', event.target.value)
+                    }
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Informe, sem presumir o piloto"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Local do serviço *
+                  <span className="relative block">
+                    <MapPin
+                      className="absolute left-3 top-3 w-4 h-4 text-[#5B6B66]"
+                      aria-hidden="true"
+                    />
+                    <input
+                      required
+                      maxLength={300}
+                      value={opportunity.location}
+                      onChange={(event) => handleOpportunityChange('location', event.target.value)}
+                      className="mt-1.5 w-full h-[44px] pl-9 pr-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                      placeholder="Cidade, obra ou endereço"
+                    />
+                  </span>
+                </label>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Data da demanda *
+                  <input
+                    required
+                    type="date"
+                    value={opportunity.demand_date}
+                    onChange={(event) => handleOpportunityChange('demand_date', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Prazo informado
+                  <input
+                    type="date"
+                    value={opportunity.deadline_date}
+                    onChange={(event) =>
+                      handleOpportunityChange('deadline_date', event.target.value)
+                    }
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  />
+                </label>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-[12px] text-[#5B6B66]">
+                  O recebimento será marcado pelo servidor no instante do cadastro.
+                </p>
+                <button
+                  type="submit"
+                  disabled={isSubmittingOpportunity}
+                  className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                >
+                  <ClipboardPlus className="w-4 h-4" />
+                  {isSubmittingOpportunity ? 'Registrando...' : 'Registrar demanda'}
+                </button>
+              </div>
+            </form>
+          </section>
         </div>
       </main>
     </div>

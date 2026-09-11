@@ -6,8 +6,8 @@
 - etapa: aguardando_teste_humano
 - autorizacao_implementacao: confirmada em 2026-09-11 17:48 - "Sim, implementar a T1.5"
 - teste_humano: pendente
-- verificacao_automatica: passou - QA SKIP 0.0.14 (setup, análise estática, build, integrações e testes); migration 0006 aplicada; coleção tech_sheets criada com RLS por responsável; endpoints de ficha técnica ativos
+- verificacao_automatica: passou - QA SKIP 0.0.15; causa raiz do erro corrigida (conversão multipart dos anexos e filtro do histórico); build, análise estática, integrações e testes passaram
 - aprendizado: pendente
-- ultima_acao: implementação concluída e QA 0.0.14 aprovado
-- proxima_acao: aguardar teste humano da ficha técnica no preview
-- atualizado_em: 2026-09-11T18:05:00-03:00
+- ultima_acao: debug concluído com correção de dois erros server-side da ficha técnica
+- proxima_acao: aguardar novo teste humano da ficha técnica no preview
+- atualizado_em: 2026-09-11T18:40:00-03:00

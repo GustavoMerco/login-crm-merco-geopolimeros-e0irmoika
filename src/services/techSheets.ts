@@ -19,23 +19,20 @@ export type TechSheetRecord = {
   collectionId: string
 }
 
-export type CreatedTechSheet = {
-  id: string
-  opportunityId: string
-  version: number
-  parameters: TechSheetParameter[]
-  pendingItems: string[]
-  notes: string
-  attachmentCount: number
-  createdBy: string
-  createdAt: string
+export const getTechSheets = async (opportunityId: string) => {
+  const result = await pb.collection('tech_sheets').getList<TechSheetRecord>(1, 100, {
+    filter: `opportunity_id = "${opportunityId}"`,
+    sort: '-version',
+  })
+  return {
+    items: result.items.map((item) => ({
+      ...item,
+      pendingItems: item.pendingItems ?? [],
+      parameters: item.parameters ?? [],
+      attachments: item.attachments ?? [],
+    })),
+  }
 }
-
-export const getTechSheets = (opportunityId: string) =>
-  pb.send<{ items: TechSheetRecord[] }>(
-    `/backend/v1/opportunities/tech-sheet?opportunity_id=${encodeURIComponent(opportunityId)}`,
-    { method: 'GET' },
-  )
 
 export type CreateTechSheetInput = {
   opportunity_id: string
@@ -58,10 +55,7 @@ export const createTechSheet = (input: CreateTechSheetInput) => {
   for (const file of input.attachments ?? []) {
     form.append('attachments', file)
   }
-  return pb.send<CreatedTechSheet>('/backend/v1/opportunities/tech-sheet', {
-    method: 'POST',
-    body: form,
-  })
+  return pb.collection('tech_sheets').create<Record & CreateTechSheetInput>(form)
 }
 
 export const techSheetFileUrl = (sheet: { collectionId: string; id: string }, filename: string) =>

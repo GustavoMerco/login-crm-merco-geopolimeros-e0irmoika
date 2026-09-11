@@ -10,6 +10,13 @@ import {
   type AptitudeResult,
   type OpportunityRecord,
 } from '@/services/opportunities'
+import {
+  createTechSheet,
+  getTechSheets,
+  techSheetFileUrl,
+  type TechSheetParameter,
+  type TechSheetRecord,
+} from '@/services/techSheets'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -17,6 +24,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   ClipboardPlus,
+  FileText,
   LockKeyhole,
   LogOut,
   MapPin,
@@ -59,6 +67,17 @@ export const Dashboard: React.FC = () => {
   const [aptitudeError, setAptitudeError] = useState<string | null>(null)
   const [exceptionJustification, setExceptionJustification] = useState('')
   const [isEvaluatingAptitude, setIsEvaluatingAptitude] = useState(false)
+  const [techSheetForm, setTechSheetForm] = useState<TechSheetParameter[]>([
+    { name: '', value: '', unit: '', origin: '' },
+  ])
+  const [techSheetPending, setTechSheetPending] = useState('')
+  const [techSheetNotes, setTechSheetNotes] = useState('')
+  const [techSheetFiles, setTechSheetFiles] = useState<File[]>([])
+  const [techSheetHistory, setTechSheetHistory] = useState<TechSheetRecord[]>([])
+  const [techSheetError, setTechSheetError] = useState<string | null>(null)
+  const [techSheetCreated, setTechSheetCreated] = useState<{ version: number } | null>(null)
+  const [isSubmittingTechSheet, setIsSubmittingTechSheet] = useState(false)
+  const [isLoadingTechSheets, setIsLoadingTechSheets] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -170,6 +189,85 @@ export const Dashboard: React.FC = () => {
       setAptitudeError(getErrorMessage(error))
     } finally {
       setIsEvaluatingAptitude(false)
+    }
+  }
+
+  const loadTechSheets = async (targetId: string) => {
+    setIsLoadingTechSheets(true)
+    try {
+      const result = await getTechSheets(targetId)
+      setTechSheetHistory(result.items)
+      setTechSheetError(null)
+    } catch (error: unknown) {
+      setTechSheetHistory([])
+      setTechSheetError(getErrorMessage(error))
+    } finally {
+      setIsLoadingTechSheets(false)
+    }
+  }
+
+  const handleTechSheetParameterChange = (
+    index: number,
+    field: keyof TechSheetParameter,
+    value: string,
+  ) => {
+    setTechSheetForm((current) =>
+      current.map((item, itemIndex) => (itemIndex === index ? { ...item, [field]: value } : item)),
+    )
+    setTechSheetError(null)
+    setTechSheetCreated(null)
+  }
+
+  const handleTechSheetAddParameter = () => {
+    setTechSheetForm((current) => [...current, { name: '', value: '', unit: '', origin: '' }])
+  }
+
+  const handleTechSheetRemoveParameter = (index: number) => {
+    setTechSheetForm((current) =>
+      current.length <= 1
+        ? [{ name: '', value: '', unit: '', origin: '' }]
+        : current.filter((_, itemIndex) => itemIndex !== index),
+    )
+  }
+
+  const handleTechSheetSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const targetId = selectedOpportunityId || createdOpportunity?.id
+    if (!targetId) return
+
+    setTechSheetError(null)
+    setTechSheetCreated(null)
+    setIsSubmittingTechSheet(true)
+
+    try {
+      const result = await createTechSheet({
+        opportunity_id: targetId,
+        parameters: techSheetForm.map((item) => ({
+          name: item.name.trim(),
+          value: item.value.trim(),
+          unit: item.unit.trim(),
+          origin: item.origin.trim(),
+        })),
+        pending_items:
+          techSheetPending.trim().length > 0
+            ? techSheetPending
+                .split('\n')
+                .map((item) => item.trim())
+                .filter((item) => item.length > 0)
+            : undefined,
+        notes: techSheetNotes.trim() || undefined,
+        attachments: techSheetFiles.length > 0 ? techSheetFiles : undefined,
+      })
+      setTechSheetCreated({ version: result.version })
+      setTechSheetForm([{ name: '', value: '', unit: '', origin: '' }])
+      setTechSheetPending('')
+      setTechSheetNotes('')
+      setTechSheetFiles([])
+      await loadTechSheets(targetId)
+    } catch (error: unknown) {
+      setTechSheetError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingTechSheet(false)
     }
   }
 
@@ -474,6 +572,9 @@ export const Dashboard: React.FC = () => {
                             : null,
                         )
                         setAptitudeError(null)
+                        setTechSheetCreated(null)
+                        setTechSheetError(null)
+                        void loadTechSheets(item.id)
                       }}
                       className={`w-full rounded-[9px] border p-3 text-left transition-colors ${
                         selectedOpportunityId === item.id
@@ -634,6 +735,269 @@ export const Dashboard: React.FC = () => {
             </form>
           </section>
         </div>
+
+        {createdOpportunity && (
+          <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+            <div className="flex items-start gap-3 mb-6">
+              <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-extrabold text-[#0F1F1C]">Ficha técnica</h2>
+                <p className="text-[13px] text-[#5B6B66] mt-1">
+                  Cada salvamento cria uma nova versão com autor e origem definidos pelo servidor.
+                  Versões anteriores permanecem intactas.
+                </p>
+              </div>
+            </div>
+
+            {techSheetError && (
+              <div
+                className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+                role="alert"
+                aria-live="assertive"
+              >
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{techSheetError}</span>
+              </div>
+            )}
+
+            {techSheetCreated && (
+              <div
+                className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium flex items-start gap-2.5"
+                role="status"
+                aria-live="polite"
+              >
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                <div>
+                  <p>
+                    Versão {techSheetCreated.version} registrada com autor e origem verificados.
+                  </p>
+                  <p className="font-normal mt-1">Versões anteriores permanecem inalteradas.</p>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleTechSheetSubmit} className="space-y-4" noValidate>
+              <div className="space-y-3">
+                {techSheetForm.map((parameter, index) => (
+                  <div
+                    key={index}
+                    className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4"
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-[12px] font-bold uppercase tracking-wider text-[#5B6B66]">
+                        Parâmetro {index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleTechSheetRemoveParameter(index)}
+                        className="text-[11px] font-semibold text-[#EA580C] hover:underline"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                        Nome *
+                        <input
+                          required
+                          maxLength={120}
+                          value={parameter.name}
+                          onChange={(event) =>
+                            handleTechSheetParameterChange(index, 'name', event.target.value)
+                          }
+                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          placeholder="Ex.: espessura da camada"
+                        />
+                      </label>
+                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                        Valor *
+                        <input
+                          required
+                          maxLength={200}
+                          value={parameter.value}
+                          onChange={(event) =>
+                            handleTechSheetParameterChange(index, 'value', event.target.value)
+                          }
+                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          placeholder="Ex.: 3,0"
+                        />
+                      </label>
+                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                        Unidade *
+                        <input
+                          required
+                          maxLength={40}
+                          value={parameter.unit}
+                          onChange={(event) =>
+                            handleTechSheetParameterChange(index, 'unit', event.target.value)
+                          }
+                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          placeholder="Ex.: mm"
+                        />
+                      </label>
+                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                        Origem *
+                        <input
+                          required
+                          maxLength={120}
+                          value={parameter.origin}
+                          onChange={(event) =>
+                            handleTechSheetParameterChange(index, 'origin', event.target.value)
+                          }
+                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          placeholder="Ex.: visita técnica, planta, cliente"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleTechSheetAddParameter}
+                className="text-[12px] font-semibold text-[#047857] hover:underline"
+              >
+                + Adicionar parâmetro
+              </button>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Pendências (uma por linha)
+                  <textarea
+                    maxLength={3000}
+                    value={techSheetPending}
+                    onChange={(event) => setTechSheetPending(event.target.value)}
+                    className="mt-1.5 w-full min-h-[76px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Ex.: aguardando planta atualizada"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Observações
+                  <textarea
+                    maxLength={2000}
+                    value={techSheetNotes}
+                    onChange={(event) => setTechSheetNotes(event.target.value)}
+                    className="mt-1.5 w-full min-h-[76px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Contexto adicional da versão"
+                  />
+                </label>
+              </div>
+
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Anexos (até 10 arquivos)
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => setTechSheetFiles(Array.from(event.target.files ?? []))}
+                  className="mt-1.5 w-full text-[13px] text-[#5B6B66] file:mr-3 file:h-[38px] file:px-3 file:rounded-[9px] file:border-0 file:bg-[#064E3B] file:text-white file:text-[12px] file:font-semibold file:cursor-pointer"
+                />
+              </label>
+
+              <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-[12px] text-[#5B6B66]">
+                  O autor e o número da versão são definidos pelo servidor.
+                </p>
+                <button
+                  type="submit"
+                  disabled={isSubmittingTechSheet}
+                  className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                >
+                  <FileText className="w-4 h-4" />
+                  {isSubmittingTechSheet ? 'Salvando...' : 'Salvar nova versão'}
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <h3 className="text-[14px] font-bold text-[#0F1F1C]">Histórico de versões</h3>
+                  <p className="text-[12px] text-[#5B6B66] mt-1">
+                    Versões anteriores são imutáveis e mantêm autor e origem.
+                  </p>
+                </div>
+                {createdOpportunity && (
+                  <button
+                    type="button"
+                    onClick={() => void loadTechSheets(createdOpportunity.id)}
+                    className="text-[12px] font-semibold text-[#047857] hover:underline"
+                  >
+                    Atualizar
+                  </button>
+                )}
+              </div>
+              {isLoadingTechSheets ? (
+                <p className="text-[12px] text-[#5B6B66]">Carregando histórico...</p>
+              ) : techSheetHistory.length === 0 ? (
+                <p className="text-[12px] text-[#5B6B66]">
+                  Nenhuma versão registrada para esta oportunidade.
+                </p>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {techSheetHistory.map((sheet) => (
+                    <div
+                      key={sheet.id}
+                      className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[13px] font-bold text-[#0F1F1C]">
+                          Versão {sheet.version}
+                        </span>
+                        <span className="text-[10px] font-semibold text-[#5B6B66]">
+                          {sheet.createdAt}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-[11px] text-[#5B6B66]">
+                        <p className="font-semibold text-[#0F1F1C]">Parâmetros</p>
+                        <ul className="mt-1 space-y-0.5">
+                          {sheet.parameters.map((parameter, parameterIndex) => (
+                            <li key={parameterIndex}>
+                              {parameter.name}: {parameter.value} {parameter.unit} · origem:{' '}
+                              {parameter.origin}
+                            </li>
+                          ))}
+                        </ul>
+                        {sheet.pendingItems.length > 0 && (
+                          <div className="mt-2">
+                            <p className="font-semibold text-[#C2410C]">Pendências</p>
+                            <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                              {sheet.pendingItems.map((item, itemIndex) => (
+                                <li key={itemIndex}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {sheet.notes && <p className="mt-2">Observações: {sheet.notes}</p>}
+                        {sheet.attachments.length > 0 && (
+                          <div className="mt-2">
+                            <p className="font-semibold text-[#0F1F1C]">Anexos</p>
+                            <ul className="mt-1 space-y-0.5">
+                              {sheet.attachments.map((filename) => (
+                                <li key={filename}>
+                                  <a
+                                    href={techSheetFileUrl(sheet, filename)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[#047857] hover:underline break-all"
+                                  >
+                                    {filename}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   )

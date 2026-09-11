@@ -1,13 +1,13 @@
 # Debug Summary — T1.4 — 2026-09-11
 
-**Problema:** ao selecionar uma demanda persistida e avaliar aptidão, o preview retornava `The requested resource wasn't found`.
+**Problema:** após a avaliação, o usuário não via checklist/pendências; os cards mostravam apenas o nome da oportunidade e poucos dados.
 
-**Reprodução:** logs mostraram `GET /api/collections/opportunities/records` com HTTP 200, seguido de `POST /backend/v1/opportunities/{id}/aptitude` com HTTP 404.
+**Reprodução:** logs confirmaram `POST /backend/v1/opportunities/aptitude` com HTTP 200. No frontend, o bloco de checklist só era renderizado quando `pendingItems.length > 0`; o card listava apenas cliente, status, família e local.
 
-**Causa raiz:** a rota customizada com parâmetro de caminho `{id}` não era encontrada pelo roteador do backend nesse formato, embora a listagem e a collection existissem.
+**Causa raiz:** regra server-side funcionando, mas apresentação incompleta: checklist omitido quando não havia pendências e card sem contato, origem, datas, recebimento e demais informações.
 
-**Correção:** substituída por rota fixa `POST /backend/v1/opportunities/aptitude`; o ID da oportunidade agora é enviado no corpo autenticado. O frontend foi ajustado para usar a nova rota.
+**Correção:** checklist agora sempre é renderizado, com cada campo marcado como preenchido/pendente e mensagem de nenhuma pendência; cards agora exibem contato, origem, família, local, data da demanda, recebimento e prazo quando informado.
 
-**Verificação:** QA SKIP 0.0.12 passou; nova rota sem autenticação retorna HTTP 401; listagem permanece HTTP 200.
+**Verificação:** QA SKIP 0.0.13 passou; avaliação server-side já confirmada HTTP 200.
 
-**Gate:** aguardando novo teste humano autenticado da avaliação, bloqueio e exceção.
+**Gate:** aguardando novo teste humano.

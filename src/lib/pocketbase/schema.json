@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T18:47:33.816Z",
+  "generatedAt": "2026-09-11T21:00:46.140Z",
   "collections": [
     {
       "name": "users",
@@ -29,21 +29,33 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         },
         {
           "name": "role",
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["comercial", "engenharia", "financeiro", "aprovador", "gestao", "admin"]
+          "selectValues": [
+            "comercial",
+            "engenharia",
+            "financeiro",
+            "aprovador",
+            "gestao",
+            "admin"
+          ]
         }
       ],
       "indexes": [
@@ -86,7 +98,12 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["allowed", "denied", "success", "failure"]
+          "selectValues": [
+            "allowed",
+            "denied",
+            "success",
+            "failure"
+          ]
         },
         {
           "name": "details",
@@ -105,14 +122,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -203,21 +225,31 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         },
         {
           "name": "aptitude_status",
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["pending", "blocked", "apt", "exception_approved"]
+          "selectValues": [
+            "pending",
+            "blocked",
+            "apt",
+            "exception_approved"
+          ]
         },
         {
           "name": "checklist",
@@ -255,6 +287,86 @@
         "CREATE INDEX idx_opportunities_responsible ON opportunities (responsible_user_id)",
         "CREATE INDEX idx_opportunities_received_at ON opportunities (received_at)",
         "CREATE INDEX idx_opportunities_status ON opportunities (status)"
+      ]
+    },
+    {
+      "name": "tech_sheets",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && opportunity_id.responsible_user_id = @request.auth.id",
+        "view": "@request.auth.id != '' && opportunity_id.responsible_user_id = @request.auth.id",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "opportunity_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "opportunities"
+        },
+        {
+          "name": "version",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "parameters",
+          "type": "json",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "pending_items",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "attachments",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_tech_sheets_opportunity_version ON tech_sheets (opportunity_id, version)",
+        "CREATE INDEX idx_tech_sheets_opportunity ON tech_sheets (opportunity_id)"
       ]
     }
   ]

@@ -1,13 +1,13 @@
 # Estado atual — Adapta Cliente
 
-- task_id: T1.4
+- task_id: T1.5
 - champion: Paulo Romeiro
-- spec: 04_fase-atual/specs/SPEC-1-002.md
-- etapa: em_correcao
-- autorizacao_implementacao: confirmada em 2026-09-11 15:27 - "Sim"
+- spec: 04_fase-atual/specs/SPEC-1-003.md
+- etapa: implementando
+- autorizacao_implementacao: confirmada em 2026-09-11 17:48 - "Sim, implementar a T1.5"
 - teste_humano: pendente
-- verificacao_automatica: falhou - backend de aptidão retorna HTTP 200, mas checklist completo não é renderizado sem pendências e card omite detalhes da oportunidade
+- verificacao_automatica: pendente - implementação em andamento
 - aprendizado: pendente
-- ultima_acao: causa raiz de apresentação confirmada; correção de UI em andamento
-- proxima_acao: renderizar checklist completo e informações detalhadas no card
-- atualizado_em: 2026-09-11T16:12:00-03:00
+- ultima_acao: autorização explícita registrada após análise da T1.5
+- proxima_acao: implementar schema, endpoints server-side, serviço e interface da ficha técnica
+- atualizado_em: 2026-09-11T17:48:00-03:00

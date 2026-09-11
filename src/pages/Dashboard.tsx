@@ -1,16 +1,38 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { checkPermission } from '@/services/security'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
 import { LogOut, ShieldCheck, User as UserIcon, LockKeyhole } from 'lucide-react'
 
+type ServerPermissionState = 'loading' | 'allowed' | 'denied' | 'unavailable'
+
 export const Dashboard: React.FC = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [serverPermission, setServerPermission] = useState<ServerPermissionState>('loading')
 
-  const handleLogout = () => {
-    logout()
+  useEffect(() => {
+    let active = true
+
+    const loadPermission = async () => {
+      try {
+        const result = await checkPermission('homologateCatalog')
+        if (active) setServerPermission(result.allowed ? 'allowed' : 'denied')
+      } catch {
+        if (active) setServerPermission('unavailable')
+      }
+    }
+
+    void loadPermission()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    await logout()
     navigate('/', { replace: true })
   }
 
@@ -18,7 +40,16 @@ export const Dashboard: React.FC = () => {
   const firstName = rawName.split(' ')[0]
   const initial = (firstName[0] || 'U').toUpperCase()
   const role = user?.role
-  const canHomologateCatalog = hasPermission(role, 'homologateCatalog')
+  const localPermission = hasPermission(role, 'homologateCatalog')
+  const canHomologateCatalog = serverPermission === 'allowed' && localPermission
+  const permissionMessage =
+    serverPermission === 'loading'
+      ? 'Verificando a permissão no servidor...'
+      : serverPermission === 'unavailable'
+        ? 'Não foi possível verificar a permissão no servidor. Acesso bloqueado por segurança.'
+        : canHomologateCatalog
+          ? 'Seu papel permite homologar o catálogo.'
+          : 'Acesso negado: somente Engenharia ou Administrador podem homologar.'
 
   return (
     <div className="min-h-screen w-full bg-[#F6F8F7] flex flex-col font-sans antialiased text-[#0F1F1C]">
@@ -41,7 +72,7 @@ export const Dashboard: React.FC = () => {
 
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={() => void handleLogout()}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[13px] font-semibold text-[#EA580C] hover:bg-[#EA580C]/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EA580C]"
           >
             <LogOut className="w-4 h-4" />
@@ -104,18 +135,14 @@ export const Dashboard: React.FC = () => {
               )}
               <div>
                 <p className="text-[14px] font-bold text-[#0F1F1C]">Homologação de catálogo</p>
-                <p className="text-[13px] text-[#5B6B66] mt-1">
-                  {canHomologateCatalog
-                    ? 'Seu papel permite homologar o catálogo.'
-                    : 'Acesso negado: somente Engenharia ou Administrador podem homologar.'}
-                </p>
+                <p className="text-[13px] text-[#5B6B66] mt-1">{permissionMessage}</p>
               </div>
             </div>
           </div>
 
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={() => void handleLogout()}
             className="w-full sm:w-auto px-8 h-[48px] rounded-[12px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[15px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2 cursor-pointer"
           >
             <LogOut className="w-4 h-4" />

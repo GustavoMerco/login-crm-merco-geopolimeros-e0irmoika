@@ -15,6 +15,7 @@ export interface AuthUser extends RecordModel {
 interface AuthContextType {
   user: AuthUser | null
   token: string | null
+  isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, pass: string, rememberMe?: boolean) => Promise<AuthUser>
   logout: () => Promise<void>
@@ -28,13 +29,16 @@ const REMEMBER_KEY = 'merco_crm_remember_me'
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [token, setToken] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
   useEffect(() => {
     let active = true
     const unsubscribe = pb.authStore.onChange((newToken, model) => {
+      const valid = pb.authStore.isValid && !!model
       setToken(newToken)
-      setUser(pb.authStore.isValid && model ? (model as unknown as AuthUser) : null)
+      setIsAuthenticated(valid)
+      setUser(valid ? (model as unknown as AuthUser) : null)
     })
 
     const restoreSession = async () => {
@@ -54,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (active) {
           setUser(pb.authStore.record as unknown as AuthUser)
           setToken(pb.authStore.token)
+          setIsAuthenticated(pb.authStore.isValid)
           sessionStorage.setItem('merco_session_active', 'true')
         }
       } catch {
@@ -80,25 +85,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const loggedUser = authData.record as unknown as AuthUser
       setUser(loggedUser)
       setToken(authData.token)
+      setIsAuthenticated(pb.authStore.isValid)
       return loggedUser
     },
     [],
   )
 
   const logout = useCallback(async () => {
-    if (pb.authStore.isValid) {
-      try {
+    try {
+      if (pb.authStore.isValid) {
         await revokeSession()
-      } finally {
-        pb.authStore.clear()
       }
-    } else {
+    } finally {
       pb.authStore.clear()
+      localStorage.removeItem(REMEMBER_KEY)
+      sessionStorage.removeItem('merco_session_active')
+      setUser(null)
+      setToken(null)
+      setIsAuthenticated(false)
     }
-    localStorage.removeItem(REMEMBER_KEY)
-    sessionStorage.removeItem('merco_session_active')
-    setUser(null)
-    setToken(null)
   }, [])
 
   const requestPasswordReset = useCallback(async (email: string) => {
@@ -110,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         token,
+        isAuthenticated,
         isLoading,
         login,
         logout,

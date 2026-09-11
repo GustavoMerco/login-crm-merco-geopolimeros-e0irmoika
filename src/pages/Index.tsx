@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertTriangle, Check } from 'lucide-react'
 
 export const Index: React.FC = () => {
-  const { user, login, isLoading: authLoading } = useAuth()
+  const { user, isAuthenticated, login, isLoading: authLoading } = useAuth()
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('')
@@ -26,10 +26,10 @@ export const Index: React.FC = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && isAuthenticated) {
       navigate('/dashboard', { replace: true })
     }
-  }, [user, authLoading, navigate])
+  }, [isAuthenticated, authLoading, navigate])
 
   const validateEmailFormat = (val: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())

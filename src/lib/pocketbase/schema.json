@@ -29,33 +29,21 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "role",
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "comercial",
-            "engenharia",
-            "financeiro",
-            "aprovador",
-            "gestao",
-            "admin"
-          ]
+          "selectValues": ["comercial", "engenharia", "financeiro", "aprovador", "gestao", "admin"]
         }
       ],
       "indexes": [
@@ -98,12 +86,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "allowed",
-            "denied",
-            "success",
-            "failure"
-          ]
+          "selectValues": ["allowed", "denied", "success", "failure"]
         },
         {
           "name": "details",
@@ -122,19 +105,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [

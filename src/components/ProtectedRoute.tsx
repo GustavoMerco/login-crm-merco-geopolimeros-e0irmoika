@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { MercoLogo, HexagonSpinner } from '@/components/MercoLogo'
 
 export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
 
   if (isLoading) {
     return (
@@ -18,7 +18,7 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
     )
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <Navigate to="/" replace />
   }
 

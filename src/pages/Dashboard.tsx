@@ -5,8 +5,10 @@ import { checkPermission } from '@/services/security'
 import {
   createOpportunity,
   evaluateOpportunityAptitude,
+  getOpportunities,
   type CreateOpportunityInput,
   type AptitudeResult,
+  type OpportunityRecord,
 } from '@/services/opportunities'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
@@ -49,6 +51,10 @@ export const Dashboard: React.FC = () => {
     receivedAt: string
     status: string
   } | null>(null)
+  const [opportunities, setOpportunities] = useState<OpportunityRecord[]>([])
+  const [selectedOpportunityId, setSelectedOpportunityId] = useState<string | null>(null)
+  const [opportunitiesError, setOpportunitiesError] = useState<string | null>(null)
+  const [isLoadingOpportunities, setIsLoadingOpportunities] = useState(true)
   const [aptitudeResult, setAptitudeResult] = useState<AptitudeResult | null>(null)
   const [aptitudeError, setAptitudeError] = useState<string | null>(null)
   const [exceptionJustification, setExceptionJustification] = useState('')
@@ -70,6 +76,23 @@ export const Dashboard: React.FC = () => {
     return () => {
       active = false
     }
+  }, [])
+
+  const loadOpportunities = async () => {
+    setIsLoadingOpportunities(true)
+    try {
+      const result = await getOpportunities()
+      setOpportunities(result.items)
+      setOpportunitiesError(null)
+    } catch (error: unknown) {
+      setOpportunitiesError(getErrorMessage(error))
+    } finally {
+      setIsLoadingOpportunities(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadOpportunities()
   }, [])
 
   const handleLogout = async () => {
@@ -106,6 +129,7 @@ export const Dashboard: React.FC = () => {
       })
       setCreatedOpportunity(result)
       setOpportunity(emptyOpportunity)
+      await loadOpportunities()
     } catch (error: unknown) {
       setOpportunityError(getErrorMessage(error))
     } finally {
@@ -114,16 +138,31 @@ export const Dashboard: React.FC = () => {
   }
 
   const handleAptitudeEvaluation = async (allowException = false) => {
-    if (!createdOpportunity) return
+    const targetId = selectedOpportunityId || createdOpportunity?.id
+    if (!targetId) return
 
     setAptitudeError(null)
     setIsEvaluatingAptitude(true)
     try {
-      const result = await evaluateOpportunityAptitude(createdOpportunity.id, {
+      const result = await evaluateOpportunityAptitude(targetId, {
         allowException,
         exceptionJustification: allowException ? exceptionJustification : undefined,
       })
       setAptitudeResult(result)
+      setOpportunities((current) =>
+        current.map((item) =>
+          item.id === targetId
+            ? {
+                ...item,
+                status: result.status,
+                aptitude_status: result.aptitudeStatus,
+                checklist: result.checklist,
+                pending_items: result.pendingItems,
+                aptitude_evaluated_at: result.evaluatedAt,
+              }
+            : item,
+        ),
+      )
       if (result.aptitudeStatus !== 'exception_approved') {
         setExceptionJustification('')
       }
@@ -366,6 +405,83 @@ export const Dashboard: React.FC = () => {
                 )}
               </div>
             )}
+
+            <div className="mb-5 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <h3 className="text-[14px] font-bold text-[#0F1F1C]">Demandas criadas</h3>
+                  <p className="text-[12px] text-[#5B6B66] mt-1">
+                    Registros vinculados ao seu usuário.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void loadOpportunities()}
+                  className="text-[12px] font-semibold text-[#047857] hover:underline"
+                >
+                  Atualizar
+                </button>
+              </div>
+              {opportunitiesError && (
+                <p className="text-[12px] text-[#B91C1C] mb-2" role="alert">
+                  {opportunitiesError}
+                </p>
+              )}
+              {isLoadingOpportunities ? (
+                <p className="text-[12px] text-[#5B6B66]">Carregando demandas...</p>
+              ) : opportunities.length === 0 ? (
+                <p className="text-[12px] text-[#5B6B66]">
+                  Nenhuma demanda encontrada para este usuário.
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {opportunities.map((item) => (
+                    <button
+                      type="button"
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedOpportunityId(item.id)
+                        setCreatedOpportunity({
+                          id: item.id,
+                          receivedAt: item.received_at,
+                          status: item.status,
+                        })
+                        setAptitudeResult(
+                          item.aptitude_status
+                            ? {
+                                id: item.id,
+                                aptitudeStatus: item.aptitude_status,
+                                status: item.status === 'blocked' ? 'blocked' : 'apt',
+                                checklist: item.checklist || {},
+                                pendingItems: item.pending_items || [],
+                                evaluatedAt: item.aptitude_evaluated_at || '',
+                              }
+                            : null,
+                        )
+                        setAptitudeError(null)
+                      }}
+                      className={`w-full rounded-[9px] border p-3 text-left transition-colors ${
+                        selectedOpportunityId === item.id
+                          ? 'border-[#10B981] bg-[#ECFDF5]'
+                          : 'border-[#E1E8E5] bg-white hover:border-[#A7F3D0]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[13px] font-semibold text-[#0F1F1C] truncate">
+                          {item.customer_name}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase text-[#047857]">
+                          {item.aptitude_status || item.status}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#5B6B66] mt-1 truncate">
+                        {item.service_family} · {item.location}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <form onSubmit={handleOpportunitySubmit} className="space-y-4" noValidate>
               <div className="grid gap-4 sm:grid-cols-2">

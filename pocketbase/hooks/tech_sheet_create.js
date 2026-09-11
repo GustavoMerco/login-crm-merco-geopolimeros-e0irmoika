@@ -1,5 +1,6 @@
 onRecordCreateRequest((e) => {
   const record = e.record
+  const body = e.requestInfo().body || {}
 
   const writeRejectedAudit = (reason) => {
     const rejectedAudit = new Record($app.findCollectionByNameOrId('audit_logs'))
@@ -32,20 +33,9 @@ onRecordCreateRequest((e) => {
     )
   }
 
-  let rawParameters = record.get('parameters')
-  $app
-    .logger()
-    .error(
-      'tech_sheet_debug_parameters',
-      'type',
-      typeof rawParameters,
-      'isArray',
-      Array.isArray(rawParameters),
-      'length',
-      String(rawParameters && rawParameters.length),
-      'json',
-      JSON.stringify(rawParameters).slice(0, 200),
-    )
+  // O campo JSON chega como bytes brutos via record.get; o corpo da requisição
+  // traz o valor já interpretado (array em JSON, string em multipart).
+  let rawParameters = body.parameters !== undefined ? body.parameters : record.get('parameters')
   if (typeof rawParameters === 'string') {
     try {
       rawParameters = JSON.parse(rawParameters)
@@ -106,7 +96,8 @@ onRecordCreateRequest((e) => {
   }
 
   let pendingItems = []
-  const rawPending = record.get('pending_items')
+  const rawPending =
+    body.pending_items !== undefined ? body.pending_items : record.get('pending_items')
   if (rawPending !== undefined && rawPending !== null && rawPending !== '') {
     let parsedPending = rawPending
     if (typeof parsedPending === 'string') {

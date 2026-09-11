@@ -6,8 +6,8 @@
 - etapa: aguardando_teste_humano
 - autorizacao_implementacao: confirmada em 2026-09-11 17:48 - "Sim, implementar a T1.5"
 - teste_humano: pendente
-- verificacao_automatica: passou - QA SKIP 0.0.16; upload migrado para o fluxo nativo do PocketBase com validação server-side no hook de requisição; migration 0007 aplicada; build, análise estática, integrações e testes passaram
+- verificacao_automatica: passou - QA SKIP 0.0.20; GREEN comprovado via API real: v1 criada (201), alteração gerou v2 com versão calculada server-side, multipart com anexo salvo (v3), histórico listado por listRule; dados sintéticos de teste removidos pela migration 0008
 - aprendizado: pendente
-- ultima_acao: segunda correção de debug concluída com troca de estratégia de upload
-- proxima_acao: aguardar novo teste humano da ficha técnica no preview
-- atualizado_em: 2026-09-11T18:42:00-03:00
+- ultima_acao: causa raiz confirmada (campo JSON chega como bytes brutos via record.get; getString devolve o texto JSON) e corrigida
+- proxima_acao: aguardar teste humano da ficha técnica no preview
+- atualizado_em: 2026-09-11T19:20:00-03:00

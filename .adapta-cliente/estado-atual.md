@@ -6,8 +6,8 @@
 - etapa: em_correcao
 - autorizacao_implementacao: confirmada em 2026-09-11 15:27 - "Sim"
 - teste_humano: pendente
-- verificacao_automatica: falhou - demandas persistidas, mas dashboard não lista opportunities existentes; apenas mantém a última criação em memória
+- verificacao_automatica: falhou - teste humano encontrou "The requested resource wasn't found" após a correção da listagem/aptidão
 - aprendizado: pendente
-- ultima_acao: causa raiz confirmada: ausência de consulta/listagem de opportunities no frontend
-- proxima_acao: adicionar serviço de listagem, carregar demandas autenticadas e permitir seleção para avaliação
-- atualizado_em: 2026-09-11T15:56:00-03:00
+- ultima_acao: falha reportada pelo champion; diagnóstico iniciado
+- proxima_acao: identificar se o 404 vem da listagem ou da avaliação de aptidão
+- atualizado_em: 2026-09-11T16:03:00-03:00

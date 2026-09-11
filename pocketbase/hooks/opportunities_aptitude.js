@@ -1,9 +1,14 @@
 routerAdd(
   'POST',
-  '/backend/v1/opportunities/{id}/aptitude',
+  '/backend/v1/opportunities/aptitude',
   (e) => {
-    const id = e.request.pathValue('id')
     const body = e.requestInfo().body || {}
+    const id = typeof body.id === 'string' ? body.id.trim() : ''
+
+    if (!id) {
+      return e.badRequestError('Informe a oportunidade a ser avaliada.')
+    }
+
     const opportunity = $app.findRecordById('opportunities', id)
 
     if (opportunity.getString('responsible_user_id') !== e.auth.id) {

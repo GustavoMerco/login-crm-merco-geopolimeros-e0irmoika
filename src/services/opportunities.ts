@@ -65,9 +65,10 @@ export const evaluateOpportunityAptitude = (
   id: string,
   options?: { allowException?: boolean; exceptionJustification?: string },
 ) =>
-  pb.send<AptitudeResult>(`/backend/v1/opportunities/${id}/aptitude`, {
+  pb.send<AptitudeResult>('/backend/v1/opportunities/aptitude', {
     method: 'POST',
     body: JSON.stringify({
+      id,
       allow_exception: options?.allowException ?? false,
       exception_justification: options?.exceptionJustification,
     }),

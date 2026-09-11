@@ -1,13 +1,13 @@
 # Debug Summary — T1.4 — 2026-09-11
 
-**Problema:** o primeiro QA da T1.4 falhou no build porque `createOpportunity` deixou de ser exportada ao atualizar `src/services/opportunities.ts`.
+**Problema:** demandas criadas não apareciam para o usuário no dashboard.
 
-**Reprodução:** QA SKIP 0.0.8; build falhou com `[MISSING_EXPORT] createOpportunity is not exported` em `src/pages/Dashboard.tsx`.
+**Reprodução:** o backend possuía a collection `opportunities` e registros persistidos, mas `Dashboard.tsx` só mantinha `createdOpportunity` em memória e não executava nenhuma consulta/listagem de oportunidades.
 
-**Causa raiz:** a atualização do serviço adicionou `evaluateOpportunityAptitude` substituindo o conteúdo anterior, em vez de preservar a exportação de cadastro da T1.3.
+**Causa raiz:** ausência de serviço frontend para listar `opportunities` e ausência de componente de lista; o cadastro funcionava, mas a tela não recarregava nem mostrava registros existentes.
 
-**Correção:** restauração de `CreateOpportunityInput`, `CreatedOpportunity` e `createOpportunity`, mantendo o novo serviço de avaliação.
+**Correção:** adicionada `getOpportunities()` com consulta paginada/autenticada, lista de demandas no dashboard, atualização após novo cadastro e seleção de uma oportunidade persistida para avaliação de aptidão.
 
-**Verificação:** QA SKIP 0.0.9 passou; após correção da migration, QA SKIP 0.0.10 passou. Migration `0005_add_opportunity_aptitude` aplicada e campos de aptidão confirmados no schema ativo.
+**Verificação:** QA SKIP 0.0.11 passou; acesso direto não autenticado não expôs dados; collection mantém leitura restrita ao responsável autenticado.
 
-**Limitação:** chamada sem sessão para ID fictício retornou 404 por recurso inexistente; não foi usada como prova de autorização. O fluxo autenticado com oportunidade válida permanece no teste humano.
+**Gate:** aguardando novo teste humano do dashboard/listagem e avaliação.

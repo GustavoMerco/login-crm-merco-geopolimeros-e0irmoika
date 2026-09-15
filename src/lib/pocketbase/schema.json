@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T22:32:05.593Z",
+  "generatedAt": "2026-09-15T22:47:45.685Z",
   "collections": [
     {
       "name": "users",
@@ -1169,6 +1169,94 @@
       "indexes": [
         "CREATE INDEX idx_source_audits_author ON source_audits (created_by)",
         "CREATE INDEX idx_source_audits_system ON source_audits (system)"
+      ]
+    },
+    {
+      "name": "backup_receipts",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "kind",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "backup",
+            "restauracao",
+            "exportacao"
+          ]
+        },
+        {
+          "name": "result",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "sucesso",
+            "falha"
+          ]
+        },
+        {
+          "name": "payload_hash",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "expected_hash",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "counts",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "error_detail",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "origin",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "manual",
+            "agendado"
+          ]
+        },
+        {
+          "name": "created_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_backup_receipts_author ON backup_receipts (created_by)",
+        "CREATE INDEX idx_backup_receipts_kind ON backup_receipts (kind, result)"
       ]
     }
   ]

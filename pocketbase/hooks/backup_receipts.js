@@ -4,6 +4,8 @@ routerAdd(
   (e) => {
     // Toda lógica inline no callback: o JSVM do PocketBase não expõe
     // declarações top-level ao callback (Hook scoping error).
+    // O hash cobre apenas o CONTEÚDO (ids + updated), nunca o momento da
+    // geração - caso contrário o hash seria instável e a verificação falharia.
     const SNAPSHOT_COLLECTIONS = [
       'opportunities',
       'tech_sheets',
@@ -30,8 +32,13 @@ routerAdd(
       }
       parts.push(name + ':' + JSON.stringify(rows))
     }
-    const payload = JSON.stringify({ generatedAt: new Date().toISOString(), counts })
-    const hash = $security.sha256(payload + '|' + parts.join('|'))
+    const contentFingerprint = parts.join('|')
+    const hash = $security.sha256(contentFingerprint)
+    const payload = JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      contentFingerprint,
+      counts,
+    })
 
     $app.runInTransaction((txApp) => {
       const receipt = new Record(txApp.findCollectionByNameOrId('backup_receipts'))
@@ -89,8 +96,7 @@ routerAdd(
       }
       parts.push(name + ':' + JSON.stringify(rows))
     }
-    const payload = JSON.stringify({ generatedAt: new Date().toISOString(), counts })
-    const hash = $security.sha256(payload + '|' + parts.join('|'))
+    const hash = $security.sha256(parts.join('|'))
 
     const expectedHash = typeof body.hash === 'string' ? body.hash.trim() : ''
     const matches = expectedHash === hash
@@ -163,8 +169,7 @@ routerAdd(
       }
       parts.push(name + ':' + JSON.stringify(rows))
     }
-    const payload = JSON.stringify({ generatedAt: new Date().toISOString(), counts })
-    const hash = $security.sha256(payload + '|' + parts.join('|'))
+    const hash = $security.sha256(parts.join('|'))
 
     const expectedHash = typeof body.hash === 'string' ? body.hash.trim() : ''
 

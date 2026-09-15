@@ -51,6 +51,12 @@ import {
   type GateRecord,
   type GateStatusResponse,
 } from '@/services/gates'
+import {
+  createSourceAudit,
+  getSourceAuditMatrix,
+  updateSourceDecision,
+  type SourceAuditMatrixItem,
+} from '@/services/sourceAudits'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -59,6 +65,7 @@ import {
   Boxes,
   CheckCircle2,
   ClipboardPlus,
+  DatabaseZap,
   FileText,
   LockKeyhole,
   LogOut,
@@ -195,6 +202,30 @@ export const Dashboard: React.FC = () => {
   const [escalateNote, setEscalateNote] = useState('')
   const [resolveTarget, setResolveTarget] = useState<string | null>(null)
   const [resolveText, setResolveText] = useState('')
+  const [sourceMatrix, setSourceMatrix] = useState<SourceAuditMatrixItem[]>([])
+  const [sourceForm, setSourceForm] = useState({
+    system: 'vobi' as 'vobi' | 'omie',
+    coverage: '',
+    source_of_truth: '',
+    access_method: 'manual' as 'manual' | 'exportacao' | 'api',
+    fields_available: '',
+    gaps: '',
+    decision: 'importar' as 'integrar' | 'importar' | 'nao_usar',
+    decision_reason: '',
+    decision_owner: '',
+    decision_date: '',
+  })
+  const [sourceError, setSourceError] = useState<string | null>(null)
+  const [sourceInfo, setSourceInfo] = useState<string | null>(null)
+  const [isSubmittingSource, setIsSubmittingSource] = useState(false)
+  const [isLoadingSource, setIsLoadingSource] = useState(true)
+  const [sourceDecideTarget, setSourceDecideTarget] = useState<string | null>(null)
+  const [sourceDecideForm, setSourceDecideForm] = useState({
+    decision: 'importar' as 'integrar' | 'importar' | 'nao_usar',
+    decision_reason: '',
+    decision_owner: '',
+    decision_date: '',
+  })
 
   useEffect(() => {
     let active = true
@@ -787,6 +818,99 @@ export const Dashboard: React.FC = () => {
     }
   }
 
+  const loadSourceAudits = async () => {
+    setIsLoadingSource(true)
+    try {
+      const result = await getSourceAuditMatrix()
+      setSourceMatrix(result.matrix)
+      setSourceError(null)
+    } catch (error: unknown) {
+      setSourceError(getErrorMessage(error))
+    } finally {
+      setIsLoadingSource(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadSourceAudits()
+  }, [])
+
+  const handleSourceChange = (field: keyof typeof sourceForm, value: string) => {
+    setSourceForm((current) => ({ ...current, [field]: value }))
+    setSourceError(null)
+    setSourceInfo(null)
+  }
+
+  const handleSourceSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setSourceError(null)
+    setSourceInfo(null)
+    setIsSubmittingSource(true)
+    try {
+      await createSourceAudit({
+        system: sourceForm.system,
+        coverage: sourceForm.coverage.trim(),
+        source_of_truth: sourceForm.source_of_truth.trim(),
+        access_method: sourceForm.access_method,
+        fields_available: sourceForm.fields_available.trim() || undefined,
+        gaps: sourceForm.gaps.trim() || undefined,
+        decision: sourceForm.decision,
+        decision_reason: sourceForm.decision_reason.trim(),
+        decision_owner: sourceForm.decision_owner.trim(),
+        decision_date: sourceForm.decision_date,
+      })
+      setSourceInfo('Auditoria registrada com decisão de fonte.')
+      setSourceForm({
+        system: 'vobi',
+        coverage: '',
+        source_of_truth: '',
+        access_method: 'manual',
+        fields_available: '',
+        gaps: '',
+        decision: 'importar',
+        decision_reason: '',
+        decision_owner: '',
+        decision_date: '',
+      })
+      await loadSourceAudits()
+    } catch (error: unknown) {
+      setSourceError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingSource(false)
+    }
+  }
+
+  const handleSourceDecide = async (auditId: string) => {
+    setSourceError(null)
+    setSourceInfo(null)
+    if (sourceDecideForm.decision_reason.trim().length < 10) {
+      setSourceError('A nova decisão exige justificativa (pelo menos 10 caracteres).')
+      return
+    }
+    setIsSubmittingSource(true)
+    try {
+      await updateSourceDecision(auditId, {
+        decision: sourceDecideForm.decision,
+        decision_reason: sourceDecideForm.decision_reason.trim(),
+        decision_owner: sourceDecideForm.decision_owner.trim(),
+        decision_date: sourceDecideForm.decision_date,
+      })
+      setSourceInfo('Decisão de fonte atualizada; histórico preservado.')
+      setSourceDecideTarget(null)
+      setSourceDecideForm({
+        decision: 'importar',
+        decision_reason: '',
+        decision_owner: '',
+        decision_date: '',
+      })
+      await loadSourceAudits()
+    } catch (error: unknown) {
+      setSourceError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingSource(false)
+    }
+  }
+
   const formatDuration = (ms: number) => {
     if (!ms) return 'sem amostra'
     const hours = ms / 3600000
@@ -1263,6 +1387,338 @@ export const Dashboard: React.FC = () => {
             </form>
           </section>
         </div>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <DatabaseZap className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Auditoria VOBI/OMIE</h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                Cobertura, fonte de verdade, forma de acesso e decisão de fonte (integrar, importar
+                ou não usar) — auditada antes de qualquer duplicação ou integração.
+              </p>
+            </div>
+          </div>
+
+          {sourceError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{sourceError}</span>
+            </div>
+          )}
+
+          {sourceInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {sourceInfo}
+            </div>
+          )}
+
+          <div className="mb-6 grid gap-3 sm:grid-cols-2">
+            {sourceMatrix.map((item) => (
+              <div
+                key={item.system}
+                className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4"
+              >
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-[14px] font-bold text-[#0F1F1C] uppercase">
+                    {item.system === 'vobi' ? 'VOBI' : 'OMIE'}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                      item.decision === 'integrar'
+                        ? 'bg-[#ECFDF5] text-[#047857]'
+                        : item.decision === 'importar'
+                          ? 'bg-[#EFF6FF] text-[#1D4ED8]'
+                          : item.decision === 'nao_usar'
+                            ? 'bg-[#FFF7ED] text-[#C2410C]'
+                            : 'bg-[#F1F5F4] text-[#5B6B66]'
+                    }`}
+                  >
+                    {item.decision === 'nao_auditado'
+                      ? 'não auditado'
+                      : item.decision.replace('_', ' ')}
+                  </span>
+                </div>
+                {item.decision !== 'nao_auditado' && (
+                  <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66]">
+                    <span>Cobertura: {item.coverage}</span>
+                    <span>Fonte de verdade: {item.sourceOfTruth}</span>
+                    <span>Acesso: {item.accessMethod}</span>
+                    {item.fieldsAvailable && <span>Campos: {item.fieldsAvailable}</span>}
+                    <span>
+                      Decisão: {item.decision?.replace('_', ' ')} em {item.decisionDate} por{' '}
+                      {item.decisionOwner}
+                    </span>
+                    <span>Justificativa: {item.decisionReason}</span>
+                    {item.gaps && <span>Histórico/lacunas: {item.gaps}</span>}
+                  </div>
+                )}
+                {item.id && canHomologateCatalog && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSourceDecideTarget(item.id ?? null)
+                      setSourceDecideForm({
+                        decision:
+                          item.decision === 'integrar'
+                            ? 'integrar'
+                            : item.decision === 'nao_usar'
+                              ? 'nao_usar'
+                              : 'importar',
+                        decision_reason: '',
+                        decision_owner: '',
+                        decision_date: '',
+                      })
+                    }}
+                    disabled={isSubmittingSource}
+                    className="mt-2 h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                  >
+                    Atualizar decisão
+                  </button>
+                )}
+                {item.id && sourceDecideTarget === item.id && (
+                  <div className="mt-2 space-y-2 pt-2 border-t border-[#E1E8E5]">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                        Nova decisão *
+                        <select
+                          value={sourceDecideForm.decision}
+                          onChange={(event) =>
+                            setSourceDecideForm((current) => ({
+                              ...current,
+                              decision: event.target.value as 'integrar' | 'importar' | 'nao_usar',
+                            }))
+                          }
+                          className="mt-1.5 w-full h-[36px] rounded-[8px] border border-[#E1E8E5] bg-white px-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                        >
+                          <option value="integrar">Integrar</option>
+                          <option value="importar">Importar</option>
+                          <option value="nao_usar">Não usar</option>
+                        </select>
+                      </label>
+                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                        Dono *
+                        <input
+                          value={sourceDecideForm.decision_owner}
+                          onChange={(event) =>
+                            setSourceDecideForm((current) => ({
+                              ...current,
+                              decision_owner: event.target.value,
+                            }))
+                          }
+                          className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          placeholder="Quem decide"
+                        />
+                      </label>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                        Data *
+                        <input
+                          type="date"
+                          value={sourceDecideForm.decision_date}
+                          onChange={(event) =>
+                            setSourceDecideForm((current) => ({
+                              ...current,
+                              decision_date: event.target.value,
+                            }))
+                          }
+                          className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                        />
+                      </label>
+                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                        Justificativa *
+                        <input
+                          minLength={10}
+                          maxLength={1000}
+                          value={sourceDecideForm.decision_reason}
+                          onChange={(event) =>
+                            setSourceDecideForm((current) => ({
+                              ...current,
+                              decision_reason: event.target.value,
+                            }))
+                          }
+                          className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          placeholder="Por que a decisão mudou"
+                        />
+                      </label>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void handleSourceDecide(item.id ?? '')}
+                        disabled={
+                          isSubmittingSource ||
+                          sourceDecideForm.decision_reason.trim().length < 10 ||
+                          !sourceDecideForm.decision_owner.trim() ||
+                          !sourceDecideForm.decision_date
+                        }
+                        className="h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                      >
+                        Confirmar decisão
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSourceDecideTarget(null)}
+                        className="h-[30px] px-3 rounded-[8px] bg-white border border-[#E1E8E5] text-[#5B6B66] text-[11px] font-semibold"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <form onSubmit={handleSourceSubmit} className="space-y-4" noValidate>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Sistema *
+                <select
+                  value={sourceForm.system}
+                  onChange={(event) => handleSourceChange('system', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                >
+                  <option value="vobi">VOBI</option>
+                  <option value="omie">OMIE</option>
+                </select>
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Forma de acesso *
+                <select
+                  value={sourceForm.access_method}
+                  onChange={(event) => handleSourceChange('access_method', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                >
+                  <option value="manual">Manual</option>
+                  <option value="exportacao">Exportação</option>
+                  <option value="api">API</option>
+                </select>
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Decisão de fonte *
+                <select
+                  value={sourceForm.decision}
+                  onChange={(event) => handleSourceChange('decision', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                >
+                  <option value="integrar">Integrar</option>
+                  <option value="importar">Importar</option>
+                  <option value="nao_usar">Não usar</option>
+                </select>
+              </label>
+            </div>
+
+            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              Cobertura *
+              <input
+                required
+                maxLength={1000}
+                value={sourceForm.coverage}
+                onChange={(event) => handleSourceChange('coverage', event.target.value)}
+                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                placeholder="O que o sistema cobre hoje no processo"
+              />
+            </label>
+
+            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              Fonte de verdade *
+              <input
+                required
+                maxLength={500}
+                value={sourceForm.source_of_truth}
+                onChange={(event) => handleSourceChange('source_of_truth', event.target.value)}
+                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                placeholder="Qual dado vem daqui (ex.: orçamentos, clientes)"
+              />
+            </label>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Campos disponíveis
+                <input
+                  maxLength={2000}
+                  value={sourceForm.fields_available}
+                  onChange={(event) => handleSourceChange('fields_available', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Campos relevantes que o sistema exporta"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Lacunas
+                <input
+                  maxLength={2000}
+                  value={sourceForm.gaps}
+                  onChange={(event) => handleSourceChange('gaps', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="O que falta ou não é confiável"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Justificativa da decisão *
+                <input
+                  required
+                  minLength={10}
+                  maxLength={1000}
+                  value={sourceForm.decision_reason}
+                  onChange={(event) => handleSourceChange('decision_reason', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Por que integrar, importar ou não usar"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Dono da decisão *
+                <input
+                  required
+                  maxLength={200}
+                  value={sourceForm.decision_owner}
+                  onChange={(event) => handleSourceChange('decision_owner', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Quem decide"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Data da decisão *
+                <input
+                  required
+                  type="date"
+                  value={sourceForm.decision_date}
+                  onChange={(event) => handleSourceChange('decision_date', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                />
+              </label>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-[12px] text-[#5B6B66]">
+                Auditoria incompleta é negada (RED-011); a decisão é auditada e o histórico é
+                preservado.
+              </p>
+              <button
+                type="submit"
+                disabled={isSubmittingSource}
+                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+              >
+                <DatabaseZap className="w-4 h-4" />
+                {isSubmittingSource ? 'Registrando...' : 'Registrar auditoria'}
+              </button>
+            </div>
+          </form>
+        </section>
 
         <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">

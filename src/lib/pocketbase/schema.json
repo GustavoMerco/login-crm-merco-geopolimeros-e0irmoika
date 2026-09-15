@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T22:22:49.407Z",
+  "generatedAt": "2026-09-15T22:31:41.577Z",
   "collections": [
     {
       "name": "users",
@@ -1052,6 +1052,123 @@
       ],
       "indexes": [
         "CREATE INDEX idx_gate_escalations_gate ON gate_escalations (gate)"
+      ]
+    },
+    {
+      "name": "source_audits",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "system",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "vobi",
+            "omie"
+          ]
+        },
+        {
+          "name": "coverage",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "source_of_truth",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "access_method",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "manual",
+            "exportacao",
+            "api"
+          ]
+        },
+        {
+          "name": "fields_available",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "gaps",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "decision",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "integrar",
+            "importar",
+            "nao_usar"
+          ]
+        },
+        {
+          "name": "decision_reason",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "decision_owner",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "decision_date",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_source_audits_author ON source_audits (created_by)",
+        "CREATE INDEX idx_source_audits_system ON source_audits (system)"
       ]
     }
   ]

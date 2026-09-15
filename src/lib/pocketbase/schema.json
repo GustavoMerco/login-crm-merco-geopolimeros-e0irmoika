@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T22:14:21.046Z",
+  "generatedAt": "2026-09-15T17:29:45.612Z",
   "collections": [
     {
       "name": "users",
@@ -367,6 +367,161 @@
       "indexes": [
         "CREATE UNIQUE INDEX idx_tech_sheets_opportunity_version ON tech_sheets (opportunity_id, version)",
         "CREATE INDEX idx_tech_sheets_opportunity ON tech_sheets (opportunity_id)"
+      ]
+    },
+    {
+      "name": "opportunity_events",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && opportunity_id.responsible_user_id = @request.auth.id",
+        "view": "@request.auth.id != '' && opportunity_id.responsible_user_id = @request.auth.id",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "opportunity_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "opportunities"
+        },
+        {
+          "name": "milestone",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "received",
+            "apt",
+            "ready",
+            "sent"
+          ]
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "occurred_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_opportunity_events_unique ON opportunity_events (opportunity_id, milestone)",
+        "CREATE INDEX idx_opportunity_events_opportunity ON opportunity_events (opportunity_id)"
+      ]
+    },
+    {
+      "name": "active_time_entries",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (opportunity_id.responsible_user_id = @request.auth.id || user_id = @request.auth.id)",
+        "view": "@request.auth.id != '' && (opportunity_id.responsible_user_id = @request.auth.id || user_id = @request.auth.id)",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "opportunity_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "opportunities"
+        },
+        {
+          "name": "user_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "stage",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "qualificacao",
+            "portal",
+            "ficha_tecnica",
+            "revisao",
+            "outro"
+          ]
+        },
+        {
+          "name": "started_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ended_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "pause_reason",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_time_entries_opportunity ON active_time_entries (opportunity_id)",
+        "CREATE INDEX idx_time_entries_user ON active_time_entries (user_id)"
       ]
     }
   ]

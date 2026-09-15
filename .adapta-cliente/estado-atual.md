@@ -1,13 +1,13 @@
 # Estado atual — Adapta Cliente
 
-- task_id: T1.5
+- task_id: T1.6
 - champion: Paulo Romeiro
-- spec: 04_fase-atual/specs/SPEC-1-003.md
-- etapa: aguardando_teste_humano
-- autorizacao_implementacao: confirmada em 2026-09-11 17:48 - "Sim, implementar a T1.5"
+- spec: 04_fase-atual/specs/SPEC-1-004.md
+- etapa: aguardando_autorizacao
+- autorizacao_implementacao: ausente
 - teste_humano: pendente
-- verificacao_automatica: passou - QA SKIP 0.0.20; GREEN comprovado via API real: v1 criada (201), alteração gerou v2 com versão calculada server-side, multipart com anexo salvo (v3), histórico listado por listRule; dados sintéticos de teste removidos pela migration 0008
+- verificacao_automatica: pendente - análise concluída; nenhuma alteração de produto executada
 - aprendizado: pendente
-- ultima_acao: causa raiz confirmada (campo JSON chega como bytes brutos via record.get; getString devolve o texto JSON) e corrigida
-- proxima_acao: aguardar teste humano da ficha técnica no preview
-- atualizado_em: 2026-09-11T19:20:00-03:00
+- ultima_acao: análise profunda da T1.6 (SPEC-1-004, TDD RED/GREEN-006, RF-23, RN-11/RN-12, coleções e hooks existentes) concluída
+- proxima_acao: aguardar autorização para implementar
+- atualizado_em: 2026-09-15T14:20:00-03:00

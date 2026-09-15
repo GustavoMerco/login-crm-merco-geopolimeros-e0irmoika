@@ -17,6 +17,15 @@ import {
   type TechSheetParameter,
   type TechSheetRecord,
 } from '@/services/techSheets'
+import {
+  getOpportunityEvents,
+  getTimeEntries,
+  recordMilestone,
+  startTimeEntry,
+  stopTimeEntry,
+  type OpportunityEventRecord,
+  type ActiveTimeEntryRecord,
+} from '@/services/tracking'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -29,6 +38,7 @@ import {
   LogOut,
   MapPin,
   ShieldCheck,
+  Timer,
   User as UserIcon,
 } from 'lucide-react'
 
@@ -78,6 +88,14 @@ export const Dashboard: React.FC = () => {
   const [techSheetCreated, setTechSheetCreated] = useState<{ version: number } | null>(null)
   const [isSubmittingTechSheet, setIsSubmittingTechSheet] = useState(false)
   const [isLoadingTechSheets, setIsLoadingTechSheets] = useState(false)
+  const [events, setEvents] = useState<OpportunityEventRecord[]>([])
+  const [timeEntries, setTimeEntries] = useState<ActiveTimeEntryRecord[]>([])
+  const [openTimeEntry, setOpenTimeEntry] = useState<ActiveTimeEntryRecord | null>(null)
+  const [timeStage, setTimeStage] = useState('qualificacao')
+  const [pauseReason, setPauseReason] = useState('')
+  const [trackingError, setTrackingError] = useState<string | null>(null)
+  const [trackingInfo, setTrackingInfo] = useState<string | null>(null)
+  const [isSubmittingTracking, setIsSubmittingTracking] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -268,6 +286,74 @@ export const Dashboard: React.FC = () => {
       setTechSheetError(getErrorMessage(error))
     } finally {
       setIsSubmittingTechSheet(false)
+    }
+  }
+
+  const loadTracking = async (targetId: string) => {
+    setIsSubmittingTracking(false)
+    try {
+      const [eventsResult, entriesResult] = await Promise.all([
+        getOpportunityEvents(targetId),
+        getTimeEntries(targetId),
+      ])
+      setEvents(eventsResult)
+      setTimeEntries(entriesResult)
+      const open = entriesResult.find((entry) => !entry.ended_at) || null
+      setOpenTimeEntry(open)
+      setTrackingError(null)
+    } catch (error: unknown) {
+      setEvents([])
+      setTimeEntries([])
+      setOpenTimeEntry(null)
+      setTrackingError(getErrorMessage(error))
+    }
+  }
+
+  const handleRecordMilestone = async (milestone: 'ready' | 'sent') => {
+    const targetId = selectedOpportunityId || createdOpportunity?.id
+    if (!targetId) return
+
+    setTrackingError(null)
+    setTrackingInfo(null)
+    setIsSubmittingTracking(true)
+    try {
+      const result = await recordMilestone(targetId, milestone)
+      setTrackingInfo(
+        `Marco "${milestone === 'ready' ? 'pronta' : 'enviada'}" registrado às ${result.occurredAt}.`,
+      )
+      await loadTracking(targetId)
+    } catch (error: unknown) {
+      setTrackingError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingTracking(false)
+    }
+  }
+
+  const handleStartStopTime = async () => {
+    const targetId = selectedOpportunityId || createdOpportunity?.id
+    if (!targetId) return
+
+    setTrackingError(null)
+    setTrackingInfo(null)
+    setIsSubmittingTracking(true)
+    try {
+      if (openTimeEntry) {
+        if (pauseReason.trim().length < 3) {
+          setTrackingError('A justificativa da pausa é obrigatória para encerrar o tempo.')
+          return
+        }
+        const result = await stopTimeEntry(openTimeEntry.id, pauseReason.trim())
+        setTrackingInfo(`Tempo encerrado às ${result.endedAt}.`)
+        setPauseReason('')
+      } else {
+        const result = await startTimeEntry(targetId, timeStage)
+        setTrackingInfo(`Tempo iniciado às ${result.startedAt} (etapa: ${result.stage}).`)
+      }
+      await loadTracking(targetId)
+    } catch (error: unknown) {
+      setTrackingError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingTracking(false)
     }
   }
 
@@ -574,7 +660,11 @@ export const Dashboard: React.FC = () => {
                         setAptitudeError(null)
                         setTechSheetCreated(null)
                         setTechSheetError(null)
+                        setTrackingError(null)
+                        setTrackingInfo(null)
+                        setPauseReason('')
                         void loadTechSheets(item.id)
+                        void loadTracking(item.id)
                       }}
                       className={`w-full rounded-[9px] border p-3 text-left transition-colors ${
                         selectedOpportunityId === item.id
@@ -735,6 +825,166 @@ export const Dashboard: React.FC = () => {
             </form>
           </section>
         </div>
+
+        {createdOpportunity && (
+          <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+            <div className="flex items-start gap-3 mb-6">
+              <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+                <Timer className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-extrabold text-[#0F1F1C]">Marcos e tempo</h2>
+                <p className="text-[13px] text-[#5B6B66] mt-1">
+                  Timeline com timestamps do servidor e tempo ativo por etapa; a pausa exige
+                  justificativa.
+                </p>
+              </div>
+            </div>
+
+            {trackingError && (
+              <div
+                className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+                role="alert"
+                aria-live="assertive"
+              >
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{trackingError}</span>
+              </div>
+            )}
+
+            {trackingInfo && (
+              <div
+                className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+                role="status"
+                aria-live="polite"
+              >
+                {trackingInfo}
+              </div>
+            )}
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+                <h3 className="text-[14px] font-bold text-[#0F1F1C] mb-3">Timeline de marcos</h3>
+                {events.length === 0 ? (
+                  <p className="text-[12px] text-[#5B6B66]">
+                    Nenhum marco registrado para esta oportunidade.
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {events.map((event) => (
+                      <li key={event.id} className="flex items-start gap-2">
+                        <span
+                          className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${
+                            event.milestone === 'sent'
+                              ? 'bg-[#10B981]'
+                              : event.milestone === 'ready'
+                                ? 'bg-[#059669]'
+                                : event.milestone === 'apt'
+                                  ? 'bg-[#0EA5E9]'
+                                  : 'bg-[#5B6B66]'
+                          }`}
+                        />
+                        <div>
+                          <p className="text-[12px] font-semibold text-[#0F1F1C]">
+                            {event.milestone === 'received'
+                              ? 'Recebida'
+                              : event.milestone === 'apt'
+                                ? 'Apta'
+                                : event.milestone === 'ready'
+                                  ? 'Pronta'
+                                  : 'Enviada'}
+                            <span className="font-normal text-[#5B6B66]">
+                              {' '}
+                              · {event.occurred_at}
+                            </span>
+                          </p>
+                          {event.note && <p className="text-[11px] text-[#5B6B66]">{event.note}</p>}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleRecordMilestone('ready')}
+                    disabled={isSubmittingTracking}
+                    className="h-[34px] px-3 rounded-[9px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                  >
+                    Marcar pronta
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleRecordMilestone('sent')}
+                    disabled={isSubmittingTracking}
+                    className="h-[34px] px-3 rounded-[9px] bg-[#10B981] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                  >
+                    Marcar enviada
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+                <h3 className="text-[14px] font-bold text-[#0F1F1C] mb-3">Tempo ativo</h3>
+                {timeEntries.length === 0 ? (
+                  <p className="text-[12px] text-[#5B6B66]">
+                    Nenhum registro de tempo para esta oportunidade.
+                  </p>
+                ) : (
+                  <ul className="space-y-2 max-h-40 overflow-y-auto">
+                    {timeEntries.map((entry) => (
+                      <li key={entry.id} className="text-[11px] text-[#5B6B66]">
+                        <span className="font-semibold text-[#0F1F1C]">{entry.stage}</span> · início{' '}
+                        {entry.started_at}
+                        {entry.ended_at ? ` · fim ${entry.ended_at}` : ' · em andamento'}
+                        {entry.pause_reason && ` · pausa: ${entry.pause_reason}`}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="mt-4 space-y-2">
+                  <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                    Etapa
+                    <select
+                      value={timeStage}
+                      onChange={(event) => setTimeStage(event.target.value)}
+                      disabled={!!openTimeEntry}
+                      className="mt-1 w-full h-[38px] rounded-[9px] border border-[#E1E8E5] bg-white px-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15 disabled:opacity-60"
+                    >
+                      <option value="qualificacao">Qualificação</option>
+                      <option value="portal">Portal</option>
+                      <option value="ficha_tecnica">Ficha técnica</option>
+                      <option value="revisao">Revisão</option>
+                      <option value="outro">Outro</option>
+                    </select>
+                  </label>
+                  {openTimeEntry && (
+                    <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                      Justificativa da pausa *
+                      <textarea
+                        maxLength={500}
+                        value={pauseReason}
+                        onChange={(event) => setPauseReason(event.target.value)}
+                        className="mt-1 w-full min-h-[60px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                        placeholder="Ex.: aguardando retorno do cliente"
+                      />
+                    </label>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void handleStartStopTime()}
+                    disabled={isSubmittingTracking}
+                    className={`h-[34px] px-3 rounded-[9px] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none ${
+                      openTimeEntry ? 'bg-[#EA580C]' : 'bg-[#0EA5E9]'
+                    }`}
+                  >
+                    {openTimeEntry ? 'Encerrar tempo com justificativa' : 'Iniciar tempo'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {createdOpportunity && (
           <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">

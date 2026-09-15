@@ -76,6 +76,15 @@ routerAdd(
       })
       audit.set('retention_days', 365)
       txApp.save(audit)
+
+      if (aptitudeStatus === 'apt' || aptitudeStatus === 'exception_approved') {
+        const event = new Record(txApp.findCollectionByNameOrId('opportunity_events'))
+        event.set('opportunity_id', id)
+        event.set('milestone', 'apt')
+        event.set('occurred_at', evaluatedAt)
+        event.set('created_by', e.auth.id)
+        txApp.save(event)
+      }
     })
 
     return e.json(200, {

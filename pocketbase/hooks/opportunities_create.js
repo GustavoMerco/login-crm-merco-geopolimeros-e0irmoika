@@ -132,6 +132,13 @@ routerAdd(
       })
       audit.set('retention_days', 365)
       txApp.save(audit)
+
+      const event = new Record(txApp.findCollectionByNameOrId('opportunity_events'))
+      event.set('opportunity_id', opportunity.id)
+      event.set('milestone', 'received')
+      event.set('occurred_at', receivedAt)
+      event.set('created_by', e.auth.id)
+      txApp.save(event)
     })
 
     return e.json(201, {

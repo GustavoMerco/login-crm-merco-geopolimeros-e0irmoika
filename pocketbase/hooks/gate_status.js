@@ -1,26 +1,27 @@
-// Ordem de corte do PRD (seção 11) - somente leitura, nunca editável pela API.
-// "Não se cortam: baseline, catálogo homologado, memória de cálculo, aprovação,
-// documento completo, segurança ou auditoria."
-const CUT_ORDER = [
-  { position: 1, item: 'RF-28 - Assistência por IA', cuttable: true },
-  { position: 2, item: 'RF-15 - Múltiplos cenários além do cenário-base', cuttable: true },
-  {
-    position: 3,
-    item: 'Integrações em tempo real (preservando importação controlada)',
-    cuttable: true,
-  },
-  { position: 4, item: 'Motivo de perda analítico além do registro mínimo', cuttable: true },
-  {
-    position: 5,
-    item: 'Baseline, catálogo homologado, memória de cálculo, aprovação, documento completo, segurança e auditoria',
-    cuttable: false,
-  },
-]
-
 routerAdd(
   'GET',
   '/backend/v1/gates/status',
   (e) => {
+    // Ordem de corte do PRD (seção 11) - somente leitura, nunca editável pela API.
+    // "Não se cortam: baseline, catálogo homologado, memória de cálculo, aprovação,
+    // documento completo, segurança ou auditoria."
+    // Inline no callback: o JSVM do PocketBase não expõe declarações top-level.
+    const cutOrder = [
+      { position: 1, item: 'RF-28 - Assistência por IA', cuttable: true },
+      { position: 2, item: 'RF-15 - Múltiplos cenários além do cenário-base', cuttable: true },
+      {
+        position: 3,
+        item: 'Integrações em tempo real (preservando importação controlada)',
+        cuttable: true,
+      },
+      { position: 4, item: 'Motivo de perda analítico além do registro mínimo', cuttable: true },
+      {
+        position: 5,
+        item: 'Baseline, catálogo homologado, memória de cálculo, aprovação, documento completo, segurança e auditoria',
+        cuttable: false,
+      },
+    ]
+
     const gates = $app.findRecordsByFilter('gates_ledger', '', '-created', 200, 0)
     const today = new Date().toISOString().slice(0, 10)
 
@@ -49,7 +50,7 @@ routerAdd(
       })
     }
 
-    return e.json(200, { items, cutOrder: CUT_ORDER, today })
+    return e.json(200, { items, cutOrder, today })
   },
   $apis.requireAuth(),
 )

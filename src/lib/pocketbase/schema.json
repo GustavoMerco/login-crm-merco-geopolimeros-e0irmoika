@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T19:05:11.218Z",
+  "generatedAt": "2026-09-15T19:06:49.798Z",
   "collections": [
     {
       "name": "users",
@@ -574,31 +574,31 @@
         {
           "name": "volume",
           "type": "number",
-          "required": true,
+          "required": false,
           "system": false
         },
         {
           "name": "received_to_apt_ms",
           "type": "number",
-          "required": true,
+          "required": false,
           "system": false
         },
         {
           "name": "apt_to_ready_ms",
           "type": "number",
-          "required": true,
+          "required": false,
           "system": false
         },
         {
           "name": "ready_to_sent_ms",
           "type": "number",
-          "required": true,
+          "required": false,
           "system": false
         },
         {
           "name": "active_time_ms",
           "type": "number",
-          "required": true,
+          "required": false,
           "system": false
         },
         {

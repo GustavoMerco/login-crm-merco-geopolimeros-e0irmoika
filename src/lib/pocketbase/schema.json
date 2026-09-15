@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T21:50:42.166Z",
+  "generatedAt": "2026-09-15T22:10:58.062Z",
   "collections": [
     {
       "name": "users",
@@ -775,6 +775,135 @@
       "indexes": [
         "CREATE INDEX idx_catalog_author ON catalog_items (created_by)",
         "CREATE INDEX idx_catalog_family_status ON catalog_items (family, status)"
+      ]
+    },
+    {
+      "name": "pilot_params",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "param_type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "bdi",
+            "iss",
+            "margem",
+            "sla",
+            "alcada",
+            "arredondamento"
+          ]
+        },
+        {
+          "name": "family",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "value",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "unit",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "decision",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "rascunho",
+            "homologado",
+            "bloqueado"
+          ]
+        },
+        {
+          "name": "blocked_reason",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "blocked_owner",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "blocked_deadline",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "homologated_by",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "homologated_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_pilot_params_author ON pilot_params (created_by)",
+        "CREATE INDEX idx_pilot_params_type_family ON pilot_params (param_type, family, decision)"
       ]
     }
   ]

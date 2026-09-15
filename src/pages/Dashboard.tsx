@@ -34,6 +34,14 @@ import {
   homologateCatalogItem,
   type CatalogItemRecord,
 } from '@/services/catalog'
+import {
+  createPilotParam,
+  getPilotParams,
+  getPilotParamsStatus,
+  homologatePilotParam,
+  type ParamStatusResponse,
+  type PilotParamRecord,
+} from '@/services/pilotParams'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -46,6 +54,7 @@ import {
   LockKeyhole,
   LogOut,
   MapPin,
+  Scale,
   ShieldCheck,
   Snowflake,
   Timer,
@@ -138,6 +147,27 @@ export const Dashboard: React.FC = () => {
   const [isLoadingCatalog, setIsLoadingCatalog] = useState(true)
   const [deactivateTarget, setDeactivateTarget] = useState<string | null>(null)
   const [deactivateReason, setDeactivateReason] = useState('')
+  const [pilotParams, setPilotParams] = useState<PilotParamRecord[]>([])
+  const [paramStatus, setParamStatus] = useState<ParamStatusResponse | null>(null)
+  const [paramForm, setParamForm] = useState({
+    param_type: 'bdi' as 'bdi' | 'iss' | 'margem' | 'sla' | 'alcada' | 'arredondamento',
+    family: '',
+    value: '',
+    unit: '',
+    source: '',
+    decision: 'rascunho' as 'rascunho' | 'bloqueado',
+    blocked_reason: '',
+    blocked_owner: '',
+    blocked_deadline: '',
+    notes: '',
+  })
+  const [paramError, setParamError] = useState<string | null>(null)
+  const [paramInfo, setParamInfo] = useState<string | null>(null)
+  const [isSubmittingParam, setIsSubmittingParam] = useState(false)
+  const [isLoadingParams, setIsLoadingParams] = useState(true)
+  const [homologateParamTarget, setHomologateParamTarget] = useState<string | null>(null)
+  const [homologateParamValue, setHomologateParamValue] = useState('')
+  const [homologateParamUnit, setHomologateParamUnit] = useState('')
 
   useEffect(() => {
     let active = true
@@ -541,6 +571,103 @@ export const Dashboard: React.FC = () => {
       setCatalogError(getErrorMessage(error))
     } finally {
       setIsSubmittingCatalog(false)
+    }
+  }
+
+  const loadPilotParams = async () => {
+    setIsLoadingParams(true)
+    try {
+      const [params, status] = await Promise.all([getPilotParams(), getPilotParamsStatus()])
+      setPilotParams(params)
+      setParamStatus(status)
+      setParamError(null)
+    } catch (error: unknown) {
+      setParamError(getErrorMessage(error))
+    } finally {
+      setIsLoadingParams(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadPilotParams()
+  }, [])
+
+  const handleParamChange = (field: keyof typeof paramForm, value: string) => {
+    setParamForm((current) => ({ ...current, [field]: value }))
+    setParamError(null)
+    setParamInfo(null)
+  }
+
+  const handleParamSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setParamError(null)
+    setParamInfo(null)
+    if (paramForm.decision === 'bloqueado' && paramForm.blocked_reason.trim().length < 10) {
+      setParamError('O bloqueio exige motivo explícito (pelo menos 10 caracteres).')
+      return
+    }
+    setIsSubmittingParam(true)
+    try {
+      await createPilotParam({
+        param_type: paramForm.param_type,
+        family: paramForm.family.trim(),
+        value: paramForm.value.trim() || undefined,
+        unit: paramForm.unit.trim() || undefined,
+        source: paramForm.source.trim(),
+        decision: paramForm.decision,
+        blocked_reason: paramForm.blocked_reason.trim() || undefined,
+        blocked_owner: paramForm.blocked_owner.trim() || undefined,
+        blocked_deadline: paramForm.blocked_deadline || undefined,
+        notes: paramForm.notes.trim() || undefined,
+      })
+      setParamInfo(
+        paramForm.decision === 'bloqueado'
+          ? 'Parâmetro registrado como bloqueado, com dono e data-limite.'
+          : 'Parâmetro registrado como rascunho; aguarda homologação.',
+      )
+      setParamForm({
+        param_type: 'bdi',
+        family: '',
+        value: '',
+        unit: '',
+        source: '',
+        decision: 'rascunho',
+        blocked_reason: '',
+        blocked_owner: '',
+        blocked_deadline: '',
+        notes: '',
+      })
+      await loadPilotParams()
+    } catch (error: unknown) {
+      setParamError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingParam(false)
+    }
+  }
+
+  const handleHomologateParam = async (paramId: string) => {
+    setParamError(null)
+    setParamInfo(null)
+    if (!homologateParamValue.trim()) {
+      setParamError('A homologação exige o valor decidido.')
+      return
+    }
+    setIsSubmittingParam(true)
+    try {
+      const result = await homologatePilotParam(
+        paramId,
+        homologateParamValue.trim(),
+        homologateParamUnit.trim() || undefined,
+      )
+      setParamInfo(`Parâmetro homologado às ${result.homologatedAt}.`)
+      setHomologateParamTarget(null)
+      setHomologateParamValue('')
+      setHomologateParamUnit('')
+      await loadPilotParams()
+    } catch (error: unknown) {
+      setParamError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingParam(false)
     }
   }
 
@@ -1020,6 +1147,343 @@ export const Dashboard: React.FC = () => {
             </form>
           </section>
         </div>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <Scale className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Regras e SLA do piloto</h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                BDI, ISS, margem, SLA, alçadas e arredondamento precisam de decisão homologada ou
+                bloqueio explícito com dono e data. O SLA da família-piloto é obrigatório para
+                liberar a Fase 2.
+              </p>
+            </div>
+          </div>
+
+          {paramStatus && (
+            <div
+              className={`mb-5 p-3.5 rounded-[12px] text-[13px] font-medium flex items-start gap-2.5 ${
+                paramStatus.gate.open
+                  ? 'bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857]'
+                  : 'bg-[#FFF7ED] border-l-4 border-[#EA580C] text-[#C2410C]'
+              }`}
+              role="status"
+              aria-live="polite"
+            >
+              {paramStatus.gate.open ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              )}
+              <span>
+                <strong>
+                  Gate da Fase 2 ({paramStatus.gate.family || 'família ainda sem registro'}):
+                </strong>{' '}
+                {paramStatus.gate.detail}
+              </span>
+            </div>
+          )}
+
+          {paramError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{paramError}</span>
+            </div>
+          )}
+
+          {paramInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {paramInfo}
+            </div>
+          )}
+
+          <form onSubmit={handleParamSubmit} className="space-y-4" noValidate>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Parâmetro *
+                <select
+                  value={paramForm.param_type}
+                  onChange={(event) =>
+                    handleParamChange(
+                      'param_type',
+                      event.target.value as
+                        | 'bdi'
+                        | 'iss'
+                        | 'margem'
+                        | 'sla'
+                        | 'alcada'
+                        | 'arredondamento',
+                    )
+                  }
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                >
+                  <option value="bdi">BDI</option>
+                  <option value="iss">ISS</option>
+                  <option value="margem">Margem</option>
+                  <option value="sla">SLA</option>
+                  <option value="alcada">Alçada</option>
+                  <option value="arredondamento">Arredondamento</option>
+                </select>
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Família *
+                <input
+                  required
+                  maxLength={120}
+                  value={paramForm.family}
+                  onChange={(event) => handleParamChange('family', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Família do parâmetro, sem presumir o piloto"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Fonte da decisão *
+                <input
+                  required
+                  maxLength={200}
+                  value={paramForm.source}
+                  onChange={(event) => handleParamChange('source', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="De onde vem a decisão (ata, e-mail, documento)"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Decisão *
+                <select
+                  value={paramForm.decision}
+                  onChange={(event) =>
+                    handleParamChange('decision', event.target.value as 'rascunho' | 'bloqueado')
+                  }
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                >
+                  <option value="rascunho">Rascunho (aguarda homologação)</option>
+                  <option value="bloqueado">Bloqueado (com dono e data-limite)</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Valor (opcional no rascunho)
+                <input
+                  maxLength={200}
+                  value={paramForm.value}
+                  onChange={(event) => handleParamChange('value', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Valor proposto, se houver"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Unidade
+                <input
+                  maxLength={40}
+                  value={paramForm.unit}
+                  onChange={(event) => handleParamChange('unit', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Ex.: %, dias, R$"
+                />
+              </label>
+            </div>
+
+            {paramForm.decision === 'bloqueado' && (
+              <div className="grid gap-4 sm:grid-cols-3 p-4 rounded-[12px] bg-[#FFF7ED] border border-[#FED7AA]">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Motivo do bloqueio *
+                  <input
+                    minLength={10}
+                    maxLength={1000}
+                    value={paramForm.blocked_reason}
+                    onChange={(event) => handleParamChange('blocked_reason', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#FED7AA] bg-white text-[14px] font-normal outline-none focus:border-[#EA580C] focus:ring-4 focus:ring-[#EA580C]/15"
+                    placeholder="Por que a decisão está bloqueada"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Dono do desbloqueio *
+                  <input
+                    maxLength={200}
+                    value={paramForm.blocked_owner}
+                    onChange={(event) => handleParamChange('blocked_owner', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#FED7AA] bg-white text-[14px] font-normal outline-none focus:border-[#EA580C] focus:ring-4 focus:ring-[#EA580C]/15"
+                    placeholder="Quem resolve"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Data-limite *
+                  <input
+                    type="date"
+                    value={paramForm.blocked_deadline}
+                    onChange={(event) => handleParamChange('blocked_deadline', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#FED7AA] bg-white text-[14px] font-normal outline-none focus:border-[#EA580C] focus:ring-4 focus:ring-[#EA580C]/15"
+                  />
+                </label>
+              </div>
+            )}
+
+            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              Observações
+              <input
+                maxLength={1000}
+                value={paramForm.notes}
+                onChange={(event) => handleParamChange('notes', event.target.value)}
+                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                placeholder="Contexto adicional opcional"
+              />
+            </label>
+
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-[12px] text-[#5B6B66]">
+                O registro é auditado; a homologação do valor é feita por Engenharia/Admin.
+              </p>
+              <button
+                type="submit"
+                disabled={isSubmittingParam}
+                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+              >
+                <Scale className="w-4 h-4" />
+                {isSubmittingParam ? 'Registrando...' : 'Registrar parâmetro'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Parâmetros registrados</h3>
+                <p className="text-[12px] text-[#5B6B66] mt-1">
+                  Homologação aparece somente para quem tem permissão no servidor.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void loadPilotParams()}
+                className="text-[12px] font-semibold text-[#047857] hover:underline"
+              >
+                Atualizar
+              </button>
+            </div>
+            {isLoadingParams ? (
+              <p className="text-[12px] text-[#5B6B66]">Carregando parâmetros...</p>
+            ) : pilotParams.length === 0 ? (
+              <p className="text-[12px] text-[#5B6B66]">Nenhum parâmetro registrado ainda.</p>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {pilotParams.map((param) => (
+                  <div
+                    key={param.id}
+                    className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-[13px] font-bold text-[#0F1F1C]">
+                        {param.param_type} · {param.family}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                          param.decision === 'homologado'
+                            ? 'bg-[#ECFDF5] text-[#047857]'
+                            : param.decision === 'bloqueado'
+                              ? 'bg-[#FFF7ED] text-[#C2410C]'
+                              : 'bg-[#F1F5F4] text-[#5B6B66]'
+                        }`}
+                      >
+                        {param.decision}
+                      </span>
+                    </div>
+                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                      {param.value && (
+                        <span>
+                          Valor: {param.value} {param.unit}
+                        </span>
+                      )}
+                      <span>Fonte: {param.source}</span>
+                      {param.blocked_reason && <span>Motivo: {param.blocked_reason}</span>}
+                      {param.blocked_owner && <span>Dono: {param.blocked_owner}</span>}
+                      {param.blocked_deadline && <span>Data-limite: {param.blocked_deadline}</span>}
+                      {param.homologated_at && <span>Homologado em: {param.homologated_at}</span>}
+                      {param.notes && <span>Obs.: {param.notes}</span>}
+                    </div>
+                    {canHomologateCatalog && param.decision === 'rascunho' && (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHomologateParamTarget(param.id)
+                            setHomologateParamValue(param.value)
+                            setHomologateParamUnit(param.unit)
+                          }}
+                          disabled={isSubmittingParam}
+                          className="mt-2 h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                        >
+                          Homologar valor
+                        </button>
+                        {homologateParamTarget === param.id && (
+                          <div className="mt-2 space-y-2 pt-2 border-t border-[#E1E8E5]">
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                                Valor homologado *
+                                <input
+                                  value={homologateParamValue}
+                                  onChange={(event) => setHomologateParamValue(event.target.value)}
+                                  className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                                  placeholder="Valor decidido"
+                                />
+                              </label>
+                              <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                                Unidade
+                                <input
+                                  maxLength={40}
+                                  value={homologateParamUnit}
+                                  onChange={(event) => setHomologateParamUnit(event.target.value)}
+                                  className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                                  placeholder="Ex.: %, dias"
+                                />
+                              </label>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => void handleHomologateParam(param.id)}
+                                disabled={isSubmittingParam || !homologateParamValue.trim()}
+                                className="h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                              >
+                                Confirmar homologação
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setHomologateParamTarget(null)
+                                  setHomologateParamValue('')
+                                  setHomologateParamUnit('')
+                                }}
+                                className="h-[30px] px-3 rounded-[8px] bg-white border border-[#E1E8E5] text-[#5B6B66] text-[11px] font-semibold"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">

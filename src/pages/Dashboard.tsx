@@ -42,6 +42,15 @@ import {
   type ParamStatusResponse,
   type PilotParamRecord,
 } from '@/services/pilotParams'
+import {
+  createGate,
+  escalateGate,
+  getGates,
+  getGatesStatus,
+  resolveGate,
+  type GateRecord,
+  type GateStatusResponse,
+} from '@/services/gates'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -54,6 +63,7 @@ import {
   LockKeyhole,
   LogOut,
   MapPin,
+  OctagonAlert,
   Scale,
   ShieldCheck,
   Snowflake,
@@ -168,6 +178,23 @@ export const Dashboard: React.FC = () => {
   const [homologateParamTarget, setHomologateParamTarget] = useState<string | null>(null)
   const [homologateParamValue, setHomologateParamValue] = useState('')
   const [homologateParamUnit, setHomologateParamUnit] = useState('')
+  const [gates, setGates] = useState<GateRecord[]>([])
+  const [gateStatus, setGateStatus] = useState<GateStatusResponse | null>(null)
+  const [gateForm, setGateForm] = useState({
+    title: '',
+    description: '',
+    owner: '',
+    decision_deadline: '',
+  })
+  const [gateError, setGateError] = useState<string | null>(null)
+  const [gateInfo, setGateInfo] = useState<string | null>(null)
+  const [isSubmittingGate, setIsSubmittingGate] = useState(false)
+  const [isLoadingGates, setIsLoadingGates] = useState(true)
+  const [escalateTarget, setEscalateTarget] = useState<string | null>(null)
+  const [escalateName, setEscalateName] = useState('')
+  const [escalateNote, setEscalateNote] = useState('')
+  const [resolveTarget, setResolveTarget] = useState<string | null>(null)
+  const [resolveText, setResolveText] = useState('')
 
   useEffect(() => {
     let active = true
@@ -671,6 +698,95 @@ export const Dashboard: React.FC = () => {
     }
   }
 
+  const loadGates = async () => {
+    setIsLoadingGates(true)
+    try {
+      const [gateList, status] = await Promise.all([getGates(), getGatesStatus()])
+      setGates(gateList)
+      setGateStatus(status)
+      setGateError(null)
+    } catch (error: unknown) {
+      setGateError(getErrorMessage(error))
+    } finally {
+      setIsLoadingGates(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadGates()
+  }, [])
+
+  const handleGateChange = (field: keyof typeof gateForm, value: string) => {
+    setGateForm((current) => ({ ...current, [field]: value }))
+    setGateError(null)
+    setGateInfo(null)
+  }
+
+  const handleGateSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setGateError(null)
+    setGateInfo(null)
+    setIsSubmittingGate(true)
+    try {
+      await createGate({
+        title: gateForm.title.trim(),
+        description: gateForm.description.trim() || undefined,
+        owner: gateForm.owner.trim(),
+        decision_deadline: gateForm.decision_deadline,
+      })
+      setGateInfo('Bloqueio registrado no ledger de gates.')
+      setGateForm({ title: '', description: '', owner: '', decision_deadline: '' })
+      await loadGates()
+    } catch (error: unknown) {
+      setGateError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingGate(false)
+    }
+  }
+
+  const handleEscalate = async (gateId: string) => {
+    setGateError(null)
+    setGateInfo(null)
+    if (!escalateName.trim()) {
+      setGateError('Informe quem está escalando.')
+      return
+    }
+    setIsSubmittingGate(true)
+    try {
+      await escalateGate(gateId, escalateName.trim(), escalateNote.trim() || undefined)
+      setGateInfo('Gate escalonado: atraso aciona escalonamento (CA-1-17).')
+      setEscalateTarget(null)
+      setEscalateName('')
+      setEscalateNote('')
+      await loadGates()
+    } catch (error: unknown) {
+      setGateError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingGate(false)
+    }
+  }
+
+  const handleResolve = async (gateId: string) => {
+    setGateError(null)
+    setGateInfo(null)
+    if (resolveText.trim().length < 10) {
+      setGateError('A decisão de resolução é obrigatória (pelo menos 10 caracteres).')
+      return
+    }
+    setIsSubmittingGate(true)
+    try {
+      await resolveGate(gateId, resolveText.trim())
+      setGateInfo('Gate resolvido com decisão registrada.')
+      setResolveTarget(null)
+      setResolveText('')
+      await loadGates()
+    } catch (error: unknown) {
+      setGateError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingGate(false)
+    }
+  }
+
   const formatDuration = (ms: number) => {
     if (!ms) return 'sem amostra'
     const hours = ms / 3600000
@@ -1147,6 +1263,305 @@ export const Dashboard: React.FC = () => {
             </form>
           </section>
         </div>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <OctagonAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Gates e cortes</h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                Bloqueios críticos com dono e data-limite. Atraso aciona escalonamento; a ordem de
+                corte do PRD é fixa e nunca editável.
+              </p>
+            </div>
+          </div>
+
+          {gateError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{gateError}</span>
+            </div>
+          )}
+
+          {gateInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {gateInfo}
+            </div>
+          )}
+
+          <form onSubmit={handleGateSubmit} className="space-y-4" noValidate>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Título do bloqueio *
+                <input
+                  required
+                  maxLength={200}
+                  value={gateForm.title}
+                  onChange={(event) => handleGateChange('title', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Ex.: Homologação da família-piloto"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Dono da decisão *
+                <input
+                  required
+                  maxLength={200}
+                  value={gateForm.owner}
+                  onChange={(event) => handleGateChange('owner', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Quem decide"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Data-limite de decisão *
+                <input
+                  required
+                  type="date"
+                  value={gateForm.decision_deadline}
+                  onChange={(event) => handleGateChange('decision_deadline', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Descrição
+                <input
+                  maxLength={1000}
+                  value={gateForm.description}
+                  onChange={(event) => handleGateChange('description', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Contexto do bloqueio"
+                />
+              </label>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-[12px] text-[#5B6B66]">
+                Bloqueio sem dono ou sem data é negado (CA-1-17); o registro é auditado.
+              </p>
+              <button
+                type="submit"
+                disabled={isSubmittingGate}
+                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+              >
+                <OctagonAlert className="w-4 h-4" />
+                {isSubmittingGate ? 'Registrando...' : 'Registrar bloqueio'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Bloqueios registrados</h3>
+                <p className="text-[12px] text-[#5B6B66] mt-1">
+                  Resolução aparece somente para quem tem permissão no servidor.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void loadGates()}
+                className="text-[12px] font-semibold text-[#047857] hover:underline"
+              >
+                Atualizar
+              </button>
+            </div>
+            {isLoadingGates ? (
+              <p className="text-[12px] text-[#5B6B66]">Carregando bloqueios...</p>
+            ) : gates.length === 0 ? (
+              <p className="text-[12px] text-[#5B6B66]">Nenhum bloqueio registrado ainda.</p>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {gates.map((gate) => {
+                  const statusInfo = gateStatus?.items.find((i) => i.id === gate.id)
+                  const overdue = statusInfo?.overdue ?? false
+                  return (
+                    <div
+                      key={gate.id}
+                      className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                    >
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-[13px] font-bold text-[#0F1F1C]">{gate.title}</span>
+                        <span
+                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                            gate.status === 'resolvido'
+                              ? 'bg-[#ECFDF5] text-[#047857]'
+                              : gate.status === 'escalonado'
+                                ? 'bg-[#FEF2F2] text-[#B91C1C]'
+                                : overdue
+                                  ? 'bg-[#FFF7ED] text-[#C2410C]'
+                                  : 'bg-[#F1F5F4] text-[#5B6B66]'
+                          }`}
+                        >
+                          {gate.status === 'aberto' && overdue ? 'vencido' : gate.status}
+                        </span>
+                      </div>
+                      <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                        <span>Dono: {gate.owner}</span>
+                        <span>Data-limite: {gate.decision_deadline.slice(0, 10)}</span>
+                        {(statusInfo?.escalations ?? 0) > 0 && (
+                          <span>Escalonamentos: {statusInfo?.escalations}</span>
+                        )}
+                        {gate.description && <span>Descrição: {gate.description}</span>}
+                        {gate.resolution && <span>Decisão: {gate.resolution}</span>}
+                        {gate.resolved_at && <span>Resolvido em: {gate.resolved_at}</span>}
+                      </div>
+                      {gate.status !== 'resolvido' && overdue && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEscalateTarget(gate.id)
+                            setEscalateName('')
+                            setEscalateNote('')
+                          }}
+                          disabled={isSubmittingGate}
+                          className="mt-2 h-[30px] px-3 rounded-[8px] bg-[#B91C1C] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                        >
+                          Escalonar (atraso)
+                        </button>
+                      )}
+                      {escalateTarget === gate.id && (
+                        <div className="mt-2 space-y-2 pt-2 border-t border-[#E1E8E5]">
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                              Quem está escalando *
+                              <input
+                                value={escalateName}
+                                onChange={(event) => setEscalateName(event.target.value)}
+                                className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                                placeholder="Seu nome"
+                              />
+                            </label>
+                            <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                              Nota
+                              <input
+                                maxLength={1000}
+                                value={escalateNote}
+                                onChange={(event) => setEscalateNote(event.target.value)}
+                                className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                                placeholder="Contexto do escalonamento"
+                              />
+                            </label>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => void handleEscalate(gate.id)}
+                              disabled={isSubmittingGate || !escalateName.trim()}
+                              className="h-[30px] px-3 rounded-[8px] bg-[#B91C1C] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                            >
+                              Confirmar escalonamento
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEscalateTarget(null)}
+                              className="h-[30px] px-3 rounded-[8px] bg-white border border-[#E1E8E5] text-[#5B6B66] text-[11px] font-semibold"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {canHomologateCatalog && gate.status !== 'resolvido' && (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setResolveTarget(gate.id)
+                              setResolveText('')
+                            }}
+                            disabled={isSubmittingGate}
+                            className="h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                          >
+                            Resolver
+                          </button>
+                        </div>
+                      )}
+                      {resolveTarget === gate.id && (
+                        <div className="mt-2 space-y-2 pt-2 border-t border-[#E1E8E5]">
+                          <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                            Decisão de resolução *
+                            <textarea
+                              minLength={10}
+                              maxLength={1000}
+                              value={resolveText}
+                              onChange={(event) => setResolveText(event.target.value)}
+                              className="mt-1.5 w-full min-h-[60px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                              placeholder="Como o bloqueio foi decidido."
+                            />
+                          </label>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => void handleResolve(gate.id)}
+                              disabled={isSubmittingGate || resolveText.trim().length < 10}
+                              className="h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                            >
+                              Confirmar resolução
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setResolveTarget(null)
+                                setResolveText('')
+                              }}
+                              className="h-[30px] px-3 rounded-[8px] bg-white border border-[#E1E8E5] text-[#5B6B66] text-[11px] font-semibold"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 rounded-[12px] border border-[#E1E8E5] bg-white p-4 text-left">
+            <h3 className="text-[14px] font-bold text-[#0F1F1C]">
+              Ordem de corte (PRD, seção 11) — fixa
+            </h3>
+            <p className="text-[12px] text-[#5B6B66] mt-1">
+              Se a homologação da família-piloto atrasar, corta-se nesta ordem. Estes itens nunca se
+              cortam: baseline, catálogo homologado, memória de cálculo, aprovação, documento
+              completo, segurança e auditoria.
+            </p>
+            <ol className="mt-3 space-y-1.5">
+              {(gateStatus?.cutOrder ?? []).map((cut) => (
+                <li key={cut.position} className="flex items-start gap-2 text-[12px]">
+                  <span
+                    className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      cut.cuttable ? 'bg-[#FFF7ED] text-[#C2410C]' : 'bg-[#ECFDF5] text-[#047857]'
+                    }`}
+                  >
+                    {cut.position}
+                  </span>
+                  <span
+                    className={cut.cuttable ? 'text-[#5B6B66]' : 'text-[#047857] font-semibold'}
+                  >
+                    {cut.item}
+                    {!cut.cuttable && ' — nunca se corta'}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
 
         <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">

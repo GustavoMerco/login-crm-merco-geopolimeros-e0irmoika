@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T22:11:59.379Z",
+  "generatedAt": "2026-09-15T22:21:42.181Z",
   "collections": [
     {
       "name": "users",
@@ -904,6 +904,154 @@
       "indexes": [
         "CREATE INDEX idx_pilot_params_author ON pilot_params (created_by)",
         "CREATE INDEX idx_pilot_params_type_family ON pilot_params (param_type, family, decision)"
+      ]
+    },
+    {
+      "name": "gates_ledger",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "owner",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "decision_deadline",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "aberto",
+            "resolvido",
+            "escalonado"
+          ]
+        },
+        {
+          "name": "resolution",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "resolved_by",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "resolved_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_gates_author ON gates_ledger (created_by)",
+        "CREATE INDEX idx_gates_status ON gates_ledger (status)"
+      ]
+    },
+    {
+      "name": "gate_escalations",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "gate",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "gates_ledger"
+        },
+        {
+          "name": "escalated_by_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_gate_escalations_gate ON gate_escalations (gate)"
       ]
     }
   ]

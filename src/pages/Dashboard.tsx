@@ -27,11 +27,19 @@ import {
   type ActiveTimeEntryRecord,
 } from '@/services/tracking'
 import { freezeBaseline, getBaselines, type BaselineSnapshotRecord } from '@/services/baselines'
+import {
+  createCatalogItem,
+  deactivateCatalogItem,
+  getCatalogItems,
+  homologateCatalogItem,
+  type CatalogItemRecord,
+} from '@/services/catalog'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
 import {
   AlertTriangle,
+  Boxes,
   CheckCircle2,
   ClipboardPlus,
   FileText,
@@ -112,6 +120,24 @@ export const Dashboard: React.FC = () => {
   const [baselineInfo, setBaselineInfo] = useState<string | null>(null)
   const [isSubmittingBaseline, setIsSubmittingBaseline] = useState(false)
   const [isLoadingBaselines, setIsLoadingBaselines] = useState(true)
+  const [catalogItems, setCatalogItems] = useState<CatalogItemRecord[]>([])
+  const [catalogForm, setCatalogForm] = useState({
+    family: '',
+    item_type: 'servico' as 'servico' | 'composicao' | 'recurso',
+    name: '',
+    description: '',
+    unit: '',
+    coefficient: '',
+    source: '',
+    valid_from: '',
+    valid_until: '',
+  })
+  const [catalogError, setCatalogError] = useState<string | null>(null)
+  const [catalogInfo, setCatalogInfo] = useState<string | null>(null)
+  const [isSubmittingCatalog, setIsSubmittingCatalog] = useState(false)
+  const [isLoadingCatalog, setIsLoadingCatalog] = useState(true)
+  const [deactivateTarget, setDeactivateTarget] = useState<string | null>(null)
+  const [deactivateReason, setDeactivateReason] = useState('')
 
   useEffect(() => {
     let active = true
@@ -420,6 +446,101 @@ export const Dashboard: React.FC = () => {
       setBaselineError(getErrorMessage(error))
     } finally {
       setIsSubmittingBaseline(false)
+    }
+  }
+
+  const loadCatalog = async () => {
+    setIsLoadingCatalog(true)
+    try {
+      setCatalogItems(await getCatalogItems())
+      setCatalogError(null)
+    } catch (error: unknown) {
+      setCatalogError(getErrorMessage(error))
+    } finally {
+      setIsLoadingCatalog(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadCatalog()
+  }, [])
+
+  const handleCatalogChange = (field: keyof typeof catalogForm, value: string) => {
+    setCatalogForm((current) => ({ ...current, [field]: value }))
+    setCatalogError(null)
+    setCatalogInfo(null)
+  }
+
+  const handleCatalogSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setCatalogError(null)
+    setCatalogInfo(null)
+    setIsSubmittingCatalog(true)
+    try {
+      const result = await createCatalogItem({
+        family: catalogForm.family.trim(),
+        item_type: catalogForm.item_type,
+        name: catalogForm.name.trim(),
+        description: catalogForm.description.trim() || undefined,
+        unit: catalogForm.unit.trim(),
+        coefficient: catalogForm.coefficient.trim() || undefined,
+        source: catalogForm.source.trim(),
+        valid_from: catalogForm.valid_from,
+        valid_until: catalogForm.valid_until,
+      })
+      setCatalogInfo(`Item cadastrado como ${result.status}.`)
+      setCatalogForm({
+        family: '',
+        item_type: 'servico',
+        name: '',
+        description: '',
+        unit: '',
+        coefficient: '',
+        source: '',
+        valid_from: '',
+        valid_until: '',
+      })
+      await loadCatalog()
+    } catch (error: unknown) {
+      setCatalogError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingCatalog(false)
+    }
+  }
+
+  const handleHomologate = async (itemId: string) => {
+    setCatalogError(null)
+    setCatalogInfo(null)
+    setIsSubmittingCatalog(true)
+    try {
+      const result = await homologateCatalogItem(itemId)
+      setCatalogInfo(`Item homologado às ${result.homologatedAt}.`)
+      await loadCatalog()
+    } catch (error: unknown) {
+      setCatalogError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingCatalog(false)
+    }
+  }
+
+  const handleDeactivate = async (itemId: string) => {
+    setCatalogError(null)
+    setCatalogInfo(null)
+    if (deactivateReason.trim().length < 10) {
+      setCatalogError('A justificativa da inativação deve ter pelo menos 10 caracteres.')
+      return
+    }
+    setIsSubmittingCatalog(true)
+    try {
+      await deactivateCatalogItem(itemId, deactivateReason.trim())
+      setCatalogInfo('Item inativado com justificativa registrada.')
+      setDeactivateTarget(null)
+      setDeactivateReason('')
+      await loadCatalog()
+    } catch (error: unknown) {
+      setCatalogError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingCatalog(false)
     }
   }
 
@@ -899,6 +1020,297 @@ export const Dashboard: React.FC = () => {
             </form>
           </section>
         </div>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <Boxes className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Catálogo</h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                Itens nascem em rascunho; somente Engenharia/Admin homologam ou inativam (com
+                justificativa). Itens homologados/inativos são imutáveis e apenas homologados
+                vigentes são utilizáveis.
+              </p>
+            </div>
+          </div>
+
+          {catalogError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{catalogError}</span>
+            </div>
+          )}
+
+          {catalogInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {catalogInfo}
+            </div>
+          )}
+
+          <form onSubmit={handleCatalogSubmit} className="space-y-4" noValidate>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Família de serviço *
+                <input
+                  required
+                  maxLength={120}
+                  value={catalogForm.family}
+                  onChange={(event) => handleCatalogChange('family', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Informe a família, sem presumir o piloto"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Tipo *
+                <select
+                  value={catalogForm.item_type}
+                  onChange={(event) =>
+                    handleCatalogChange(
+                      'item_type',
+                      event.target.value as 'servico' | 'composicao' | 'recurso',
+                    )
+                  }
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                >
+                  <option value="servico">Serviço</option>
+                  <option value="composicao">Composição</option>
+                  <option value="recurso">Recurso</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Nome *
+                <input
+                  required
+                  maxLength={200}
+                  value={catalogForm.name}
+                  onChange={(event) => handleCatalogChange('name', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Nome do serviço, composição ou recurso"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Unidade *
+                <input
+                  required
+                  maxLength={40}
+                  value={catalogForm.unit}
+                  onChange={(event) => handleCatalogChange('unit', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Ex.: m², kg, un"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Fonte *
+                <input
+                  required
+                  maxLength={200}
+                  value={catalogForm.source}
+                  onChange={(event) => handleCatalogChange('source', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="De onde vem a informação"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Coeficiente
+                <input
+                  maxLength={100}
+                  value={catalogForm.coefficient}
+                  onChange={(event) => handleCatalogChange('coefficient', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Texto descritivo, sem cálculo nesta task"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Vigência - início *
+                <input
+                  required
+                  type="date"
+                  value={catalogForm.valid_from}
+                  onChange={(event) => handleCatalogChange('valid_from', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Vigência - fim *
+                <input
+                  required
+                  type="date"
+                  value={catalogForm.valid_until}
+                  onChange={(event) => handleCatalogChange('valid_until', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Descrição
+                <input
+                  maxLength={1000}
+                  value={catalogForm.description}
+                  onChange={(event) => handleCatalogChange('description', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Detalhe opcional"
+                />
+              </label>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-[12px] text-[#5B6B66]">
+                O cadastro é auditado; o item entra como rascunho e só um homologador autorizado
+                pode liberá-lo.
+              </p>
+              <button
+                type="submit"
+                disabled={isSubmittingCatalog}
+                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+              >
+                <Boxes className="w-4 h-4" />
+                {isSubmittingCatalog ? 'Cadastrando...' : 'Cadastrar item'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Itens do catálogo</h3>
+                <p className="text-[12px] text-[#5B6B66] mt-1">
+                  Homologação e inativação aparecem somente para quem tem permissão no servidor.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void loadCatalog()}
+                className="text-[12px] font-semibold text-[#047857] hover:underline"
+              >
+                Atualizar
+              </button>
+            </div>
+            {isLoadingCatalog ? (
+              <p className="text-[12px] text-[#5B6B66]">Carregando itens...</p>
+            ) : catalogItems.length === 0 ? (
+              <p className="text-[12px] text-[#5B6B66]">Nenhum item cadastrado ainda.</p>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {catalogItems.map((item) => (
+                  <div key={item.id} className="rounded-[9px] border border-[#E1E8E5] bg-white p-3">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-[13px] font-bold text-[#0F1F1C]">
+                        {item.name} · {item.item_type}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                          item.status === 'homologado'
+                            ? 'bg-[#ECFDF5] text-[#047857]'
+                            : item.status === 'inativo'
+                              ? 'bg-[#FFF7ED] text-[#C2410C]'
+                              : 'bg-[#F1F5F4] text-[#5B6B66]'
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                      <span>Família: {item.family}</span>
+                      <span>Unidade: {item.unit}</span>
+                      <span>Fonte: {item.source}</span>
+                      {item.coefficient && <span>Coeficiente: {item.coefficient}</span>}
+                      <span>
+                        Vigência: {item.valid_from} a {item.valid_until}
+                      </span>
+                      {item.homologated_at && <span>Homologado em: {item.homologated_at}</span>}
+                      {item.inactive_reason && (
+                        <span>Motivo da inativação: {item.inactive_reason}</span>
+                      )}
+                    </div>
+                    {canHomologateCatalog && item.status === 'rascunho' && (
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void handleHomologate(item.id)}
+                          disabled={isSubmittingCatalog}
+                          className="h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                        >
+                          Homologar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeactivateTarget(item.id)}
+                          disabled={isSubmittingCatalog}
+                          className="h-[30px] px-3 rounded-[8px] bg-[#FFF7ED] text-[#C2410C] border border-[#FED7AA] text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                        >
+                          Inativar
+                        </button>
+                      </div>
+                    )}
+                    {canHomologateCatalog && item.status === 'homologado' && (
+                      <button
+                        type="button"
+                        onClick={() => setDeactivateTarget(item.id)}
+                        disabled={isSubmittingCatalog}
+                        className="mt-2 h-[30px] px-3 rounded-[8px] bg-[#FFF7ED] text-[#C2410C] border border-[#FED7AA] text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                      >
+                        Inativar
+                      </button>
+                    )}
+                    {deactivateTarget === item.id && (
+                      <div className="mt-2 space-y-2 pt-2 border-t border-[#E1E8E5]">
+                        <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                          Justificativa da inativação *
+                          <textarea
+                            minLength={10}
+                            maxLength={1000}
+                            value={deactivateReason}
+                            onChange={(event) => setDeactivateReason(event.target.value)}
+                            className="mt-1.5 w-full min-h-[60px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                            placeholder="Explique por que o item está sendo inativado."
+                          />
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void handleDeactivate(item.id)}
+                            disabled={isSubmittingCatalog || deactivateReason.trim().length < 10}
+                            className="h-[30px] px-3 rounded-[8px] bg-[#EA580C] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                          >
+                            Confirmar inativação
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeactivateTarget(null)
+                              setDeactivateReason('')
+                            }}
+                            className="h-[30px] px-3 rounded-[8px] bg-white border border-[#E1E8E5] text-[#5B6B66] text-[11px] font-semibold"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">

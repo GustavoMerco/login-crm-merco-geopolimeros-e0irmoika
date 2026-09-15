@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T19:09:38.568Z",
+  "generatedAt": "2026-09-15T19:31:40.143Z",
   "collections": [
     {
       "name": "users",
@@ -643,6 +643,138 @@
       "indexes": [
         "CREATE INDEX idx_baselines_author ON baseline_snapshots (created_by)",
         "CREATE INDEX idx_baselines_window ON baseline_snapshots (window_start, window_end)"
+      ]
+    },
+    {
+      "name": "catalog_items",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "family",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "item_type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "servico",
+            "composicao",
+            "recurso"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "unit",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "coefficient",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valid_from",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "valid_until",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "rascunho",
+            "homologado",
+            "inativo"
+          ]
+        },
+        {
+          "name": "inactive_reason",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "homologated_by",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "homologated_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_catalog_author ON catalog_items (created_by)",
+        "CREATE INDEX idx_catalog_family_status ON catalog_items (family, status)"
       ]
     }
   ]

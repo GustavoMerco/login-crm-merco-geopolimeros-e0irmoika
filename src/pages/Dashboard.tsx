@@ -57,6 +57,13 @@ import {
   updateSourceDecision,
   type SourceAuditMatrixItem,
 } from '@/services/sourceAudits'
+import {
+  exportBackup,
+  getBackupReceipts,
+  restoreCheck,
+  verifyBackup,
+  type BackupReceiptItem,
+} from '@/services/backup'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -67,6 +74,7 @@ import {
   ClipboardPlus,
   DatabaseZap,
   FileText,
+  HardDriveDownload,
   LockKeyhole,
   LogOut,
   MapPin,
@@ -226,6 +234,14 @@ export const Dashboard: React.FC = () => {
     decision_owner: '',
     decision_date: '',
   })
+  const [backupReceipts, setBackupReceipts] = useState<BackupReceiptItem[]>([])
+  const [backupHash, setBackupHash] = useState<string | null>(null)
+  const [backupCounts, setBackupCounts] = useState<Record<string, number> | null>(null)
+  const [backupInputHash, setBackupInputHash] = useState('')
+  const [backupError, setBackupError] = useState<string | null>(null)
+  const [backupInfo, setBackupInfo] = useState<string | null>(null)
+  const [isSubmittingBackup, setIsSubmittingBackup] = useState(false)
+  const [isLoadingBackup, setIsLoadingBackup] = useState(true)
 
   useEffect(() => {
     let active = true
@@ -911,6 +927,88 @@ export const Dashboard: React.FC = () => {
     }
   }
 
+  const loadBackupReceipts = async () => {
+    setIsLoadingBackup(true)
+    try {
+      const result = await getBackupReceipts()
+      setBackupReceipts(result.items)
+      setBackupError(null)
+    } catch (error: unknown) {
+      setBackupError(getErrorMessage(error))
+    } finally {
+      setIsLoadingBackup(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadBackupReceipts()
+  }, [])
+
+  const handleBackupExport = async () => {
+    setBackupError(null)
+    setBackupInfo(null)
+    setIsSubmittingBackup(true)
+    try {
+      const result = await exportBackup()
+      setBackupHash(result.hash)
+      setBackupCounts(result.counts)
+      setBackupInputHash(result.hash)
+      setBackupInfo('Exportação gerada com hash de integridade; recibo registrado.')
+      await loadBackupReceipts()
+    } catch (error: unknown) {
+      setBackupError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingBackup(false)
+    }
+  }
+
+  const handleBackupVerify = async () => {
+    setBackupError(null)
+    setBackupInfo(null)
+    if (!backupInputHash.trim()) {
+      setBackupError('Informe o hash a verificar.')
+      return
+    }
+    setIsSubmittingBackup(true)
+    try {
+      const result = await verifyBackup(backupInputHash.trim())
+      if (result.result === 'sucesso') {
+        setBackupInfo('Verificação: hash confere com o estado atual.')
+        setBackupHash(result.currentHash)
+      } else {
+        setBackupInfo(`Verificação: ${result.errorDetail}`)
+      }
+      await loadBackupReceipts()
+    } catch (error: unknown) {
+      setBackupError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingBackup(false)
+    }
+  }
+
+  const handleBackupRestore = async () => {
+    setBackupError(null)
+    setBackupInfo(null)
+    if (!backupInputHash.trim()) {
+      setBackupError('Informe o hash do backup a restaurar.')
+      return
+    }
+    setIsSubmittingBackup(true)
+    try {
+      const result = await restoreCheck(backupInputHash.trim())
+      if (result.result === 'sucesso') {
+        setBackupInfo(result.detail ?? 'Restauração comprovada via recibo auditado.')
+      } else {
+        setBackupInfo(`Restauração bloqueada: ${result.errorDetail}`)
+      }
+      await loadBackupReceipts()
+    } catch (error: unknown) {
+      setBackupError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingBackup(false)
+    }
+  }
+
   const formatDuration = (ms: number) => {
     if (!ms) return 'sem amostra'
     const hours = ms / 3600000
@@ -1387,6 +1485,156 @@ export const Dashboard: React.FC = () => {
             </form>
           </section>
         </div>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <HardDriveDownload className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Backup e exportação</h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                Demonstração com recibo auditado e hash de integridade: backup inválido bloqueia a
+                restauração (falha segura); hash válido comprova a restauração.
+              </p>
+            </div>
+          </div>
+
+          {backupError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{backupError}</span>
+            </div>
+          )}
+
+          {backupInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {backupInfo}
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-3 mb-5">
+            <button
+              type="button"
+              onClick={() => void handleBackupExport()}
+              disabled={isSubmittingBackup}
+              className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2"
+            >
+              <HardDriveDownload className="w-4 h-4" />
+              {isSubmittingBackup ? 'Gerando...' : 'Exportar / Gerar backup'}
+            </button>
+          </div>
+
+          {backupHash && backupCounts && (
+            <div className="mb-5 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4">
+              <h3 className="text-[13px] font-bold text-[#0F1F1C]">Snapshot atual</h3>
+              <p className="text-[12px] text-[#5B6B66] mt-1 break-all">
+                Hash: <span className="font-mono">{backupHash}</span>
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {Object.entries(backupCounts).map(([name, count]) => (
+                  <span
+                    key={name}
+                    className="text-[11px] bg-white border border-[#E1E8E5] rounded-full px-2.5 py-1 text-[#5B6B66]"
+                  >
+                    {name}: {count}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-[12px] border border-[#E1E8E5] bg-white p-4 mb-5">
+            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              Hash do backup
+              <input
+                value={backupInputHash}
+                onChange={(event) => setBackupInputHash(event.target.value)}
+                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-mono outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                placeholder="Cole o hash do backup (ou use o gerado acima)"
+              />
+            </label>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => void handleBackupVerify()}
+                disabled={isSubmittingBackup || !backupInputHash.trim()}
+                className="h-[38px] px-4 rounded-[9px] bg-[#064E3B] text-white text-[12px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+              >
+                Verificar integridade
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleBackupRestore()}
+                disabled={isSubmittingBackup || !backupInputHash.trim()}
+                className="h-[38px] px-4 rounded-[9px] bg-[#1D4ED8] text-white text-[12px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+              >
+                Testar restauração
+              </button>
+            </div>
+            <p className="mt-2 text-[12px] text-[#5B6B66]">
+              Dica: altere um caractere do hash para provar a falha segura (RED-012).
+            </p>
+          </div>
+
+          <div className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 className="text-[14px] font-bold text-[#0F1F1C]">Recibos de demonstração</h3>
+              <button
+                type="button"
+                onClick={() => void loadBackupReceipts()}
+                className="text-[12px] font-semibold text-[#047857] hover:underline"
+              >
+                Atualizar
+              </button>
+            </div>
+            {isLoadingBackup ? (
+              <p className="text-[12px] text-[#5B6B66]">Carregando recibos...</p>
+            ) : backupReceipts.length === 0 ? (
+              <p className="text-[12px] text-[#5B6B66]">
+                Nenhum recibo ainda — gere uma exportação para começar.
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-72 overflow-y-auto">
+                {backupReceipts.map((receipt) => (
+                  <div
+                    key={receipt.id}
+                    className="flex items-center justify-between gap-2 rounded-[9px] border border-[#E1E8E5] bg-white px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <span className="text-[12px] font-bold text-[#0F1F1C] capitalize">
+                        {receipt.kind}
+                      </span>
+                      <span className="text-[11px] text-[#5B6B66] ml-2">
+                        {new Date(receipt.created).toLocaleString('pt-BR')}
+                      </span>
+                      {receipt.errorDetail && (
+                        <p className="text-[11px] text-[#C2410C] truncate">{receipt.errorDetail}</p>
+                      )}
+                    </div>
+                    <span
+                      className={`shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                        receipt.result === 'sucesso'
+                          ? 'bg-[#ECFDF5] text-[#047857]'
+                          : 'bg-[#FEF2F2] text-[#B91C1C]'
+                      }`}
+                    >
+                      {receipt.result}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">

@@ -70,19 +70,20 @@ routerAdd(
     }
 
     // Idempotência (RNF-11): mesma família + classe + janela retorna o snapshot existente.
+    // Datas armazenadas incluem sufixo de tempo, então os limites usam formato completo.
     const existing = $app.findRecordsByFilter(
       'baseline_snapshots',
       'created_by = "' +
         e.auth.id +
-        '" && service_family ~ "' +
+        '" && service_family = "' +
         serviceFamily.replace(/"/g, '') +
-        '" && complexity_class ~ "' +
+        '" && complexity_class = "' +
         complexityClass.replace(/"/g, '') +
         '" && window_start >= "' +
         body.window_start +
-        '" && window_end <= "' +
+        ' 00:00:00.000Z" && window_end <= "' +
         body.window_end +
-        '"',
+        ' 23:59:59.999Z"',
       '',
       1,
       0,

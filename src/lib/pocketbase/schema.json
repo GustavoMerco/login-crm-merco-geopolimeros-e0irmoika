@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T17:47:05.830Z",
+  "generatedAt": "2026-09-15T19:05:11.218Z",
   "collections": [
     {
       "name": "users",
@@ -522,6 +522,127 @@
       "indexes": [
         "CREATE INDEX idx_time_entries_opportunity ON active_time_entries (opportunity_id)",
         "CREATE INDEX idx_time_entries_user ON active_time_entries (user_id)"
+      ]
+    },
+    {
+      "name": "baseline_snapshots",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && created_by = @request.auth.id",
+        "view": "@request.auth.id != '' && created_by = @request.auth.id",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "service_family",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "complexity_class",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "window_start",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "window_end",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "frozen_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "calendar",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "volume",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "received_to_apt_ms",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "apt_to_ready_ms",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "ready_to_sent_ms",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "active_time_ms",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "reliability_criteria",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "freeze_reason",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_baselines_author ON baseline_snapshots (created_by)",
+        "CREATE INDEX idx_baselines_window ON baseline_snapshots (window_start, window_end)"
       ]
     }
   ]

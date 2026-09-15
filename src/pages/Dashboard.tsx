@@ -26,6 +26,7 @@ import {
   type OpportunityEventRecord,
   type ActiveTimeEntryRecord,
 } from '@/services/tracking'
+import { freezeBaseline, getBaselines, type BaselineSnapshotRecord } from '@/services/baselines'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -38,6 +39,7 @@ import {
   LogOut,
   MapPin,
   ShieldCheck,
+  Snowflake,
   Timer,
   User as UserIcon,
 } from 'lucide-react'
@@ -96,6 +98,20 @@ export const Dashboard: React.FC = () => {
   const [trackingError, setTrackingError] = useState<string | null>(null)
   const [trackingInfo, setTrackingInfo] = useState<string | null>(null)
   const [isSubmittingTracking, setIsSubmittingTracking] = useState(false)
+  const [baselines, setBaselines] = useState<BaselineSnapshotRecord[]>([])
+  const [baselineForm, setBaselineForm] = useState({
+    service_family: '',
+    complexity_class: '',
+    window_start: '',
+    window_end: '',
+    calendar: 'dias úteis, 8h/dia',
+    reliability_criteria: '',
+    freeze_reason: '',
+  })
+  const [baselineError, setBaselineError] = useState<string | null>(null)
+  const [baselineInfo, setBaselineInfo] = useState<string | null>(null)
+  const [isSubmittingBaseline, setIsSubmittingBaseline] = useState(false)
+  const [isLoadingBaselines, setIsLoadingBaselines] = useState(true)
 
   useEffect(() => {
     let active = true
@@ -355,6 +371,64 @@ export const Dashboard: React.FC = () => {
     } finally {
       setIsSubmittingTracking(false)
     }
+  }
+
+  const loadBaselines = async () => {
+    setIsLoadingBaselines(true)
+    try {
+      setBaselines(await getBaselines())
+      setBaselineError(null)
+    } catch (error: unknown) {
+      setBaselineError(getErrorMessage(error))
+    } finally {
+      setIsLoadingBaselines(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadBaselines()
+  }, [])
+
+  const handleBaselineChange = (field: keyof typeof baselineForm, value: string) => {
+    setBaselineForm((current) => ({ ...current, [field]: value }))
+    setBaselineError(null)
+    setBaselineInfo(null)
+  }
+
+  const handleBaselineFreeze = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setBaselineError(null)
+    setBaselineInfo(null)
+    setIsSubmittingBaseline(true)
+    try {
+      const result = await freezeBaseline({
+        service_family: baselineForm.service_family.trim(),
+        complexity_class: baselineForm.complexity_class.trim(),
+        window_start: baselineForm.window_start,
+        window_end: baselineForm.window_end,
+        calendar: baselineForm.calendar.trim(),
+        reliability_criteria: baselineForm.reliability_criteria.trim(),
+        freeze_reason: baselineForm.freeze_reason.trim(),
+      })
+      setBaselineInfo(
+        result.alreadyFrozen
+          ? 'Esta janela já possui um baseline congelado — o snapshot existente foi mantido.'
+          : `Baseline congelado às ${result.frozenAt} com ${result.volume} demanda(s) na janela.`,
+      )
+      await loadBaselines()
+    } catch (error: unknown) {
+      setBaselineError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingBaseline(false)
+    }
+  }
+
+  const formatDuration = (ms: number) => {
+    if (!ms) return 'sem amostra'
+    const hours = ms / 3600000
+    if (hours >= 24) return `${(hours / 24).toFixed(1)} dias`
+    if (hours >= 1) return `${hours.toFixed(1)} h`
+    return `${Math.round(ms / 60000)} min`
   }
 
   const rawName = user?.name || user?.email?.split('@')[0] || 'Usuário'
@@ -825,6 +899,206 @@ export const Dashboard: React.FC = () => {
             </form>
           </section>
         </div>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <Snowflake className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Baseline</h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                Congela o "antes" por família e classe de complexidade, usando a timeline e o tempo
+                ativo já registrados. Snapshots são imutáveis e comparáveis pela mesma fronteira.
+              </p>
+            </div>
+          </div>
+
+          {baselineError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{baselineError}</span>
+            </div>
+          )}
+
+          {baselineInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {baselineInfo}
+            </div>
+          )}
+
+          <form onSubmit={handleBaselineFreeze} className="space-y-4" noValidate>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Família de serviço *
+                <input
+                  required
+                  maxLength={120}
+                  value={baselineForm.service_family}
+                  onChange={(event) => handleBaselineChange('service_family', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Informe a família, sem presumir o piloto"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Classe de complexidade *
+                <input
+                  required
+                  maxLength={120}
+                  value={baselineForm.complexity_class}
+                  onChange={(event) => handleBaselineChange('complexity_class', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Ex.: baixa, média, alta"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Janela - início *
+                <input
+                  required
+                  type="date"
+                  value={baselineForm.window_start}
+                  onChange={(event) => handleBaselineChange('window_start', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Janela - fim *
+                <input
+                  required
+                  type="date"
+                  value={baselineForm.window_end}
+                  onChange={(event) => handleBaselineChange('window_end', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Calendário *
+                <input
+                  required
+                  maxLength={120}
+                  value={baselineForm.calendar}
+                  onChange={(event) => handleBaselineChange('calendar', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Ex.: dias úteis, 8h/dia"
+                />
+              </label>
+            </div>
+
+            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              Critérios de confiabilidade *
+              <textarea
+                required
+                minLength={10}
+                maxLength={2000}
+                value={baselineForm.reliability_criteria}
+                onChange={(event) =>
+                  handleBaselineChange('reliability_criteria', event.target.value)
+                }
+                className="mt-1.5 w-full min-h-[70px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                placeholder="Ex.: demandas com recebida e apta registradas; pausas justificadas excluídas"
+              />
+            </label>
+
+            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              Motivo do congelamento *
+              <textarea
+                required
+                minLength={10}
+                maxLength={1000}
+                value={baselineForm.freeze_reason}
+                onChange={(event) => handleBaselineChange('freeze_reason', event.target.value)}
+                className="mt-1.5 w-full min-h-[70px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                placeholder="Ex.: congelar o antes antes de usar dimensionamento e preço"
+              />
+            </label>
+
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-[12px] text-[#5B6B66]">
+                Os números são agregados pelo servidor a partir da timeline real; snapshots não
+                podem ser editados.
+              </p>
+              <button
+                type="submit"
+                disabled={isSubmittingBaseline}
+                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+              >
+                <Snowflake className="w-4 h-4" />
+                {isSubmittingBaseline ? 'Congelando...' : 'Congelar baseline'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Baselines congelados</h3>
+                <p className="text-[12px] text-[#5B6B66] mt-1">
+                  Snapshots imutáveis; a comparação com o resultado entra nas próximas tasks.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void loadBaselines()}
+                className="text-[12px] font-semibold text-[#047857] hover:underline"
+              >
+                Atualizar
+              </button>
+            </div>
+            {isLoadingBaselines ? (
+              <p className="text-[12px] text-[#5B6B66]">Carregando baselines...</p>
+            ) : baselines.length === 0 ? (
+              <p className="text-[12px] text-[#5B6B66]">Nenhum baseline congelado ainda.</p>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {baselines.map((baseline) => (
+                  <div
+                    key={baseline.id}
+                    className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-[13px] font-bold text-[#0F1F1C]">
+                        {baseline.service_family} · {baseline.complexity_class}
+                      </span>
+                      <span className="text-[10px] font-semibold text-[#5B6B66]">
+                        congelado em {baseline.frozen_at}
+                      </span>
+                    </div>
+                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                      <span>
+                        Janela: {baseline.window_start} a {baseline.window_end}
+                      </span>
+                      <span>Calendário: {baseline.calendar}</span>
+                      <span>Volume: {baseline.volume} demanda(s)</span>
+                      <span>Recebida→Apta: {formatDuration(baseline.received_to_apt_ms)}</span>
+                      <span>Apta→Pronta: {formatDuration(baseline.apt_to_ready_ms)}</span>
+                      <span>Pronta→Enviada: {formatDuration(baseline.ready_to_sent_ms)}</span>
+                      <span>Tempo ativo somado: {formatDuration(baseline.active_time_ms)}</span>
+                    </div>
+                    <p className="mt-2 text-[11px] text-[#5B6B66]">
+                      <span className="font-semibold text-[#0F1F1C]">Confiabilidade:</span>{' '}
+                      {baseline.reliability_criteria}
+                    </p>
+                    <p className="mt-1 text-[11px] text-[#5B6B66]">
+                      <span className="font-semibold text-[#0F1F1C]">Motivo:</span>{' '}
+                      {baseline.freeze_reason}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         {createdOpportunity && (
           <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">

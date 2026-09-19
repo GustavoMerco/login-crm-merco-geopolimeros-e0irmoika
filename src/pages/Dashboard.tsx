@@ -71,6 +71,19 @@ import {
   proposalTemplateFileUrl,
   type ProposalTemplateRecord,
 } from '@/services/proposalTemplates'
+import {
+  attemptProposalPreviewSend,
+  createProposalPreview,
+  formatProposalDate,
+  getApprovedProposalTemplates,
+  getProposalPreviews,
+  proposalFamilyLabel,
+  proposalFixedSystemCopy,
+  type CreateProposalPreviewInput,
+  type ProposalAreaRow,
+  type ProposalPreviewRecord,
+  type ProposalTemplateMatrixItem,
+} from '@/services/proposalPreviews'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -86,10 +99,14 @@ import {
   LogOut,
   MapPin,
   OctagonAlert,
+  Plus,
+  Printer,
   Scale,
+  Send,
   ShieldCheck,
   Snowflake,
   Timer,
+  Trash2,
   User as UserIcon,
 } from 'lucide-react'
 
@@ -260,6 +277,38 @@ export const Dashboard: React.FC = () => {
   const [proposalTemplateInfo, setProposalTemplateInfo] = useState<string | null>(null)
   const [isSubmittingProposalTemplate, setIsSubmittingProposalTemplate] = useState(false)
   const [isLoadingProposalTemplates, setIsLoadingProposalTemplates] = useState(true)
+  const [approvedProposalTemplates, setApprovedProposalTemplates] = useState<
+    ProposalTemplateMatrixItem[]
+  >([])
+  const [proposalPreviews, setProposalPreviews] = useState<ProposalPreviewRecord[]>([])
+  const [activeProposalPreview, setActiveProposalPreview] = useState<ProposalPreviewRecord | null>(
+    null,
+  )
+  const [proposalPreviewForm, setProposalPreviewForm] = useState<CreateProposalPreviewInput>({
+    opportunity_id: '',
+    template_id: '',
+    family: 'poliureia',
+    proposal_number: '',
+    revision: 'REV 00',
+    proposal_date: new Date().toISOString().slice(0, 10),
+    city: '',
+    customer_name: '',
+    customer_cnpj: '',
+    customer_address: '',
+    contact_name: '',
+    contact_email: '',
+    local_obra: '',
+    surface_type: '',
+    solution_proposed: '',
+    execution_start: '',
+    execution_deadline: '',
+    areas: [{ item: '01', local: '', area: '', pathology: '', solution: '' }],
+  })
+  const [proposalPreviewError, setProposalPreviewError] = useState<string | null>(null)
+  const [proposalPreviewInfo, setProposalPreviewInfo] = useState<string | null>(null)
+  const [isSubmittingProposalPreview, setIsSubmittingProposalPreview] = useState(false)
+  const [isLoadingApprovedProposalTemplates, setIsLoadingApprovedProposalTemplates] = useState(true)
+  const [isLoadingProposalPreviews, setIsLoadingProposalPreviews] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -318,19 +367,41 @@ export const Dashboard: React.FC = () => {
     setIsSubmittingOpportunity(true)
 
     try {
-      const result = await createOpportunity({
+      const submittedOpportunity = {
         customer_name: opportunity.customer_name.trim(),
         contact_name: opportunity.contact_name.trim(),
-        contact_email: opportunity.contact_email?.trim() || undefined,
+        contact_email: opportunity.contact_email?.trim() || '',
         origin: opportunity.origin.trim(),
         service_family: opportunity.service_family.trim(),
         location: opportunity.location.trim(),
         demand_date: opportunity.demand_date,
-        deadline_date: opportunity.deadline_date || undefined,
+        deadline_date: opportunity.deadline_date || '',
+      }
+      const result = await createOpportunity({
+        ...submittedOpportunity,
+        contact_email: submittedOpportunity.contact_email || undefined,
+        deadline_date: submittedOpportunity.deadline_date || undefined,
       })
+      const matchedFamily = matchingFamilyForOpportunity(submittedOpportunity.service_family)
+      const family = matchedFamily || proposalPreviewForm.family
+      const firstTemplate = approvedProposalTemplates.find((item) => item.family === family)
+      setSelectedOpportunityId(result.id)
       setCreatedOpportunity(result)
+      setProposalPreviewForm((current) => ({
+        ...current,
+        opportunity_id: result.id,
+        family,
+        template_id: firstTemplate?.id || '',
+        customer_name: submittedOpportunity.customer_name,
+        contact_name: submittedOpportunity.contact_name,
+        contact_email: submittedOpportunity.contact_email,
+        local_obra: submittedOpportunity.location,
+      }))
+      setProposalPreviewInfo(null)
+      setProposalPreviewError(null)
       setOpportunity(emptyOpportunity)
       await loadOpportunities()
+      await loadProposalPreviews(result.id)
     } catch (error: unknown) {
       setOpportunityError(getErrorMessage(error))
     } finally {
@@ -1111,6 +1182,201 @@ export const Dashboard: React.FC = () => {
     }
   }
 
+  const loadApprovedProposalTemplates = async () => {
+    setIsLoadingApprovedProposalTemplates(true)
+    try {
+      const result = await getApprovedProposalTemplates()
+      setApprovedProposalTemplates(result.items)
+      setProposalPreviewError(null)
+    } catch (error: unknown) {
+      setProposalPreviewError(getErrorMessage(error))
+    } finally {
+      setIsLoadingApprovedProposalTemplates(false)
+    }
+  }
+
+  const loadProposalPreviews = async (opportunityId?: string) => {
+    setIsLoadingProposalPreviews(true)
+    try {
+      const result = await getProposalPreviews(opportunityId)
+      setProposalPreviews(result.items)
+      setProposalPreviewError(null)
+    } catch (error: unknown) {
+      setProposalPreviews([])
+      setProposalPreviewError(getErrorMessage(error))
+    } finally {
+      setIsLoadingProposalPreviews(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadApprovedProposalTemplates()
+  }, [])
+
+  const matchingFamilyForOpportunity = (serviceFamily: string) => {
+    const normalized = serviceFamily.trim().toLowerCase()
+    if (normalized.includes('geotecnia')) return 'geotecnia' as const
+    if (normalized.includes('poliureia')) return 'poliureia' as const
+    return null
+  }
+
+  const syncProposalFormWithOpportunity = (opportunityId: string) => {
+    const selected = opportunities.find((item) => item.id === opportunityId)
+    if (!selected) return
+    const matchedFamily = matchingFamilyForOpportunity(selected.service_family)
+    const family = matchedFamily || proposalPreviewForm.family
+    const firstTemplate = approvedProposalTemplates.find((item) => item.family === family)
+    setSelectedOpportunityId(opportunityId)
+    setCreatedOpportunity({
+      id: selected.id,
+      receivedAt: selected.received_at,
+      status: selected.status,
+    })
+    setProposalPreviewForm((current) => ({
+      ...current,
+      opportunity_id: selected.id,
+      family,
+      template_id: firstTemplate?.id || '',
+      customer_name: selected.customer_name,
+      contact_name: selected.contact_name,
+      contact_email: selected.contact_email || '',
+      local_obra: selected.location,
+    }))
+    setProposalPreviewInfo(null)
+    setProposalPreviewError(null)
+    void loadProposalPreviews(opportunityId)
+  }
+
+  const handleProposalPreviewFieldChange = (
+    field: keyof Omit<CreateProposalPreviewInput, 'areas'>,
+    value: string,
+  ) => {
+    setProposalPreviewForm((current) => ({ ...current, [field]: value }))
+    setProposalPreviewError(null)
+    setProposalPreviewInfo(null)
+  }
+
+  const handleProposalPreviewFamilyChange = (family: 'poliureia' | 'geotecnia') => {
+    const firstTemplate = approvedProposalTemplates.find((item) => item.family === family)
+    setProposalPreviewForm((current) => ({
+      ...current,
+      family,
+      template_id: firstTemplate?.id || '',
+    }))
+    setProposalPreviewError(null)
+    setProposalPreviewInfo(null)
+  }
+
+  const handleProposalPreviewAreaChange = (
+    index: number,
+    field: keyof ProposalAreaRow,
+    value: string,
+  ) => {
+    setProposalPreviewForm((current) => ({
+      ...current,
+      areas: current.areas.map((area, areaIndex) =>
+        areaIndex === index ? { ...area, [field]: value } : area,
+      ),
+    }))
+    setProposalPreviewError(null)
+  }
+
+  const handleProposalPreviewAddArea = () => {
+    setProposalPreviewForm((current) => ({
+      ...current,
+      areas: [
+        ...current.areas,
+        {
+          item: String(current.areas.length + 1).padStart(2, '0'),
+          local: '',
+          area: '',
+          pathology: '',
+          solution: '',
+        },
+      ],
+    }))
+  }
+
+  const handleProposalPreviewRemoveArea = (index: number) => {
+    setProposalPreviewForm((current) => ({
+      ...current,
+      areas:
+        current.areas.length <= 1
+          ? current.areas
+          : current.areas.filter((_, areaIndex) => areaIndex !== index),
+    }))
+  }
+
+  const handleProposalPreviewSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setProposalPreviewError(null)
+    setProposalPreviewInfo(null)
+    if (!proposalPreviewForm.opportunity_id) {
+      setProposalPreviewError('Selecione uma demanda antes de gerar a prévia.')
+      return
+    }
+    if (!proposalPreviewForm.template_id) {
+      setProposalPreviewError('Selecione um modelo aprovado da família escolhida.')
+      return
+    }
+    setIsSubmittingProposalPreview(true)
+    try {
+      const result = await createProposalPreview({
+        ...proposalPreviewForm,
+        proposal_number: proposalPreviewForm.proposal_number.trim(),
+        revision: proposalPreviewForm.revision.trim(),
+        city: proposalPreviewForm.city.trim(),
+        customer_name: proposalPreviewForm.customer_name.trim(),
+        customer_cnpj: proposalPreviewForm.customer_cnpj.trim(),
+        customer_address: proposalPreviewForm.customer_address.trim(),
+        contact_name: proposalPreviewForm.contact_name.trim(),
+        contact_email: proposalPreviewForm.contact_email?.trim() || undefined,
+        local_obra: proposalPreviewForm.local_obra.trim(),
+        surface_type: proposalPreviewForm.surface_type.trim(),
+        solution_proposed: proposalPreviewForm.solution_proposed.trim(),
+        execution_start: proposalPreviewForm.execution_start.trim(),
+        execution_deadline: proposalPreviewForm.execution_deadline.trim(),
+        areas: proposalPreviewForm.areas.map((area) => ({
+          item: area.item.trim(),
+          local: area.local.trim(),
+          area: area.area.trim(),
+          pathology: area.pathology.trim(),
+          solution: area.solution.trim(),
+        })),
+      })
+      setActiveProposalPreview(result)
+      setProposalPreviewInfo(
+        'Prévia criada. Ela está marcada SEM PREÇO — NÃO ENVIAR e não contém valores de faturamento.',
+      )
+      await loadProposalPreviews(proposalPreviewForm.opportunity_id)
+    } catch (error: unknown) {
+      setProposalPreviewError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingProposalPreview(false)
+    }
+  }
+
+  const handleProposalPreviewSendAttempt = async () => {
+    if (!activeProposalPreview) return
+    setProposalPreviewError(null)
+    setProposalPreviewInfo(null)
+    setIsSubmittingProposalPreview(true)
+    try {
+      const result = await attemptProposalPreviewSend(activeProposalPreview.id)
+      setProposalPreviewInfo(result.errorDetail)
+    } catch (error: unknown) {
+      setProposalPreviewError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingProposalPreview(false)
+    }
+  }
+
+  const handleProposalPreviewPrint = () => {
+    document.body.classList.add('printing-proposal-preview')
+    window.print()
+    window.setTimeout(() => document.body.classList.remove('printing-proposal-preview'), 500)
+  }
+
   const formatDuration = (ms: number) => {
     if (!ms) return 'sem amostra'
     const hours = ms / 3600000
@@ -1401,12 +1667,7 @@ export const Dashboard: React.FC = () => {
                       type="button"
                       key={item.id}
                       onClick={() => {
-                        setSelectedOpportunityId(item.id)
-                        setCreatedOpportunity({
-                          id: item.id,
-                          receivedAt: item.received_at,
-                          status: item.status,
-                        })
+                        syncProposalFormWithOpportunity(item.id)
                         setAptitudeResult(
                           item.aptitude_status
                             ? {
@@ -1427,6 +1688,7 @@ export const Dashboard: React.FC = () => {
                         setPauseReason('')
                         void loadTechSheets(item.id)
                         void loadTracking(item.id)
+                        void loadProposalPreviews(item.id)
                       }}
                       className={`w-full rounded-[9px] border p-3 text-left transition-colors ${
                         selectedOpportunityId === item.id
@@ -1938,6 +2200,585 @@ export const Dashboard: React.FC = () => {
               </div>
             )}
           </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#FFF7ED] text-[#C2410C] flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">
+                Prévia de proposta sem preço
+              </h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                T1.14 — selecione uma demanda e um modelo aprovado, preencha os dados variáveis e
+                gere uma prévia imprimível. O envio permanece bloqueado.
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-5 rounded-[12px] border border-[#FDBA74] bg-[#FFF7ED] p-4" role="note">
+            <p className="text-[14px] font-extrabold tracking-wide text-[#9A3412]">
+              SEM PREÇO — NÃO ENVIAR
+            </p>
+            <p className="mt-1 text-[12px] text-[#C2410C]">
+              Esta etapa não calcula nem aceita valores, faturamento, condições de pagamento ou
+              envio ao cliente.
+            </p>
+          </div>
+
+          {proposalPreviewError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{proposalPreviewError}</span>
+            </div>
+          )}
+
+          {proposalPreviewInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {proposalPreviewInfo}
+            </div>
+          )}
+
+          <form onSubmit={handleProposalPreviewSubmit} className="space-y-5" noValidate>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Demanda *
+                <select
+                  required
+                  value={proposalPreviewForm.opportunity_id}
+                  onChange={(event) => {
+                    if (event.target.value) syncProposalFormWithOpportunity(event.target.value)
+                  }}
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                >
+                  <option value="">Selecione uma demanda registrada</option>
+                  {opportunities.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.customer_name} · {item.service_family} · {item.location}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Modelo aprovado *
+                <select
+                  required
+                  value={proposalPreviewForm.template_id}
+                  onChange={(event) =>
+                    setProposalPreviewForm((current) => ({
+                      ...current,
+                      template_id: event.target.value,
+                    }))
+                  }
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                >
+                  <option value="">
+                    {isLoadingApprovedProposalTemplates
+                      ? 'Carregando modelos aprovados...'
+                      : 'Selecione um modelo aprovado'}
+                  </option>
+                  {approvedProposalTemplates
+                    .filter((item) => item.family === proposalPreviewForm.family)
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} · {item.modelNumber || 'sem número'} · v{item.version}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-4">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Família *
+                <select
+                  value={proposalPreviewForm.family}
+                  onChange={(event) =>
+                    handleProposalPreviewFamilyChange(
+                      event.target.value as 'poliureia' | 'geotecnia',
+                    )
+                  }
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                >
+                  <option value="poliureia">Poliureia</option>
+                  <option value="geotecnia">Geotecnia</option>
+                </select>
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C] sm:col-span-2">
+                Número da proposta *
+                <input
+                  required
+                  maxLength={60}
+                  value={proposalPreviewForm.proposal_number}
+                  onChange={(event) =>
+                    handleProposalPreviewFieldChange('proposal_number', event.target.value)
+                  }
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Ex.: NR2026XXX"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Revisão *
+                <input
+                  required
+                  maxLength={20}
+                  value={proposalPreviewForm.revision}
+                  onChange={(event) =>
+                    handleProposalPreviewFieldChange('revision', event.target.value)
+                  }
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="REV 00"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Data da proposta *
+                <input
+                  required
+                  type="date"
+                  value={proposalPreviewForm.proposal_date}
+                  onChange={(event) =>
+                    handleProposalPreviewFieldChange('proposal_date', event.target.value)
+                  }
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C] sm:col-span-2">
+                Cidade *
+                <input
+                  required
+                  maxLength={120}
+                  value={proposalPreviewForm.city}
+                  onChange={(event) => handleProposalPreviewFieldChange('city', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="São Paulo - SP"
+                />
+              </label>
+            </div>
+
+            <div className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4">
+              <h3 className="text-[14px] font-bold text-[#0F1F1C]">Cliente e obra</h3>
+              <p className="mt-1 text-[11px] text-[#5B6B66]">
+                Cliente, contato e e-mail vêm da demanda selecionada. O servidor confere que não
+                sejam trocados por outra demanda.
+              </p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Cliente
+                  <input
+                    readOnly
+                    value={proposalPreviewForm.customer_name}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#D1FAE5] bg-[#ECFDF5] text-[13px] font-normal outline-none"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Contato
+                  <input
+                    readOnly
+                    value={proposalPreviewForm.contact_name}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#D1FAE5] bg-[#ECFDF5] text-[13px] font-normal outline-none"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  CNPJ do cliente *
+                  <input
+                    required
+                    maxLength={40}
+                    value={proposalPreviewForm.customer_cnpj}
+                    onChange={(event) =>
+                      handleProposalPreviewFieldChange('customer_cnpj', event.target.value)
+                    }
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="00.000.000/0000-00"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  E-mail do contato
+                  <input
+                    type="email"
+                    maxLength={200}
+                    readOnly
+                    value={proposalPreviewForm.contact_email}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#D1FAE5] bg-[#ECFDF5] text-[13px] font-normal outline-none"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C] sm:col-span-2">
+                  Endereço do cliente *
+                  <input
+                    required
+                    maxLength={500}
+                    value={proposalPreviewForm.customer_address}
+                    onChange={(event) =>
+                      handleProposalPreviewFieldChange('customer_address', event.target.value)
+                    }
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Rua, número, cidade, estado e CEP"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C] sm:col-span-2">
+                  Local da obra *
+                  <input
+                    required
+                    maxLength={300}
+                    value={proposalPreviewForm.local_obra}
+                    onChange={(event) =>
+                      handleProposalPreviewFieldChange('local_obra', event.target.value)
+                    }
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Nome da obra ou unidade"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Tipo de superfície *
+                <input
+                  required
+                  maxLength={120}
+                  value={proposalPreviewForm.surface_type}
+                  onChange={(event) =>
+                    handleProposalPreviewFieldChange('surface_type', event.target.value)
+                  }
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Concreto, solo..."
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Início da execução *
+                <input
+                  required
+                  maxLength={200}
+                  value={proposalPreviewForm.execution_start}
+                  onChange={(event) =>
+                    handleProposalPreviewFieldChange('execution_start', event.target.value)
+                  }
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Mobilização"
+                />
+              </label>
+            </div>
+
+            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              Prazo de execução *
+              <input
+                required
+                maxLength={200}
+                value={proposalPreviewForm.execution_deadline}
+                onChange={(event) =>
+                  handleProposalPreviewFieldChange('execution_deadline', event.target.value)
+                }
+                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                placeholder="Em até ... dias úteis"
+              />
+            </label>
+
+            <div className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <h3 className="text-[14px] font-bold text-[#0F1F1C]">Áreas e ações</h3>
+                  <p className="mt-1 text-[11px] text-[#5B6B66]">
+                    Não inclua preços, faturamento ou condições de pagamento nesta tabela.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleProposalPreviewAddArea}
+                  disabled={proposalPreviewForm.areas.length >= 50}
+                  className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] border border-[#A7F3D0] bg-white px-3 text-[11px] font-semibold text-[#047857] disabled:opacity-60"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Adicionar área
+                </button>
+              </div>
+              <div className="space-y-3">
+                {proposalPreviewForm.areas.map((area, index) => (
+                  <div
+                    key={`${area.item}-${index}`}
+                    className="rounded-[10px] border border-[#E1E8E5] bg-white p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-[12px] font-bold text-[#0F1F1C]">Área {index + 1}</span>
+                      {proposalPreviewForm.areas.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleProposalPreviewRemoveArea(index)}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#B91C1C] hover:underline"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Remover
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-5">
+                      {(
+                        [
+                          ['item', 'Item', '01'],
+                          ['local', 'Local', 'Área dos porta-paletes'],
+                          ['area', 'Área / metragem', '1.000 m²'],
+                          ['pathology', 'Patologia', 'Descreva a patologia'],
+                          ['solution', 'Solução', 'Descreva a solução'],
+                        ] as const
+                      ).map(([field, label, placeholder]) => (
+                        <label
+                          key={field}
+                          className="block text-[11px] font-semibold text-[#0F1F1C]"
+                        >
+                          {label} *
+                          <input
+                            required
+                            maxLength={
+                              field === 'item'
+                                ? 30
+                                : field === 'local'
+                                  ? 300
+                                  : field === 'area'
+                                    ? 80
+                                    : 1000
+                            }
+                            value={area[field]}
+                            onChange={(event) =>
+                              handleProposalPreviewAreaChange(index, field, event.target.value)
+                            }
+                            className="mt-1.5 w-full h-[38px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[11px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                            placeholder={placeholder}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              Solução proposta *
+              <textarea
+                required
+                maxLength={5000}
+                value={proposalPreviewForm.solution_proposed}
+                onChange={(event) =>
+                  handleProposalPreviewFieldChange('solution_proposed', event.target.value)
+                }
+                className="mt-1.5 w-full min-h-[110px] rounded-[10px] border border-[#E1E8E5] bg-white p-3 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                placeholder="Descreva a solução técnica para esta demanda, sem valores comerciais."
+              />
+            </label>
+
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-[12px] text-[#5B6B66]">
+                O modelo e a demanda serão validados novamente pelo servidor.
+              </p>
+              <button
+                type="submit"
+                disabled={isSubmittingProposalPreview || isLoadingApprovedProposalTemplates}
+                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#EA580C] to-[#C2410C] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(234,88,12,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+              >
+                <FileText className="w-4 h-4" />
+                {isSubmittingProposalPreview ? 'Gerando prévia...' : 'Gerar prévia sem preço'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-[14px] font-bold text-[#0F1F1C]">
+                  Pré-visualizações desta demanda
+                </h3>
+                <p className="text-[11px] text-[#5B6B66] mt-1">
+                  Registros gerados sem preço e vinculados ao usuário.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  void loadProposalPreviews(proposalPreviewForm.opportunity_id || undefined)
+                }
+                className="text-[12px] font-semibold text-[#047857] hover:underline"
+              >
+                Atualizar
+              </button>
+            </div>
+            {isLoadingProposalPreviews ? (
+              <p className="text-[12px] text-[#5B6B66]">Carregando prévias...</p>
+            ) : proposalPreviews.length === 0 ? (
+              <p className="text-[12px] text-[#5B6B66]">
+                Nenhuma prévia gerada para a demanda selecionada.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {proposalPreviews.map((preview) => (
+                  <button
+                    key={preview.id}
+                    type="button"
+                    onClick={() => setActiveProposalPreview(preview)}
+                    className={`w-full rounded-[9px] border p-3 text-left ${
+                      activeProposalPreview?.id === preview.id
+                        ? 'border-[#EA580C] bg-[#FFF7ED]'
+                        : 'border-[#E1E8E5] bg-white hover:border-[#FDBA74]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[12px] font-bold text-[#0F1F1C]">
+                        {preview.proposalNumber} · {proposalFamilyLabel(preview.family)}
+                      </span>
+                      <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[10px] font-bold uppercase text-[#C2410C]">
+                        SEM PREÇO
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-[#5B6B66]">
+                      Modelo: {preview.templateName} ·{' '}
+                      {new Date(preview.createdAt).toLocaleString('pt-BR')}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {activeProposalPreview && (
+            <div
+              id="proposal-preview-print"
+              className="mt-6 rounded-[12px] border border-[#CBD5D1] bg-white p-5 text-left shadow-sm"
+            >
+              <div className="flex flex-col gap-3 border-b border-[#E1E8E5] pb-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#C2410C]">
+                    Prévia documental
+                  </p>
+                  <h3 className="mt-1 text-xl font-extrabold text-[#0F1F1C]">MERCO GEOPOLÍMEROS</h3>
+                  <p className="mt-1 text-[12px] text-[#5B6B66]">
+                    {activeProposalPreview.templateName} ·{' '}
+                    {activeProposalPreview.templateModelNumber || 'modelo aprovado'} · v
+                    {activeProposalPreview.templateVersion}
+                  </p>
+                </div>
+                <div className="rounded-[9px] border-2 border-[#EA580C] px-3 py-2 text-center">
+                  <p className="text-[12px] font-extrabold text-[#C2410C]">SEM PREÇO</p>
+                  <p className="text-[10px] font-bold text-[#C2410C]">NÃO ENVIAR</p>
+                </div>
+              </div>
+              <div className="mt-5 grid gap-x-5 gap-y-2 text-[12px] sm:grid-cols-2">
+                <p>
+                  <strong>Proposta:</strong> {activeProposalPreview.proposalNumber} ·{' '}
+                  {activeProposalPreview.revision}
+                </p>
+                <p>
+                  <strong>Data:</strong> {formatProposalDate(activeProposalPreview.proposalDate)} ·{' '}
+                  {activeProposalPreview.city}
+                </p>
+                <p>
+                  <strong>Cliente:</strong> {activeProposalPreview.customerName} ·{' '}
+                  {activeProposalPreview.customerCnpj}
+                </p>
+                <p>
+                  <strong>Contato:</strong> {activeProposalPreview.contactName}
+                  {activeProposalPreview.contactEmail
+                    ? ` · ${activeProposalPreview.contactEmail}`
+                    : ''}
+                </p>
+                <p className="sm:col-span-2">
+                  <strong>Endereço:</strong> {activeProposalPreview.customerAddress}
+                </p>
+                <p>
+                  <strong>Local da obra:</strong> {activeProposalPreview.localObra}
+                </p>
+                <p>
+                  <strong>Superfície:</strong> {activeProposalPreview.surfaceType}
+                </p>
+              </div>
+              <div className="mt-5">
+                <h4 className="text-[13px] font-extrabold text-[#0F1F1C]">
+                  Descrição das áreas e ações
+                </h4>
+                <div className="mt-2 overflow-x-auto rounded-[8px] border border-[#E1E8E5]">
+                  <table className="w-full min-w-[680px] text-left text-[11px]">
+                    <thead
+                      className="bg-[#F6F8F7] text-[#5B6B66]
+                      "
+                    >
+                      <tr>
+                        <th className="p-2">Item</th>
+                        <th className="p-2">Local</th>
+                        <th className="p-2">Área</th>
+                        <th className="p-2">Patologia</th>
+                        <th className="p-2">Solução</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeProposalPreview.areas.map((area) => (
+                        <tr key={area.item} className="border-t border-[#E1E8E5]">
+                          <td className="p-2">{area.item}</td>
+                          <td className="p-2">{area.local}</td>
+                          <td className="p-2">{area.area}</td>
+                          <td className="p-2">{area.pathology}</td>
+                          <td className="p-2">{area.solution}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="mt-5">
+                <h4 className="text-[13px] font-extrabold text-[#0F1F1C]">Solução proposta</h4>
+                <p className="mt-2 whitespace-pre-wrap text-[12px] leading-6 text-[#33443F]">
+                  {activeProposalPreview.solutionProposed}
+                </p>
+              </div>
+              <div className="mt-5">
+                <h4 className="text-[13px] font-extrabold text-[#0F1F1C]">
+                  Descrição do sistema — {proposalFamilyLabel(activeProposalPreview.family)}
+                </h4>
+                <div className="mt-2 space-y-2 text-[12px] leading-6 text-[#33443F]">
+                  {proposalFixedSystemCopy(activeProposalPreview.family).map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-5 grid gap-3 rounded-[9px] bg-[#F6F8F7] p-3 text-[12px] sm:grid-cols-2">
+                <p>
+                  <strong>Início:</strong> {activeProposalPreview.executionStart}
+                </p>
+                <p>
+                  <strong>Prazo de execução:</strong> {activeProposalPreview.executionDeadline}
+                </p>
+              </div>
+              <p className="mt-5 border-t border-[#E1E8E5] pt-4 text-[11px] italic text-[#5B6B66]">
+                Esta prévia não contém preço, faturamento ou condições de pagamento. A tentativa de
+                envio é bloqueada pelo servidor.
+              </p>
+              <div className="proposal-print-controls mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleProposalPreviewPrint}
+                  className="inline-flex h-[38px] items-center gap-1.5 rounded-[8px] bg-[#064E3B] px-4 text-[12px] font-semibold text-white"
+                >
+                  <Printer className="w-4 h-4" /> Imprimir / salvar PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleProposalPreviewSendAttempt()}
+                  disabled={isSubmittingProposalPreview}
+                  className="inline-flex h-[38px] items-center gap-1.5 rounded-[8px] border border-[#FCA5A5] bg-[#FEF2F2] px-4 text-[12px] font-semibold text-[#B91C1C] disabled:opacity-60"
+                >
+                  <Send className="w-4 h-4" /> Tentar enviar (deve bloquear)
+                </button>
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">

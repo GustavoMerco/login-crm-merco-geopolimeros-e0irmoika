@@ -1,13 +1,13 @@
 # Estado atual — Adapta Cliente
 
-- task_id: T1.13
+- task_id: T1.14
 - champion: Paulo Romeiro
 - spec: 04_fase-atual/specs/SPEC-1-007.md
-- etapa: em_correcao
-- autorizacao_implementacao: confirmada em 2026-09-19 - Opção A escolhida; modelos reais DOCX Poliureia e Geotecnia fornecidos para registro/aprovação
-- teste_humano: falhou em 2026-09-19 20:02 - upload e aprovação funcionaram, mas dono não conseguiu abrir/ver os modelos enviados
-- verificacao_automatica: passou anteriormente - QA SKIP 0.0.52; debug da visualização em andamento
+- etapa: implementando
+- autorizacao_implementacao: confirmada em 2026-09-19 20:19 - "Pode implementar a T1.14 com o plano analisado."
+- teste_humano: pendente
+- verificacao_automatica: pendente - baseline atual T1.13: QA SKIP 0.0.53; T1.14 em implementação
 - aprendizado: pendente
-- ultima_acao: causa raiz reproduzida: card exibia apenas o nome do arquivo, sem URL/ação de abertura autenticada
-- proxima_acao: adicionar URL autenticada e botão Abrir/baixar DOCX, reexecutar QA e prova de arquivo
-- atualizado_em: 2026-09-19T20:03:00-03:00
+- ultima_acao: início da implementação autorizada da T1.14: prévia sem preço baseada em modelo aprovado
+- proxima_acao: implementar backend, formulário, prévia imprimível e bloqueio server-side de envio; depois executar QA
+- atualizado_em: 2026-09-19T20:19:00-03:00

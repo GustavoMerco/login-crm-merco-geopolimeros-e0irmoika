@@ -74,6 +74,30 @@
     padding: 0 !important;
     margin: 0 !important;
   }
+
+  @media print {
+    body.printing-proposal-preview * {
+      visibility: hidden !important;
+    }
+
+    body.printing-proposal-preview #proposal-preview-print,
+    body.printing-proposal-preview #proposal-preview-print * {
+      visibility: visible !important;
+    }
+
+    body.printing-proposal-preview #proposal-preview-print {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      margin: 0 !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+
+    body.printing-proposal-preview .proposal-print-controls {
+      display: none !important;
+    }
+  }
 }
 
 @layer utilities {

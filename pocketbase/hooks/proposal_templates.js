@@ -1,5 +1,4 @@
 // T1.13 - registro de modelo real de proposta via upload nativo PocketBase.
-// Toda lógica inline no callback: JSVM não expõe declarações top-level.
 onRecordCreateRequest(
   (e) => {
     const record = e.record
@@ -23,7 +22,6 @@ onRecordCreateRequest(
     const name = (record.getString('name') || '').trim()
     if (!name) return reject('name_required', 'Informe o nome do modelo.')
 
-    // Nenhum modelo nasce aprovado: aprovação é decisão server-side de Engenharia/Admin.
     record.set('status', 'rascunho')
     record.set('version', 1)
     record.set('created_by', e.auth.id)
@@ -131,17 +129,18 @@ routerAdd(
     let filter = 'status = "aprovado"'
     if (family) filter += ' && family = "' + family + '"'
 
-    const templates = $app.findRecordsByFilter('proposal_templates', filter, '-version', 50, 0)
+    const templates = $app.findRecordsByFilter('proposal_templates', filter, '', 50, 0)
     const items = []
     for (const t of templates) {
-      const version = parseInt(t.getString('version') || '1', 10)
+      const rawVersion = t.getString('version') || '1'
+      const rawFile = t.getString('file') || ''
       items.push({
         id: t.id,
         family: t.getString('family'),
         name: t.getString('name'),
         modelNumber: t.getString('model_number'),
-        version: Number.isFinite(version) ? version : 1,
-        fileUrl: '/api/files/proposal_templates/' + t.id + '/' + t.getString('file'),
+        version: rawVersion,
+        fileUrl: '/api/files/proposal_templates/' + t.id + '/' + rawFile,
         approvedAt: t.getString('approved_at'),
       })
     }

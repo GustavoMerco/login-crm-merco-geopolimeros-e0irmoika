@@ -64,6 +64,12 @@ import {
   verifyBackup,
   type BackupReceiptItem,
 } from '@/services/backup'
+import {
+  approveProposalTemplate,
+  createProposalTemplate,
+  getProposalTemplates,
+  type ProposalTemplateRecord,
+} from '@/services/proposalTemplates'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -242,6 +248,17 @@ export const Dashboard: React.FC = () => {
   const [backupInfo, setBackupInfo] = useState<string | null>(null)
   const [isSubmittingBackup, setIsSubmittingBackup] = useState(false)
   const [isLoadingBackup, setIsLoadingBackup] = useState(true)
+  const [proposalTemplates, setProposalTemplates] = useState<ProposalTemplateRecord[]>([])
+  const [proposalTemplateForm, setProposalTemplateForm] = useState({
+    family: 'poliureia' as 'poliureia' | 'geotecnia',
+    name: '',
+    model_number: '',
+    file: null as File | null,
+  })
+  const [proposalTemplateError, setProposalTemplateError] = useState<string | null>(null)
+  const [proposalTemplateInfo, setProposalTemplateInfo] = useState<string | null>(null)
+  const [isSubmittingProposalTemplate, setIsSubmittingProposalTemplate] = useState(false)
+  const [isLoadingProposalTemplates, setIsLoadingProposalTemplates] = useState(true)
 
   useEffect(() => {
     let active = true
@@ -1009,6 +1026,90 @@ export const Dashboard: React.FC = () => {
     }
   }
 
+  const loadProposalTemplates = async () => {
+    setIsLoadingProposalTemplates(true)
+    try {
+      setProposalTemplates(await getProposalTemplates())
+      setProposalTemplateError(null)
+    } catch (error: unknown) {
+      setProposalTemplateError(getErrorMessage(error))
+    } finally {
+      setIsLoadingProposalTemplates(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadProposalTemplates()
+  }, [])
+
+  const handleProposalTemplateSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setProposalTemplateError(null)
+    setProposalTemplateInfo(null)
+    if (!proposalTemplateForm.file) {
+      setProposalTemplateError('Anexe o modelo DOCX real da Mercogeo.')
+      return
+    }
+    if (
+      proposalTemplateForm.file.type !==
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' &&
+      !proposalTemplateForm.file.name.toLowerCase().endsWith('.docx')
+    ) {
+      setProposalTemplateError('O modelo deve ser um arquivo DOCX.')
+      return
+    }
+    setIsSubmittingProposalTemplate(true)
+    try {
+      const result = await createProposalTemplate({
+        family: proposalTemplateForm.family,
+        name: proposalTemplateForm.name.trim(),
+        model_number: proposalTemplateForm.model_number.trim(),
+        file: proposalTemplateForm.file,
+        variable_fields: [
+          'numero_proposta',
+          'revisao',
+          'data',
+          'cidade',
+          'cliente_nome',
+          'cliente_cnpj',
+          'cliente_endereco',
+          'cliente_contato',
+          'cliente_email',
+          'local_obra',
+          'tipo_superficie',
+          'tabela_areas',
+          'solucao_proposta',
+          'prazo_execucao',
+          'familia',
+        ],
+      })
+      setProposalTemplateInfo(
+        `Modelo enviado como ${result.status}. Aguarda aprovação de Engenharia/Admin.`,
+      )
+      setProposalTemplateForm({ family: 'poliureia', name: '', model_number: '', file: null })
+      await loadProposalTemplates()
+    } catch (error: unknown) {
+      setProposalTemplateError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingProposalTemplate(false)
+    }
+  }
+
+  const handleProposalTemplateApprove = async (templateId: string) => {
+    setProposalTemplateError(null)
+    setProposalTemplateInfo(null)
+    setIsSubmittingProposalTemplate(true)
+    try {
+      const result = await approveProposalTemplate(templateId)
+      setProposalTemplateInfo(`Modelo aprovado às ${result.approvedAt}.`)
+      await loadProposalTemplates()
+    } catch (error: unknown) {
+      setProposalTemplateError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingProposalTemplate(false)
+    }
+  }
+
   const formatDuration = (ms: number) => {
     if (!ms) return 'sem amostra'
     const hours = ms / 3600000
@@ -1629,6 +1730,196 @@ export const Dashboard: React.FC = () => {
                     >
                       {receipt.result}
                     </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Modelos reais de proposta</h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                T1.13 — envie os modelos DOCX reais da Mercogeo. Eles entram como rascunho; somente
+                Engenharia/Admin aprova. Nenhum template é inventado e a T1.14 usará apenas modelos
+                aprovados.
+              </p>
+            </div>
+          </div>
+
+          {proposalTemplateError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{proposalTemplateError}</span>
+            </div>
+          )}
+
+          {proposalTemplateInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {proposalTemplateInfo}
+            </div>
+          )}
+
+          <form onSubmit={handleProposalTemplateSubmit} className="space-y-4" noValidate>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Família *
+                <select
+                  value={proposalTemplateForm.family}
+                  onChange={(event) =>
+                    setProposalTemplateForm((current) => ({
+                      ...current,
+                      family: event.target.value as 'poliureia' | 'geotecnia',
+                    }))
+                  }
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                >
+                  <option value="poliureia">Poliureia</option>
+                  <option value="geotecnia">Geotecnia</option>
+                </select>
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Nome do modelo *
+                <input
+                  required
+                  maxLength={200}
+                  value={proposalTemplateForm.name}
+                  onChange={(event) =>
+                    setProposalTemplateForm((current) => ({ ...current, name: event.target.value }))
+                  }
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Modelo real — Poliureia"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Nº do modelo
+                <input
+                  maxLength={60}
+                  value={proposalTemplateForm.model_number}
+                  onChange={(event) =>
+                    setProposalTemplateForm((current) => ({
+                      ...current,
+                      model_number: event.target.value,
+                    }))
+                  }
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="NR..."
+                />
+              </label>
+            </div>
+
+            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              Arquivo DOCX real *
+              <input
+                required
+                type="file"
+                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={(event) =>
+                  setProposalTemplateForm((current) => ({
+                    ...current,
+                    file: event.target.files?.[0] || null,
+                  }))
+                }
+                className="mt-1.5 block w-full rounded-[10px] border border-[#E1E8E5] bg-white px-3 py-2.5 text-[13px] font-normal file:mr-3 file:rounded-[7px] file:border-0 file:bg-[#ECFDF5] file:px-3 file:py-1.5 file:text-[12px] file:font-semibold file:text-[#047857]"
+              />
+              <span className="mt-1 block text-[11px] font-normal text-[#5B6B66]">
+                O arquivo original é preservado; a prévia sem preço será uma etapa posterior.
+              </span>
+            </label>
+
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-[12px] text-[#5B6B66]">
+                Campos mapeados: cliente, obra, áreas/patologias, solução, prazo, família e dados do
+                cabeçalho.
+              </p>
+              <button
+                type="submit"
+                disabled={isSubmittingProposalTemplate}
+                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+              >
+                <FileText className="w-4 h-4" />
+                {isSubmittingProposalTemplate ? 'Enviando...' : 'Enviar modelo como rascunho'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Modelos registrados</h3>
+                <p className="text-[12px] text-[#5B6B66] mt-1">
+                  A aprovação é uma decisão explícita e auditada de Engenharia/Admin.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void loadProposalTemplates()}
+                className="text-[12px] font-semibold text-[#047857] hover:underline"
+              >
+                Atualizar
+              </button>
+            </div>
+            {isLoadingProposalTemplates ? (
+              <p className="text-[12px] text-[#5B6B66]">Carregando modelos...</p>
+            ) : proposalTemplates.length === 0 ? (
+              <p className="text-[12px] text-[#5B6B66]">
+                Nenhum modelo registrado ainda. A T1.14 permanece bloqueada até aprovação.
+              </p>
+            ) : (
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {proposalTemplates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-[13px] font-bold text-[#0F1F1C]">
+                        {template.name} · {template.family}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                          template.status === 'aprovado'
+                            ? 'bg-[#ECFDF5] text-[#047857]'
+                            : template.status === 'inativo'
+                              ? 'bg-[#FFF7ED] text-[#C2410C]'
+                              : 'bg-[#F1F5F4] text-[#5B6B66]'
+                        }`}
+                      >
+                        {template.status}
+                      </span>
+                    </div>
+                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                      <span>Modelo: {template.model_number || 'não informado'}</span>
+                      <span>Versão: {template.version}</span>
+                      <span>Arquivo: {template.file}</span>
+                      <span>
+                        Campos variáveis: cabeçalho, cliente, obra, áreas, solução e prazo
+                      </span>
+                      {template.approved_at && <span>Aprovado em: {template.approved_at}</span>}
+                    </div>
+                    {canHomologateCatalog && template.status === 'rascunho' && (
+                      <button
+                        type="button"
+                        onClick={() => void handleProposalTemplateApprove(template.id)}
+                        disabled={isSubmittingProposalTemplate}
+                        className="mt-2 h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                      >
+                        Aprovar modelo
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

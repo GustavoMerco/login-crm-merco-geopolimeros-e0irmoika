@@ -14,14 +14,14 @@ onRecordCreateRequest(
       rejectedAudit.set('details', { reason, source: 'server_proposal_template_create' })
       rejectedAudit.set('retention_days', 365)
       $app.save(rejectedAudit)
-      e.badRequestError(message)
+      return e.badRequestError(message)
     }
 
     const family = (record.getString('family') || '').trim()
-    if (!family) reject('family_required', 'Informe a família do modelo.')
+    if (!family) return reject('family_required', 'Informe a família do modelo.')
 
     const name = (record.getString('name') || '').trim()
-    if (!name) reject('name_required', 'Informe o nome do modelo.')
+    if (!name) return reject('name_required', 'Informe o nome do modelo.')
 
     // Nenhum modelo nasce aprovado: aprovação é decisão server-side de Engenharia/Admin.
     record.set('status', 'rascunho')
@@ -33,7 +33,7 @@ onRecordCreateRequest(
       try {
         JSON.parse(rawFields)
       } catch (_) {
-        reject('variable_fields_invalid', 'Campos variáveis devem ser JSON válido.')
+        return reject('variable_fields_invalid', 'Campos variáveis devem ser JSON válido.')
       }
     }
 
@@ -75,27 +75,29 @@ routerAdd(
       rejectedAudit.set('details', { reason, source: 'server_proposal_template_approve' })
       rejectedAudit.set('retention_days', 365)
       $app.save(rejectedAudit)
-      e.badRequestError(message)
+      return e.badRequestError(message)
     }
 
     const templateId = typeof body.id === 'string' ? body.id.trim() : ''
     if (!/^[a-z0-9]{15}$/.test(templateId))
-      reject('template_id_required', 'Informe o modelo a ser aprovado.')
+      return reject('template_id_required', 'Informe o modelo a ser aprovado.')
 
     const role = e.auth.getString('role')
     if (role !== 'engenharia' && role !== 'admin') {
-      e.forbiddenError('Somente Engenharia ou Administrador podem aprovar o modelo de proposta.')
+      return e.forbiddenError(
+        'Somente Engenharia ou Administrador podem aprovar o modelo de proposta.',
+      )
     }
 
     let template
     try {
       template = $app.findRecordById('proposal_templates', templateId)
     } catch (_) {
-      reject('template_not_found', 'Modelo não encontrado.')
+      return reject('template_not_found', 'Modelo não encontrado.')
     }
 
     if (template.getString('status') !== 'rascunho')
-      reject('template_not_draft', 'Somente modelos em rascunho podem ser aprovados.')
+      return reject('template_not_draft', 'Somente modelos em rascunho podem ser aprovados.')
 
     const approvedAt = new Date().toISOString()
     $app.runInTransaction((txApp) => {
@@ -132,12 +134,13 @@ routerAdd(
     const templates = $app.findRecordsByFilter('proposal_templates', filter, '-version', 50, 0)
     const items = []
     for (const t of templates) {
+      const version = parseInt(t.getString('version') || '1', 10)
       items.push({
         id: t.id,
         family: t.getString('family'),
         name: t.getString('name'),
         modelNumber: t.getString('model_number'),
-        version: t.getInt('version'),
+        version: Number.isFinite(version) ? version : 1,
         fileUrl: '/api/files/proposal_templates/' + t.id + '/' + t.getString('file'),
         approvedAt: t.getString('approved_at'),
       })

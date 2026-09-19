@@ -1,1 +1,2 @@
 - 2026-09-19T20:09:00-03:00 · task T1.13 · candidato registrado em `06_notas/aprendizado-continuo/AP-2026-09-19-2009-arquivos-autenticados.md` · aprovação do registro não substitui teste do arquivo; upload deve ter abertura autenticada exercitada.
+- 2026-09-19T20:45:00-03:00 · task T1.14 · candidato registrado em `06_notas/aprendizado-continuo/AP-2026-09-19-2045-previa-server-side.md` · prévias devem impor no servidor a ausência de preço e o bloqueio de envio, não apenas exibir um aviso.

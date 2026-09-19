@@ -64,6 +64,9 @@ export const approveProposalTemplate = (id: string) =>
     },
   )
 
+export const proposalTemplateFileUrl = (template: Pick<ProposalTemplateRecord, 'id' | 'file'>) =>
+  `${pb.baseUrl}/api/files/proposal_templates/${template.id}/${encodeURIComponent(template.file)}?token=${encodeURIComponent(pb.authStore.token || '')}`
+
 export const getApprovedProposalTemplates = (family?: string) => {
   const query = family ? `?family=${encodeURIComponent(family)}` : ''
   return pb.send<{ items: ProposalTemplateMatrixItem[] }>(

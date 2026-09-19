@@ -68,6 +68,7 @@ import {
   approveProposalTemplate,
   createProposalTemplate,
   getProposalTemplates,
+  proposalTemplateFileUrl,
   type ProposalTemplateRecord,
 } from '@/services/proposalTemplates'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
@@ -1910,6 +1911,18 @@ export const Dashboard: React.FC = () => {
                       </span>
                       {template.approved_at && <span>Aprovado em: {template.approved_at}</span>}
                     </div>
+                    {template.file && (
+                      <a
+                        href={proposalTemplateFileUrl(template)}
+                        target="_blank"
+                        rel="noreferrer"
+                        download={template.file}
+                        className="mt-3 inline-flex h-[34px] items-center gap-1.5 rounded-[8px] border border-[#A7F3D0] bg-[#ECFDF5] px-3 text-[11px] font-semibold text-[#047857] hover:bg-[#D1FAE5]"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        Abrir / baixar DOCX
+                      </a>
+                    )}
                     {canHomologateCatalog && template.status === 'rascunho' && (
                       <button
                         type="button"

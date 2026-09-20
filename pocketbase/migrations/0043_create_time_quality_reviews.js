@@ -5,8 +5,8 @@ migrate(
     const reviews = new Collection({
       name: 'time_quality_reviews',
       type: 'base',
-      listRule: "@request.auth.id != '' && created_by = @request.auth.id",
-      viewRule: "@request.auth.id != '' && created_by = @request.auth.id",
+      listRule: null,
+      viewRule: null,
       createRule: null,
       updateRule: null,
       deleteRule: null,
@@ -51,6 +51,8 @@ migrate(
     )
     reviews.fields.add(new AutodateField({ name: 'created', onCreate: true, onUpdate: false }))
     reviews.fields.add(new AutodateField({ name: 'updated', onCreate: true, onUpdate: true }))
+    reviews.listRule = "@request.auth.id != '' && created_by = @request.auth.id"
+    reviews.viewRule = "@request.auth.id != '' && created_by = @request.auth.id"
 
     reviews.addIndex('idx_time_quality_reviews_author', false, 'created_by, signed_at', '')
     reviews.addIndex('idx_time_quality_reviews_window', false, 'week_start, week_end', '')

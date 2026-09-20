@@ -1,13 +1,13 @@
 # Estado atual — Adapta Cliente
 
-- task_id: T1.15
+- task_id: T1.16
 - champion: Paulo Romeiro
-- spec: 04_fase-atual/specs/SPEC-1-001.md
+- spec: 04_fase-atual/specs/SPEC-1-004.md
 - etapa: implementando
-- autorizacao_implementacao: confirmada em 2026-09-19 20:54 - "Pode implementar a T1.15 com o plano analisado."
+- autorizacao_implementacao: confirmada em 2026-09-19 21:20 - "Sim, implementar a T1.16"
 - teste_humano: pendente
-- verificacao_automatica: pendente - baseline SKIP 0.0.54; T1.15 em regressão integrada
+- verificacao_automatica: pendente - análise de baseline concluída; runtime na versão 0.0.55; coleções de eventos/tempo/baseline protegidas e migrations 0009, 0011–0015 aplicadas
 - aprendizado: pendente
-- ultima_acao: início da execução autorizada da REG-001/REG-002 sobre controles críticos e integrações T1.2, T1.4, T1.7, T1.10, T1.12 e T1.14
-- proxima_acao: executar provas RED/GREEN integradas, conferir logs/fixtures e QA; depois pedir teste humano
-- atualizado_em: 2026-09-19T20:54:00-03:00
+- ultima_acao: autorização posterior à análise registrada; início da implementação da T1.16
+- proxima_acao: implementar revisão semanal server-side, relatório assinado e interface mínima
+- atualizado_em: 2026-09-19T21:20:00-03:00

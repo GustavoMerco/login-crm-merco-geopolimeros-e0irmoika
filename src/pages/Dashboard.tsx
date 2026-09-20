@@ -28,6 +28,11 @@ import {
 } from '@/services/tracking'
 import { freezeBaseline, getBaselines, type BaselineSnapshotRecord } from '@/services/baselines'
 import {
+  createTimeQualityReview,
+  getTimeQualityReviews,
+  type TimeQualityReviewRecord,
+} from '@/services/timeQuality'
+import {
   createCatalogItem,
   deactivateCatalogItem,
   getCatalogItems,
@@ -178,6 +183,17 @@ export const Dashboard: React.FC = () => {
   const [baselineInfo, setBaselineInfo] = useState<string | null>(null)
   const [isSubmittingBaseline, setIsSubmittingBaseline] = useState(false)
   const [isLoadingBaselines, setIsLoadingBaselines] = useState(true)
+  const [timeQualityReviews, setTimeQualityReviews] = useState<TimeQualityReviewRecord[]>([])
+  const [timeQualityForm, setTimeQualityForm] = useState({
+    week_start: '',
+    week_end: '',
+    criteria:
+      'Timestamps server-side; sequência recebida→apta→pronta→enviada; intervalos encerrados com justificativa de pausa; demandas sem classe não entram na comparação.',
+  })
+  const [timeQualityError, setTimeQualityError] = useState<string | null>(null)
+  const [timeQualityInfo, setTimeQualityInfo] = useState<string | null>(null)
+  const [isSubmittingTimeQuality, setIsSubmittingTimeQuality] = useState(false)
+  const [isLoadingTimeQuality, setIsLoadingTimeQuality] = useState(true)
   const [catalogItems, setCatalogItems] = useState<CatalogItemRecord[]>([])
   const [catalogForm, setCatalogForm] = useState({
     family: '',
@@ -639,6 +655,55 @@ export const Dashboard: React.FC = () => {
       setBaselineError(getErrorMessage(error))
     } finally {
       setIsSubmittingBaseline(false)
+    }
+  }
+
+  const loadTimeQualityReviews = async () => {
+    setIsLoadingTimeQuality(true)
+    try {
+      const result = await getTimeQualityReviews()
+      setTimeQualityReviews(result.items)
+      setTimeQualityError(null)
+    } catch (error: unknown) {
+      setTimeQualityError(getErrorMessage(error))
+    } finally {
+      setIsLoadingTimeQuality(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadTimeQualityReviews()
+  }, [])
+
+  const handleTimeQualityChange = (field: keyof typeof timeQualityForm, value: string) => {
+    setTimeQualityForm((current) => ({ ...current, [field]: value }))
+    setTimeQualityError(null)
+    setTimeQualityInfo(null)
+  }
+
+  const handleTimeQualityReview = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setTimeQualityError(null)
+    setTimeQualityInfo(null)
+    setIsSubmittingTimeQuality(true)
+    try {
+      const result = await createTimeQualityReview({
+        week_start: timeQualityForm.week_start,
+        week_end: timeQualityForm.week_end,
+        criteria: timeQualityForm.criteria.trim(),
+      })
+      setTimeQualityInfo(
+        result.status === 'aprovado'
+          ? 'Revisão assinada e aprovada para comparação.'
+          : result.status === 'sem_amostra'
+            ? 'Revisão assinada sem amostra; nenhuma comparação foi liberada.'
+            : 'Revisão assinada com pendências; a comparação permanece bloqueada.',
+      )
+      await loadTimeQualityReviews()
+    } catch (error: unknown) {
+      setTimeQualityError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingTimeQuality(false)
     }
   }
 
@@ -4232,6 +4297,168 @@ export const Dashboard: React.FC = () => {
                     <p className="mt-1 text-[11px] text-[#5B6B66]">
                       <span className="font-semibold text-[#0F1F1C]">Motivo:</span>{' '}
                       {baseline.freeze_reason}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">
+                Revisão semanal da qualidade do tempo
+              </h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                Relatório assinado pelo servidor: intervalos abertos ou inválidos e timelines não
+                comparáveis ficam explícitos.
+              </p>
+            </div>
+          </div>
+
+          {timeQualityError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{timeQualityError}</span>
+            </div>
+          )}
+
+          {timeQualityInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {timeQualityInfo}
+            </div>
+          )}
+
+          <form onSubmit={handleTimeQualityReview} className="space-y-4" noValidate>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Semana - início *
+                <input
+                  required
+                  type="date"
+                  value={timeQualityForm.week_start}
+                  onChange={(event) => handleTimeQualityChange('week_start', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Semana - fim *
+                <input
+                  required
+                  type="date"
+                  value={timeQualityForm.week_end}
+                  onChange={(event) => handleTimeQualityChange('week_end', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                />
+              </label>
+            </div>
+            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              Critérios usados na revisão *
+              <textarea
+                required
+                minLength={10}
+                maxLength={4000}
+                value={timeQualityForm.criteria}
+                onChange={(event) => handleTimeQualityChange('criteria', event.target.value)}
+                className="mt-1.5 w-full min-h-[90px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+              />
+            </label>
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-[12px] text-[#5B6B66]">
+                O servidor calcula a revisão e grava uma assinatura; o relatório é imutável.
+              </p>
+              <button
+                type="submit"
+                disabled={isSubmittingTimeQuality}
+                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                {isSubmittingTimeQuality ? 'Revisando...' : 'Assinar revisão semanal'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Relatórios assinados</h3>
+                <p className="text-[12px] text-[#5B6B66] mt-1">
+                  A comparação só é liberada quando a revisão não encontra bloqueios ou pendências.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void loadTimeQualityReviews()}
+                className="text-[12px] font-semibold text-[#047857] hover:underline"
+              >
+                Atualizar
+              </button>
+            </div>
+            {isLoadingTimeQuality ? (
+              <p className="text-[12px] text-[#5B6B66]">Carregando revisões...</p>
+            ) : timeQualityReviews.length === 0 ? (
+              <p className="text-[12px] text-[#5B6B66]">Nenhuma revisão semanal assinada ainda.</p>
+            ) : (
+              <div className="space-y-3 max-h-[32rem] overflow-y-auto">
+                {timeQualityReviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-[13px] font-bold text-[#0F1F1C]">
+                        {review.weekStart} a {review.weekEnd}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                          review.status === 'aprovado'
+                            ? 'bg-[#ECFDF5] text-[#047857]'
+                            : review.status === 'sem_amostra'
+                              ? 'bg-[#F1F5F4] text-[#5B6B66]'
+                              : 'bg-[#FFF7ED] text-[#C2410C]'
+                        }`}
+                      >
+                        {review.status === 'sem_amostra' ? 'sem amostra' : review.status}
+                      </span>
+                    </div>
+                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                      <span>Demandas revisadas: {review.reviewedOpportunities}</span>
+                      <span>Elegíveis: {review.eligibleBaselineOpportunities}</span>
+                      <span>Não comparáveis: {review.nonComparableOpportunities}</span>
+                      <span>Tempos abertos: {review.openTimeEntries}</span>
+                      <span>Tempos inválidos: {review.invalidTimeEntries}</span>
+                      <span>Timelines incompletas: {review.incompleteTimelines}</span>
+                    </div>
+                    {review.findings.length > 0 && (
+                      <div className="mt-3 space-y-1">
+                        <p className="text-[11px] font-semibold text-[#0F1F1C]">Achados</p>
+                        {review.findings.map((finding) => (
+                          <p key={finding.code} className="text-[11px] text-[#5B6B66]">
+                            <span className="font-semibold text-[#C2410C]">{finding.count}×</span>{' '}
+                            {finding.description}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-3 text-[11px] text-[#5B6B66]">
+                      <span className="font-semibold text-[#0F1F1C]">Decisão:</span>{' '}
+                      {review.decision}
+                    </p>
+                    <p className="mt-1 text-[10px] text-[#5B6B66] break-all">
+                      Assinado em {review.signedAt} · assinatura {review.signature.slice(0, 16)}…
                     </p>
                   </div>
                 ))}

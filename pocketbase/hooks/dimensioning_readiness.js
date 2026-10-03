@@ -253,10 +253,25 @@ routerAdd(
     }
 
     if (pending.length > 0) {
-      return e.conflictError(
-        'Prontidão não pode ser aprovada: existem pendências sem prova.',
-        pending,
-      )
+      // 409 de negócio esperado via e.json (padrão T1.12): o SDK do frontend
+      // trata status >= 400 como ClientResponseError e o card exibe as pendências.
+      const blockedAudit = new Record(auditLogs)
+      blockedAudit.set('actor_id', e.auth.id)
+      blockedAudit.set('action', 'readiness_approve_blocked')
+      blockedAudit.set('resource', 'phase2_readiness')
+      blockedAudit.set('outcome', 'failure')
+      blockedAudit.set('details', {
+        reason: 'pending_proofs',
+        pendingCount: pending.length,
+        source: 'server_dimensioning_readiness',
+      })
+      blockedAudit.set('retention_days', 365)
+      $app.save(blockedAudit)
+
+      return e.json(409, {
+        error: 'Prontidão não pode ser aprovada: existem pendências sem prova.',
+        pending: pending,
+      })
     }
 
     // RED-P2-001: trocar família sem reaprovar — a aprovação anterior de outra

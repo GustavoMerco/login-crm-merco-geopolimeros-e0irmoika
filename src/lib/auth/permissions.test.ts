@@ -24,6 +24,10 @@ describe('PERMISSIONS', () => {
   it('mantém homologateCatalog intacto (não ampliar permissões antigas)', () => {
     expect(PERMISSIONS.homologateCatalog).toEqual(['engenharia', 'admin'])
   })
+
+  it('inclui manageCompositions restrito a engenharia/admin (T2.3)', () => {
+    expect(PERMISSIONS.manageCompositions).toEqual(['engenharia', 'admin'])
+  })
 })
 
 describe('hasPermission', () => {
@@ -37,6 +41,14 @@ describe('hasPermission', () => {
 
   it('comercial NÃO pode aprovar prontidão (REG-P2-001)', () => {
     expect(hasPermission('comercial', 'approveReadiness')).toBe(false)
+  })
+
+  it('comercial NÃO pode gerenciar composições (T2.3)', () => {
+    expect(hasPermission('comercial', 'manageCompositions')).toBe(false)
+  })
+
+  it('engenharia pode gerenciar composições (T2.3)', () => {
+    expect(hasPermission('engenharia', 'manageCompositions')).toBe(true)
   })
 
   it('papel ausente é negado', () => {

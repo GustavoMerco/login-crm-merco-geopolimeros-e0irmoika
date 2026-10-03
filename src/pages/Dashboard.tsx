@@ -90,6 +90,7 @@ import {
   type ProposalTemplateMatrixItem,
 } from '@/services/proposalPreviews'
 import { approveReadiness, getReadiness, type ReadinessStatus } from '@/services/dimensioning'
+import { createComposition, getCompositions, type CompositionRecord } from '@/services/compositions'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -226,6 +227,25 @@ export const Dashboard: React.FC = () => {
     baseline_id: '',
     recovery_evidence_ref: '',
     phase1_receipt_ref: '',
+  })
+  const [compositions, setCompositions] = useState<CompositionRecord[]>([])
+  const [compositionError, setCompositionError] = useState<string | null>(null)
+  const [compositionInfo, setCompositionInfo] = useState<string | null>(null)
+  const [isLoadingCompositions, setIsLoadingCompositions] = useState(true)
+  const [isSubmittingComposition, setIsSubmittingComposition] = useState(false)
+  const [compositionForm, setCompositionForm] = useState({
+    catalog_item_id: '',
+    code: '',
+    output_unit: '',
+    source: '',
+    fixture_ref: '',
+    precision: '2 casas decimais',
+    rounding: 'normal',
+    tolerance: '5%',
+    valid_from: '',
+    valid_until: '',
+    inputs_text: '',
+    resources_text: '',
   })
   const [pilotParams, setPilotParams] = useState<PilotParamRecord[]>([])
   const [paramStatus, setParamStatus] = useState<ParamStatusResponse | null>(null)
@@ -403,6 +423,82 @@ export const Dashboard: React.FC = () => {
       setReadinessError(getErrorMessage(error))
     } finally {
       setIsApprovingReadiness(false)
+    }
+  }
+
+  const loadCompositions = async () => {
+    setIsLoadingCompositions(true)
+    try {
+      const items = await getCompositions()
+      setCompositions(items)
+      setCompositionError(null)
+    } catch (error: unknown) {
+      setCompositionError(getErrorMessage(error))
+    } finally {
+      setIsLoadingCompositions(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadCompositions()
+  }, [])
+
+  const handleCompositionChange = (field: string, value: string) => {
+    setCompositionForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleCompositionSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setCompositionError(null)
+    setCompositionInfo(null)
+    setIsSubmittingComposition(true)
+    try {
+      const inputs = compositionForm.inputs_text
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+          const [name, unit] = line.split('|').map((part) => part.trim())
+          return { name: name || '', unit: unit || '' }
+        })
+      const resources = compositionForm.resources_text
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+          const [id, unit, coefficient, source] = line.split('|').map((part) => part.trim())
+          return {
+            id: id || '',
+            unit: unit || '',
+            coefficient: coefficient || '',
+            source: source || '',
+          }
+        })
+      const result = await createComposition({
+        catalog_item_id: compositionForm.catalog_item_id,
+        code: compositionForm.code,
+        output_unit: compositionForm.output_unit,
+        source: compositionForm.source,
+        fixture_ref: compositionForm.fixture_ref,
+        precision: compositionForm.precision,
+        rounding: compositionForm.rounding as 'normal' | 'up' | 'down',
+        tolerance: compositionForm.tolerance,
+        valid_from: compositionForm.valid_from,
+        valid_until: compositionForm.valid_until,
+        owner_id: user?.id || '',
+        inputs,
+        resources,
+        formula_ast: { op: 'sum', args: [] },
+      })
+      setCompositionInfo(
+        'Rascunho criado: versão ' + result.version + ' (status ' + result.status + ').',
+      )
+      setCompositionForm((prev) => ({ ...prev, code: '' }))
+      void loadCompositions()
+    } catch (error: unknown) {
+      setCompositionError(getErrorMessage(error))
+    } finally {
+      setIsSubmittingComposition(false)
     }
   }
 
@@ -1520,6 +1616,8 @@ export const Dashboard: React.FC = () => {
   const canHomologateCatalog = serverPermission === 'allowed' && localPermission
   const localReadinessPermission = hasPermission(role, 'approveReadiness')
   const canApproveReadiness = serverPermission === 'allowed' && localReadinessPermission
+  const localCompositionPermission = hasPermission(role, 'manageCompositions')
+  const canManageCompositions = serverPermission === 'allowed' && localCompositionPermission
   const permissionMessage =
     serverPermission === 'loading'
       ? 'Verificando a permissão no servidor...'
@@ -2150,6 +2248,248 @@ export const Dashboard: React.FC = () => {
                 {isApprovingReadiness ? 'Assinando...' : 'Assinar prontidão'}
               </button>
             </form>
+          )}
+        </section>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <Boxes className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Biblioteca de composições</h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                Rascunho versionado por item do catálogo: código, família, unidade de saída,
+                insumos, recursos, fórmula estrutural, fonte, vigência, precisão, arredondamento e
+                tolerância. Homologação e consulta de utilizáveis virão na T2.4.
+              </p>
+            </div>
+          </div>
+
+          {compositionError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{compositionError}</span>
+            </div>
+          )}
+
+          {compositionInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {compositionInfo}
+            </div>
+          )}
+
+          <div className="mb-6">
+            <h3 className="text-[15px] font-bold text-[#0F1F1C] mb-3">Versões registradas</h3>
+            {isLoadingCompositions ? (
+              <p className="text-[13px] text-[#5B6B66]">Carregando composições...</p>
+            ) : compositions.length === 0 ? (
+              <p className="text-[13px] text-[#5B6B66]">
+                Nenhuma composição registrada ainda. O primeiro rascunho nasce como versão 1.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {compositions.map((composition) => (
+                  <div
+                    key={composition.id}
+                    className="p-3.5 rounded-[12px] border border-[#E1E8E5] bg-[#F8FAF9] flex items-center justify-between gap-3"
+                  >
+                    <div>
+                      <p className="text-[13px] font-semibold text-[#0F1F1C]">
+                        {composition.code} · v{composition.version} ·{' '}
+                        <span className="font-normal text-[#5B6B66]">{composition.family}</span>
+                      </p>
+                      <p className="text-[12px] text-[#5B6B66]">
+                        {composition.output_unit} · vigência {composition.valid_from} a{' '}
+                        {composition.valid_until} · fonte: {composition.source}
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 ${
+                        composition.status === 'homologado'
+                          ? 'bg-[#ECFDF5] text-[#047857]'
+                          : composition.status === 'inativo'
+                            ? 'bg-[#F1F5F4] text-[#5B6B66]'
+                            : 'bg-[#FFF7ED] text-[#C2410C]'
+                      }`}
+                    >
+                      {composition.status === 'homologado'
+                        ? 'HOMOLOGADO'
+                        : composition.status === 'inativo'
+                          ? 'INATIVO'
+                          : 'RASCUNHO'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {canManageCompositions ? (
+            <form onSubmit={handleCompositionSubmit} className="space-y-4" noValidate>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Item do catálogo (id) *
+                  <input
+                    required
+                    maxLength={15}
+                    value={compositionForm.catalog_item_id}
+                    onChange={(event) =>
+                      handleCompositionChange('catalog_item_id', event.target.value)
+                    }
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="id catalog_items"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Código da composição *
+                  <input
+                    required
+                    maxLength={64}
+                    value={compositionForm.code}
+                    onChange={(event) => handleCompositionChange('code', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Ex.: COMP-GEO-001"
+                  />
+                </label>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Unidade de saída *
+                  <input
+                    required
+                    maxLength={40}
+                    value={compositionForm.output_unit}
+                    onChange={(event) => handleCompositionChange('output_unit', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Ex.: m³"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Precisão *
+                  <input
+                    required
+                    maxLength={40}
+                    value={compositionForm.precision}
+                    onChange={(event) => handleCompositionChange('precision', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Tolerância *
+                  <input
+                    required
+                    maxLength={40}
+                    value={compositionForm.tolerance}
+                    onChange={(event) => handleCompositionChange('tolerance', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  />
+                </label>
+              </div>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Fonte *
+                <input
+                  required
+                  maxLength={200}
+                  value={compositionForm.source}
+                  onChange={(event) => handleCompositionChange('source', event.target.value)}
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Origem do contrato (ex.: contrato sintético T2.3)"
+                />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Início da vigência *
+                  <input
+                    required
+                    type="date"
+                    value={compositionForm.valid_from}
+                    onChange={(event) => handleCompositionChange('valid_from', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Fim da vigência *
+                  <input
+                    required
+                    type="date"
+                    value={compositionForm.valid_until}
+                    onChange={(event) => handleCompositionChange('valid_until', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  />
+                </label>
+              </div>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Insumos * (um por linha: nome | unidade)
+                <textarea
+                  required
+                  rows={2}
+                  value={compositionForm.inputs_text}
+                  onChange={(event) => handleCompositionChange('inputs_text', event.target.value)}
+                  className="mt-1.5 w-full px-3 py-2.5 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder={'Insumo A | m2\nInsumo B | kg'}
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Recursos * (um por linha: id | unidade | coeficiente | fonte)
+                <textarea
+                  required
+                  rows={2}
+                  value={compositionForm.resources_text}
+                  onChange={(event) =>
+                    handleCompositionChange('resources_text', event.target.value)
+                  }
+                  className="mt-1.5 w-full px-3 py-2.5 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="id-do-recurso | m2 | 1.5 | contrato sintético v1"
+                />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Referência da fixture *
+                  <input
+                    required
+                    maxLength={500}
+                    value={compositionForm.fixture_ref}
+                    onChange={(event) => handleCompositionChange('fixture_ref', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Ex.: FIXTURE-SINTETICA-T2.3 (massa de teste)"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Arredondamento *
+                  <select
+                    required
+                    value={compositionForm.rounding}
+                    onChange={(event) => handleCompositionChange('rounding', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="up">Para cima</option>
+                    <option value="down">Para baixo</option>
+                  </select>
+                </label>
+              </div>
+              <button
+                type="submit"
+                disabled={isSubmittingComposition}
+                className="h-[44px] px-5 rounded-[10px] bg-[#10B981] text-white text-[13px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+              >
+                {isSubmittingComposition ? 'Salvando...' : 'Criar rascunho (v1)'}
+              </button>
+            </form>
+          ) : (
+            <p className="text-[13px] text-[#5B6B66]">
+              Somente Engenharia/Admin criam ou revisam composições; seu papel tem acesso de
+              visualização.
+            </p>
           )}
         </section>
 

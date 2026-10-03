@@ -22,6 +22,7 @@ export const PERMISSIONS = {
   viewDashboard: ['comercial', 'engenharia', 'financeiro', 'aprovador', 'gestao', 'admin'],
   homologateCatalog: ['engenharia', 'admin'],
   approveReadiness: ['engenharia', 'admin'],
+  manageCompositions: ['engenharia', 'admin'],
 } as const satisfies Record<string, readonly UserRole[]>
 
 export type Permission = keyof typeof PERMISSIONS

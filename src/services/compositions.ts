@@ -65,12 +65,24 @@ export type ReviseCompositionInput = Omit<
   id: string
 }
 
-export const getCompositions = async () => {
-  const result = await pb.collection('composition_versions').getList<CompositionRecord>(1, 100, {
-    sort: '-created',
-  })
-  return result.items
+export type CompositionListItem = {
+  id: string
+  code: string
+  family: string
+  version: number
+  status: 'rascunho' | 'homologado' | 'inativo'
+  outputUnit: string
+  inputsCount: number
+  resourcesCount: number
+  source: string
+  validFrom: string
+  validUntil: string
+  fixtureRef: string
+  created: string
 }
+
+export const getCompositions = () =>
+  pb.send<{ items: CompositionListItem[] }>('/backend/v1/compositions', { method: 'GET' })
 
 export const createComposition = (input: CreateCompositionInput) =>
   pb.send<{ id: string; version: number; status: string }>('/backend/v1/compositions', {

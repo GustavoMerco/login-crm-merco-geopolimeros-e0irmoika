@@ -90,7 +90,11 @@ import {
   type ProposalTemplateMatrixItem,
 } from '@/services/proposalPreviews'
 import { approveReadiness, getReadiness, type ReadinessStatus } from '@/services/dimensioning'
-import { createComposition, getCompositions, type CompositionRecord } from '@/services/compositions'
+import {
+  createComposition,
+  getCompositions,
+  type CompositionListItem,
+} from '@/services/compositions'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -228,7 +232,7 @@ export const Dashboard: React.FC = () => {
     recovery_evidence_ref: '',
     phase1_receipt_ref: '',
   })
-  const [compositions, setCompositions] = useState<CompositionRecord[]>([])
+  const [compositions, setCompositions] = useState<CompositionListItem[]>([])
   const [compositionError, setCompositionError] = useState<string | null>(null)
   const [compositionInfo, setCompositionInfo] = useState<string | null>(null)
   const [isLoadingCompositions, setIsLoadingCompositions] = useState(true)
@@ -429,8 +433,8 @@ export const Dashboard: React.FC = () => {
   const loadCompositions = async () => {
     setIsLoadingCompositions(true)
     try {
-      const items = await getCompositions()
-      setCompositions(items)
+      const result = await getCompositions()
+      setCompositions(result.items)
       setCompositionError(null)
     } catch (error: unknown) {
       setCompositionError(getErrorMessage(error))
@@ -438,7 +442,6 @@ export const Dashboard: React.FC = () => {
       setIsLoadingCompositions(false)
     }
   }
-
   useEffect(() => {
     void loadCompositions()
   }, [])

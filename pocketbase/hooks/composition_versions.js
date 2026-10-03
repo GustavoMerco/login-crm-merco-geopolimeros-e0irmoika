@@ -1,4 +1,46 @@
 routerAdd(
+  'GET',
+  '/backend/v1/compositions',
+  (e) => {
+    // Listagem para a seção Biblioteca: autenticado, leitura autorizada
+    // (Comercial visualiza; escrita continua restrita a Engenharia/Admin).
+    const records = $app.findRecordsByFilter('composition_versions', '', '-created', 100, 0)
+    const items = []
+    for (const r of records) {
+      let inputs = []
+      let resources = []
+      try {
+        inputs = JSON.parse(r.getString('inputs') || '[]')
+      } catch (_) {
+        inputs = []
+      }
+      try {
+        resources = JSON.parse(r.getString('resources') || '[]')
+      } catch (_) {
+        resources = []
+      }
+      items.push({
+        id: r.id,
+        code: r.getString('code'),
+        family: r.getString('family'),
+        version: r.getInt('version'),
+        status: r.getString('status'),
+        outputUnit: r.getString('output_unit'),
+        inputsCount: inputs.length,
+        resourcesCount: resources.length,
+        source: r.getString('source'),
+        validFrom: r.getString('valid_from'),
+        validUntil: r.getString('valid_until'),
+        fixtureRef: r.getString('fixture_ref'),
+        created: r.getString('created'),
+      })
+    }
+    return e.json(200, { items })
+  },
+  $apis.requireAuth(),
+)
+
+routerAdd(
   'POST',
   '/backend/v1/compositions',
   (e) => {

@@ -2023,11 +2023,17 @@ export const Dashboard: React.FC = () => {
                   className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-bold ${
                     readinessStatus.status === 'aprovado'
                       ? 'bg-[#ECFDF5] text-[#047857]'
-                      : 'bg-[#FEF2F2] text-[#B91C1C]'
+                      : readinessStatus.status === 'invalidado'
+                        ? 'bg-[#FEF2F2] text-[#B91C1C]'
+                        : 'bg-[#FFF7ED] text-[#C2410C]'
                   }`}
                 >
-                  {readinessStatus.status === 'aprovado' ? 'APROVADO' : 'BLOQUEADO'}
-                </span>
+                  {readinessStatus.status === 'aprovado'
+                    ? 'APROVADO'
+                    : readinessStatus.status === 'invalidado'
+                      ? 'INVALIDADO'
+                      : 'BLOQUEADO'}
+                </span>{' '}
                 {readinessStatus.family && (
                   <span className="text-[12px] font-semibold text-[#0F1F1C]">
                     Família: {readinessStatus.family}

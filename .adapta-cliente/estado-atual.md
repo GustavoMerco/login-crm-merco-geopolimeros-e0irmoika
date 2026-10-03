@@ -1,13 +1,13 @@
 # Estado atual — Adapta Cliente
 
-- task_id: T1.16
+- task_id: T2.2
 - champion: Paulo Romeiro
-- spec: 04_fase-atual/specs/SPEC-1-004.md
-- etapa: em_correcao
-- autorizacao_implementacao: confirmada em 2026-09-19 21:20 - "Sim, implementar a T1.16"
-- teste_humano: falhou em 2026-09-19 21:44 - "Retornou esse erro \"Something went wrong while processing your request.\""
-- verificacao_automatica: passou - versão SKIP 0.0.57; setup, análise estática, build, integrações e testes passaram; falha surgiu no teste humano
+- spec: 04_fase-atual/specs/spec-2-001.md
+- etapa: implementando
+- autorizacao_implementacao: confirmada em 2026-10-03 15:38 - "Sim, pode implementar a T2.2"
+- teste_humano: pendente
+- verificacao_automatica: pendente
 - aprendizado: pendente
-- ultima_acao: teste humano da T1.16 falhou com erro genérico no preview; investigação de runtime iniciada
-- proxima_acao: localizar a chamada/causa no log do backend e corrigir somente a T1.16
-- atualizado_em: 2026-09-19T21:44:00-03:00
+- ultima_acao: autorização recebida; implementação iniciada (migration 0044, hook, serviço, card, suíte real)
+- proxima_acao: gravar migration 0044 e hook dimensioning_readiness.js
+- atualizado_em: 2026-10-03T15:39:00-03:00

@@ -89,6 +89,7 @@ import {
   type ProposalPreviewRecord,
   type ProposalTemplateMatrixItem,
 } from '@/services/proposalPreviews'
+import { approveReadiness, getReadiness, type ReadinessStatus } from '@/services/dimensioning'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { MercoLogo } from '@/components/MercoLogo'
@@ -212,6 +213,20 @@ export const Dashboard: React.FC = () => {
   const [isLoadingCatalog, setIsLoadingCatalog] = useState(true)
   const [deactivateTarget, setDeactivateTarget] = useState<string | null>(null)
   const [deactivateReason, setDeactivateReason] = useState('')
+  const [readinessStatus, setReadinessStatus] = useState<ReadinessStatus | null>(null)
+  const [readinessError, setReadinessError] = useState<string | null>(null)
+  const [readinessInfo, setReadinessInfo] = useState<string | null>(null)
+  const [isLoadingReadiness, setIsLoadingReadiness] = useState(true)
+  const [isApprovingReadiness, setIsApprovingReadiness] = useState(false)
+  const [readinessForm, setReadinessForm] = useState({
+    pilot_family: '',
+    pilot_owner: '',
+    pilot_reason: '',
+    sla_record_id: '',
+    baseline_id: '',
+    recovery_evidence_ref: '',
+    phase1_receipt_ref: '',
+  })
   const [pilotParams, setPilotParams] = useState<PilotParamRecord[]>([])
   const [paramStatus, setParamStatus] = useState<ParamStatusResponse | null>(null)
   const [paramForm, setParamForm] = useState({
@@ -343,6 +358,53 @@ export const Dashboard: React.FC = () => {
       active = false
     }
   }, [])
+
+  const loadReadiness = async () => {
+    setIsLoadingReadiness(true)
+    try {
+      const result = await getReadiness()
+      setReadinessStatus(result)
+      setReadinessError(null)
+    } catch (error: unknown) {
+      setReadinessError(getErrorMessage(error))
+    } finally {
+      setIsLoadingReadiness(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadReadiness()
+  }, [])
+
+  const handleReadinessChange = (field: string, value: string) => {
+    setReadinessForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleReadinessApprove = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setReadinessError(null)
+    setReadinessInfo(null)
+    setIsApprovingReadiness(true)
+    try {
+      const result = await approveReadiness({
+        pilot_family: readinessForm.pilot_family,
+        pilot_owner: readinessForm.pilot_owner,
+        pilot_reason: readinessForm.pilot_reason,
+        sla_record_id: readinessForm.sla_record_id,
+        baseline_id: readinessForm.baseline_id,
+        recovery_evidence_ref: readinessForm.recovery_evidence_ref,
+        phase1_receipt_ref: readinessForm.phase1_receipt_ref,
+      })
+      setReadinessInfo(
+        'Prontidão aprovada para a família ' + result.family + ' em ' + result.approvedAt + '.',
+      )
+      void loadReadiness()
+    } catch (error: unknown) {
+      setReadinessError(getErrorMessage(error))
+    } finally {
+      setIsApprovingReadiness(false)
+    }
+  }
 
   const loadOpportunities = async () => {
     setIsLoadingOpportunities(true)
@@ -1456,6 +1518,8 @@ export const Dashboard: React.FC = () => {
   const role = user?.role
   const localPermission = hasPermission(role, 'homologateCatalog')
   const canHomologateCatalog = serverPermission === 'allowed' && localPermission
+  const localReadinessPermission = hasPermission(role, 'approveReadiness')
+  const canApproveReadiness = serverPermission === 'allowed' && localReadinessPermission
   const permissionMessage =
     serverPermission === 'loading'
       ? 'Verificando a permissão no servidor...'
@@ -1914,6 +1978,174 @@ export const Dashboard: React.FC = () => {
             </form>
           </section>
         </div>
+
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Prontidão da Fase 2</h2>
+              <p className="text-[13px] text-[#5B6B66] mt-1">
+                Gate de prontidão por família: exibe pendências com motivo, dono e data. A aprovação
+                exige vínculos verificáveis e só é assinada por Engenharia/Admin.
+              </p>
+            </div>
+          </div>
+
+          {readinessError && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{readinessError}</span>
+            </div>
+          )}
+
+          {readinessInfo && (
+            <div
+              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              role="status"
+              aria-live="polite"
+            >
+              {readinessInfo}
+            </div>
+          )}
+
+          {isLoadingReadiness ? (
+            <p className="text-[13px] text-[#5B6B66]">Carregando prontidão...</p>
+          ) : readinessStatus ? (
+            <div className="mb-6 p-4 rounded-[12px] border border-[#E1E8E5] bg-[#F8FAF9]">
+              <div className="flex items-center gap-2 mb-2">
+                <span
+                  className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                    readinessStatus.status === 'aprovado'
+                      ? 'bg-[#ECFDF5] text-[#047857]'
+                      : 'bg-[#FEF2F2] text-[#B91C1C]'
+                  }`}
+                >
+                  {readinessStatus.status === 'aprovado' ? 'APROVADO' : 'BLOQUEADO'}
+                </span>
+                {readinessStatus.family && (
+                  <span className="text-[12px] font-semibold text-[#0F1F1C]">
+                    Família: {readinessStatus.family}
+                  </span>
+                )}
+              </div>
+              <p className="text-[13px] text-[#5B6B66]">{readinessStatus.detail}</p>
+              {readinessStatus.blockers.length > 0 && (
+                <ul className="mt-3 space-y-1.5">
+                  {readinessStatus.blockers.map((blocker, index) => (
+                    <li key={index} className="text-[12px] text-[#0F1F1C]">
+                      <span className="font-semibold">{blocker.key}</span> — {blocker.reason} ·
+                      dono: {blocker.owner} · aberto em {blocker.openedAt}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : null}
+
+          {canApproveReadiness && (
+            <form onSubmit={handleReadinessApprove} className="space-y-4" noValidate>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Família-piloto *
+                  <input
+                    required
+                    maxLength={120}
+                    value={readinessForm.pilot_family}
+                    onChange={(event) => handleReadinessChange('pilot_family', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Ex.: geotecnia"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  Dono da decisão de piloto *
+                  <input
+                    required
+                    maxLength={200}
+                    value={readinessForm.pilot_owner}
+                    onChange={(event) => handleReadinessChange('pilot_owner', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="Quem decidiu o piloto"
+                  />
+                </label>
+              </div>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Motivo da decisão de piloto *
+                <textarea
+                  required
+                  maxLength={1000}
+                  rows={2}
+                  value={readinessForm.pilot_reason}
+                  onChange={(event) => handleReadinessChange('pilot_reason', event.target.value)}
+                  className="mt-1.5 w-full px-3 py-2.5 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Justificativa da escolha da família"
+                />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  ID do SLA homologado *
+                  <input
+                    required
+                    maxLength={15}
+                    value={readinessForm.sla_record_id}
+                    onChange={(event) => handleReadinessChange('sla_record_id', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="id pilot_params"
+                  />
+                </label>
+                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                  ID do baseline congelado *
+                  <input
+                    required
+                    maxLength={15}
+                    value={readinessForm.baseline_id}
+                    onChange={(event) => handleReadinessChange('baseline_id', event.target.value)}
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    placeholder="id baseline_snapshots"
+                  />
+                </label>
+              </div>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Evidência de recuperação real (CA-1-13) *
+                <input
+                  required
+                  maxLength={500}
+                  value={readinessForm.recovery_evidence_ref}
+                  onChange={(event) =>
+                    handleReadinessChange('recovery_evidence_ref', event.target.value)
+                  }
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Referência da prova de restauração isolada"
+                />
+              </label>
+              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                Recibo da Fase 1 *
+                <input
+                  required
+                  maxLength={500}
+                  value={readinessForm.phase1_receipt_ref}
+                  onChange={(event) =>
+                    handleReadinessChange('phase1_receipt_ref', event.target.value)
+                  }
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  placeholder="Ex.: 05_entregas/fase-1/RECIBO-T1.17.md"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={isApprovingReadiness}
+                className="h-[44px] px-5 rounded-[10px] bg-[#10B981] text-white text-[13px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+              >
+                {isApprovingReadiness ? 'Assinando...' : 'Assinar prontidão'}
+              </button>
+            </form>
+          )}
+        </section>
 
         <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">

@@ -28,7 +28,7 @@ export const PERMISSIONS = {
 export type Permission = keyof typeof PERMISSIONS
 
 export function hasPermission(role: UserRole | undefined, permission: Permission): boolean {
-  return role !== undefined && PERMISSIONS[permission].includes(role)
+  return role !== undefined && (PERMISSIONS[permission] as readonly string[]).includes(role)
 }
 
 export function canAccess(role: UserRole | undefined, permission: Permission): boolean {

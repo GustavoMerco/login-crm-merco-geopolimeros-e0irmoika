@@ -55,7 +55,7 @@ export const createTechSheet = (input: CreateTechSheetInput) => {
   for (const file of input.attachments ?? []) {
     form.append('attachments', file)
   }
-  return pb.collection('tech_sheets').create<Record & CreateTechSheetInput>(form)
+  return pb.collection('tech_sheets').create<TechSheetRecord>(form)
 }
 
 export const techSheetFileUrl = (sheet: { collectionId: string; id: string }, filename: string) =>

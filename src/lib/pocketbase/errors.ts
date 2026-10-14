@@ -25,15 +25,5 @@ export function getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : 'An unexpected error occurred.'
   }
   const msgs = Object.values(extractFieldErrors(error))
-  if (msgs.length > 0) return msgs.join(' ')
-  // Corpos de negócio server-side (ex.: 409 via e.json com { error, reason }):
-  // o SDK expõe o corpo em error.response, não em error.response.data.
-  const body = error.response as Record<string, unknown> | undefined
-  if (body && typeof body.error === 'string' && body.error.trim()) {
-    return body.error
-  }
-  if (body && typeof body.message === 'string' && body.message.trim()) {
-    return body.message
-  }
-  return error.message || 'An unexpected error occurred.'
+  return msgs.length > 0 ? msgs.join(' ') : error.message || 'An unexpected error occurred.'
 }

@@ -1,5 +1,5 @@
-import pb, { type SendOptions } from '@/lib/pocketbase/client'
-import { ClientResponseError } from 'pocketbase'
+import pb from '@/lib/pocketbase/client'
+import { ClientResponseError, type SendOptions } from 'pocketbase'
 import type { BackupRestoreResponse } from './backupTypes'
 
 /**

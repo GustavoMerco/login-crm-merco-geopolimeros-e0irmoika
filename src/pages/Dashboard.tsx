@@ -1899,7 +1899,7 @@ export const Dashboard: React.FC = () => {
                       onClick={() => {
                         syncProposalFormWithOpportunity(item.id)
                         setAptitudeResult(
-                          item.aptitude_status
+                          item.aptitude_status && item.aptitude_status !== 'pending'
                             ? {
                                 id: item.id,
                                 aptitudeStatus: item.aptitude_status,
@@ -2311,8 +2311,8 @@ export const Dashboard: React.FC = () => {
                         <span className="font-normal text-[#5B6B66]">{composition.family}</span>
                       </p>
                       <p className="text-[12px] text-[#5B6B66]">
-                        {composition.output_unit} · vigência {composition.valid_from} a{' '}
-                        {composition.valid_until} · fonte: {composition.source}
+                        {composition.outputUnit} · vigência {composition.validFrom} a{' '}
+                        {composition.validUntil} · fonte: {composition.source}
                       </p>
                     </div>
                     <span

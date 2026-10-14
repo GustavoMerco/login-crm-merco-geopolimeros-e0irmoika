@@ -383,12 +383,7 @@ export const Index: React.FC = () => {
           <div
             className="mt-8 pt-6 border-t border-[#E1E8E5]/70 text-center animate-assemble"
             style={{ animationDelay: '400ms' }}
-          >
-            <p className="text-[13px] text-[#5B6B66]">
-              Problemas para acessar? Fale com o{' '}
-              <span className="font-semibold text-[#EA580C]">administrador</span> do sistema.
-            </p>
-          </div>
+          ></div>
         </div>
       </div>
 

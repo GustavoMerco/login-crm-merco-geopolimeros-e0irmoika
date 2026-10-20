@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { checkPermission } from '@/services/security'
 import {
@@ -1611,6 +1611,20 @@ export const Dashboard: React.FC = () => {
     return `${Math.round(ms / 60000)} min`
   }
 
+  const location = useLocation()
+  const sectionKey = new URLSearchParams(location.search).get('secao')
+  useEffect(() => {
+    if (!sectionKey) return
+    const frame = requestAnimationFrame(() => {
+      const target = document.getElementById(`secao-${sectionKey}`)
+      if (target) {
+        target.scrollIntoView({ block: 'start' })
+        target.focus({ preventScroll: true })
+      }
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [sectionKey, createdOpportunity])
+
   const rawName = user?.name || user?.email?.split('@')[0] || 'Usuário'
   const firstName = rawName.split(' ')[0]
   const initial = (firstName[0] || 'U').toUpperCase()
@@ -1632,7 +1646,11 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full bg-[#F6F8F7] flex flex-col font-sans antialiased text-[#0F1F1C]">
-      <header className="w-full h-16 bg-white border-b border-[#E1E8E5] px-4 sm:px-8 flex items-center justify-between shadow-xs sticky top-0 z-20">
+      <header
+        hidden
+        style={{ display: 'none' }}
+        className="w-full h-16 bg-white border-b border-[#E1E8E5] px-4 sm:px-8 flex items-center justify-between shadow-xs sticky top-0 z-20"
+      >
         <div className="flex items-center">
           <MercoLogo size={36} showWordmark={true} lightTheme={true} />
         </div>
@@ -1660,9 +1678,59 @@ export const Dashboard: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 p-4 sm:p-6 lg:p-10">
-        <div className="mx-auto w-full max-w-5xl grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
-          <section className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+      <div className="flex-1 min-w-0">
+        {sectionKey &&
+          ![
+            'demanda',
+            'ficha',
+            'biblioteca',
+            'prontidao',
+            'catalogo',
+            'backup',
+            'modelos',
+            'previa',
+            'fontes',
+            'gates',
+            'sla',
+            'baseline',
+            'qualidade',
+            'tempo',
+          ].includes(sectionKey) && (
+            <p role="alert">
+              Seção não encontrada.{' '}
+              <Link className="underline" to="/dashboard">
+                Voltar ao início
+              </Link>
+            </p>
+          )}
+        {!createdOpportunity && (sectionKey === 'ficha' || sectionKey === 'tempo') && (
+          <section className="mb-6 rounded border bg-white p-4">
+            <h2
+              id={`secao-${sectionKey}`}
+              tabIndex={-1}
+              style={{ scrollMarginTop: '5rem' }}
+              className="text-xl font-bold"
+            >
+              {sectionKey === 'ficha' ? 'Ficha técnica' : 'Marcos e tempo'}
+            </h2>
+            <p className="my-3">
+              Esta função precisa de uma demanda selecionada no painel. Abra Oportunidades e
+              selecione uma demanda existente ou registre uma demanda autorizada.
+            </p>
+            <Link
+              className="inline-flex min-h-[44px] items-center underline text-emerald-800"
+              to="/painel-tecnico?secao=demanda"
+            >
+              Abrir Oportunidades
+            </Link>
+          </section>
+        )}
+        <div className="mx-auto w-full max-w-5xl grid gap-6">
+          <section
+            hidden
+            style={{ display: 'none' }}
+            className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]"
+          >
             <div className="w-16 h-16 mb-5 rounded-2xl bg-gradient-to-b from-[#064E3B] to-[#022C22] p-3 flex items-center justify-center shadow-[0_8px_20px_rgba(2,44,34,0.18)]">
               <MercoLogo size={40} showWordmark={false} />
             </div>
@@ -1729,7 +1797,14 @@ export const Dashboard: React.FC = () => {
                 <ClipboardPlus className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-[#0F1F1C]">Nova demanda</h2>
+                <h2
+                  id="secao-demanda"
+                  tabIndex={-1}
+                  style={{ scrollMarginTop: '5rem' }}
+                  className="text-xl font-extrabold text-[#0F1F1C]"
+                >
+                  Nova demanda
+                </h2>
                 <p className="text-[13px] text-[#5B6B66] mt-1">
                   Campos com * são necessários para registrar o recebimento.
                 </p>
@@ -2086,7 +2161,14 @@ export const Dashboard: React.FC = () => {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Prontidão da Fase 2</h2>
+              <h2
+                id="secao-prontidao"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
+                Prontidão da Fase 2
+              </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
                 Gate de prontidão por família: exibe pendências com motivo, dono e data. A aprovação
                 exige vínculos verificáveis e só é assinada por Engenharia/Admin.
@@ -2260,7 +2342,14 @@ export const Dashboard: React.FC = () => {
               <Boxes className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Biblioteca de composições</h2>
+              <h2
+                id="secao-biblioteca"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
+                Biblioteca de composições
+              </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
                 Rascunho versionado por item do catálogo: código, família, unidade de saída,
                 insumos, recursos, fórmula estrutural, fonte, vigência, precisão, arredondamento e
@@ -2502,7 +2591,14 @@ export const Dashboard: React.FC = () => {
               <HardDriveDownload className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Backup e exportação</h2>
+              <h2
+                id="secao-backup"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
+                Backup e exportação
+              </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
                 Demonstração com recibo auditado e hash de integridade: backup inválido bloqueia a
                 restauração (falha segura); hash válido comprova a restauração.
@@ -2652,7 +2748,14 @@ export const Dashboard: React.FC = () => {
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Modelos reais de proposta</h2>
+              <h2
+                id="secao-modelos"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
+                Modelos reais de proposta
+              </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
                 T1.13 — envie os modelos DOCX reais da Mercogeo. Eles entram como rascunho; somente
                 Engenharia/Admin aprova. Nenhum template é inventado e a T1.14 usará apenas modelos
@@ -2854,7 +2957,12 @@ export const Dashboard: React.FC = () => {
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">
+              <h2
+                id="secao-previa"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
                 Prévia de proposta sem preço
               </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
@@ -3433,7 +3541,14 @@ export const Dashboard: React.FC = () => {
               <DatabaseZap className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Auditoria VOBI/OMIE</h2>
+              <h2
+                id="secao-fontes"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
+                Auditoria VOBI/OMIE
+              </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
                 Cobertura, fonte de verdade, forma de acesso e decisão de fonte (integrar, importar
                 ou não usar) — auditada antes de qualquer duplicação ou integração.
@@ -3765,7 +3880,14 @@ export const Dashboard: React.FC = () => {
               <OctagonAlert className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Gates e cortes</h2>
+              <h2
+                id="secao-gates"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
+                Gates e cortes
+              </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
                 Bloqueios críticos com dono e data-limite. Atraso aciona escalonamento; a ordem de
                 corte do PRD é fixa e nunca editável.
@@ -4064,7 +4186,14 @@ export const Dashboard: React.FC = () => {
               <Scale className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Regras e SLA do piloto</h2>
+              <h2
+                id="secao-sla"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
+                Regras e SLA do piloto
+              </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
                 BDI, ISS, margem, SLA, alçadas e arredondamento precisam de decisão homologada ou
                 bloqueio explícito com dono e data. O SLA da família-piloto é obrigatório para
@@ -4401,7 +4530,14 @@ export const Dashboard: React.FC = () => {
               <Boxes className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Catálogo</h2>
+              <h2
+                id="secao-catalogo"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
+                Catálogo
+              </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
                 Itens nascem em rascunho; somente Engenharia/Admin homologam ou inativam (com
                 justificativa). Itens homologados/inativos são imutáveis e apenas homologados
@@ -4692,7 +4828,14 @@ export const Dashboard: React.FC = () => {
               <Snowflake className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">Baseline</h2>
+              <h2
+                id="secao-baseline"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
+                Baseline
+              </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
                 Congela o "antes" por família e classe de complexidade, usando a timeline e o tempo
                 ativo já registrados. Snapshots são imutáveis e comparáveis pela mesma fronteira.
@@ -4892,7 +5035,12 @@ export const Dashboard: React.FC = () => {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-[#0F1F1C]">
+              <h2
+                id="secao-qualidade"
+                tabIndex={-1}
+                style={{ scrollMarginTop: '5rem' }}
+                className="text-xl font-extrabold text-[#0F1F1C]"
+              >
                 Revisão semanal da qualidade do tempo
               </h2>
               <p className="text-[13px] text-[#5B6B66] mt-1">
@@ -5055,7 +5203,14 @@ export const Dashboard: React.FC = () => {
                 <Timer className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-[#0F1F1C]">Marcos e tempo</h2>
+                <h2
+                  id="secao-tempo"
+                  tabIndex={-1}
+                  style={{ scrollMarginTop: '5rem' }}
+                  className="text-xl font-extrabold text-[#0F1F1C]"
+                >
+                  Marcos e tempo
+                </h2>
                 <p className="text-[13px] text-[#5B6B66] mt-1">
                   Timeline com timestamps do servidor e tempo ativo por etapa; a pausa exige
                   justificativa.
@@ -5215,7 +5370,14 @@ export const Dashboard: React.FC = () => {
                 <FileText className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-[#0F1F1C]">Ficha técnica</h2>
+                <h2
+                  id="secao-ficha"
+                  tabIndex={-1}
+                  style={{ scrollMarginTop: '5rem' }}
+                  className="text-xl font-extrabold text-[#0F1F1C]"
+                >
+                  Ficha técnica
+                </h2>
                 <p className="text-[13px] text-[#5B6B66] mt-1">
                   Cada salvamento cria uma nova versão com autor e origem definidos pelo servidor.
                   Versões anteriores permanecem intactas.
@@ -5470,7 +5632,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </section>
         )}
-      </main>
+      </div>
     </div>
   )
 }

@@ -1,13 +1,13 @@
 # Estado atual — Adapta Cliente
 
-- task_id: T2.13
+- task_id: T2.14
 - champion: Paulo Romeiro
 - spec: 04_fase-atual/specs/spec-2-006.md
-- etapa: aguardando_autorizacao
-- autorizacao_implementacao: ausente
-- teste_humano: pendente (T2.3 permanece em teste humano: passos 1-3 aprovados; revalidação do passo 4 vinculada ao GREEN-P2-006A desta task, conforme fase.md e STATUS de 14/10)
-- verificacao_automatica: pendente
+- etapa: implementando
+- autorizacao_implementacao: confirmada em 2026-10-20T15:53:00-03:00 — "Autorizo implementar somente a T2.14 conforme o plano apresentado"; plano apresentado antes da autorização; checkpoint anterior T2.3 concluída reconciliado nesta transição
+- teste_humano: pendente
+- verificacao_automatica: pendente — baseline 0.0.73/2e9a06d; registrar RED/GREEN-P2-006B e UX-006-NAV
 - aprendizado: pendente
-- ultima_acao: análise profunda da T2.13 concluída em 2026-10-19 (errors.ts confirmado sem a leitura de corpos de negócio revertida na 0.0.71; errors.test.ts inexistente; corpo do 409 confirmado no hook composition_versions.js; plano RED local + GREEN no Skip definido)
-- proxima_acao: aguardar autorização para implementar
-- atualizado_em: 2026-10-19T10:30:00-03:00
+- ultima_acao: conferidos SPEC-2-006/aditivo, contrato-experiencia, inventário e árvore Skip; pré-condições T2.13 e T2.30 documental verificadas; T2.3 concluída no commit6ebc7b8a; autorização restrita T2.14 registrada. Pendências anteriores preservadas; .skip.config.json fora do recorte
+- proxima_acao: implementar e verificar exclusivamente navegação/contexto/home da T2.14 sem extrair Biblioteca ou alterar regras
+- atualizado_em: 2026-10-20T15:57:00-03:00

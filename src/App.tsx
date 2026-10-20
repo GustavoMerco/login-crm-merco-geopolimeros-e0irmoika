@@ -7,10 +7,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import AppLayout from './components/AppLayout'
 import Index from './pages/Index'
 import DashboardHome from './pages/DashboardHome'
-import Clientes from './pages/Clientes'
-import Propostas from './pages/Propostas'
-import Projetos from './pages/Projetos'
-import Configuracoes from './pages/Configuracoes'
+
 import DashboardLegacy from './pages/Dashboard'
 import NotFound from './pages/NotFound'
 
@@ -33,17 +30,17 @@ const App = () => (
             }
           >
             <Route path="/dashboard" element={<DashboardHome />} />
-            <Route path="/clientes" element={<Clientes />} />
-            <Route path="/propostas" element={<Propostas />} />
-            <Route path="/projetos" element={<Projetos />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
+            <Route path="/clientes" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/propostas" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/projetos" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/configuracoes" element={<Navigate to="/dashboard" replace />} />
             {/* Legacy technical panel access preserved for engineer audit */}
             <Route path="/painel-tecnico" element={<DashboardLegacy />} />
           </Route>
 
           {/* Catch-all */}
           <Route path="/404" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>
     </AuthProvider>

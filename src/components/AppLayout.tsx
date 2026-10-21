@@ -11,7 +11,10 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const sections = sectionsForRole(user?.role)
-  const active = new URLSearchParams(location.search).get('secao')
+  const active =
+    location.pathname === '/biblioteca'
+      ? 'biblioteca'
+      : new URLSearchParams(location.search).get('secao')
   const title =
     location.pathname === '/dashboard'
       ? 'Central de trabalho técnico'

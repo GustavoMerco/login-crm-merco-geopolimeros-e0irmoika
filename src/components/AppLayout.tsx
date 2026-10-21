@@ -3,10 +3,12 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { ROLE_LABELS } from '@/lib/auth/permissions'
 import { sectionsForRole, sectionUrl } from '@/lib/navigation'
+import { useCompositionDraft } from '@/contexts/CompositionDraftContext'
 import * as Dialog from '@radix-ui/react-dialog'
 
 export default function AppLayout() {
   const { user, logout } = useAuth()
+  const { hasUnsavedChanges } = useCompositionDraft()
   const location = useLocation()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -46,6 +48,13 @@ export default function AppLayout() {
     </nav>
   )
   const signOut = async () => {
+    if (
+      hasUnsavedChanges &&
+      !window.confirm(
+        'Há alterações não salvas na Biblioteca. Ao encerrar a sessão, elas serão perdidas. Deseja continuar?',
+      )
+    )
+      return
     await logout()
     navigate('/', { replace: true })
   }

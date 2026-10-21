@@ -217,7 +217,7 @@ export default function CompositionLibrary() {
           <p className="text-[13px] text-[#5B6B66]" role="status" aria-live="polite">
             Carregando versões salvas…
           </p>
-        ) : compositions.length === 0 ? (
+        ) : compositionLoadError ? null : compositions.length === 0 ? (
           <p className="text-[13px] text-[#5B6B66]" role="status">
             Nenhuma composição registrada ainda. O primeiro rascunho nasce como versão 1.
           </p>

@@ -152,7 +152,7 @@ export default function CompositionLibrary() {
             ref={headingRef}
             tabIndex={-1}
             style={{ scrollMarginTop: '5rem' }}
-            className="text-xl font-extrabold text-[#0F1F1C]"
+            className="text-xl font-extrabold text-[#0F1F1C] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#064E3B] outline-offset-2"
           >
             Biblioteca de composições
           </h2>

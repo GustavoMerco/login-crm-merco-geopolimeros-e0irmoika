@@ -9,6 +9,7 @@ import AppLayout from './components/AppLayout'
 import Index from './pages/Index'
 import DashboardHome from './pages/DashboardHome'
 import CompositionLibrary from './pages/CompositionLibrary'
+import Opportunities from './pages/Opportunities'
 import DashboardLegacy from './pages/Dashboard'
 import NotFound from './pages/NotFound'
 import { legacySectionRedirect } from './lib/navigation'
@@ -37,6 +38,7 @@ const App = () => (
             }
           >
             <Route path="/dashboard" element={<DashboardHome />} />
+            <Route path="/demandas" element={<Opportunities />} />
             <Route path="/biblioteca" element={<CompositionLibrary />} />
             <Route path="/clientes" element={<Navigate to="/dashboard" replace />} />
             <Route path="/propostas" element={<Navigate to="/dashboard" replace />} />

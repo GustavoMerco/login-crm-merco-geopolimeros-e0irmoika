@@ -13,10 +13,13 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const sections = sectionsForRole(user?.role)
+  // Superfícies extraídas para página própria mantêm o item do menu marcado.
+  const STANDALONE_ACTIVE: Record<string, string> = {
+    '/biblioteca': 'biblioteca',
+    '/demandas': 'demanda',
+  }
   const active =
-    location.pathname === '/biblioteca'
-      ? 'biblioteca'
-      : new URLSearchParams(location.search).get('secao')
+    STANDALONE_ACTIVE[location.pathname] ?? new URLSearchParams(location.search).get('secao')
   const title =
     location.pathname === '/dashboard'
       ? 'Central de trabalho técnico'

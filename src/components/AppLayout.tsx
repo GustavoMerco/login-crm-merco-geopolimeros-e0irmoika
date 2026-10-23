@@ -17,6 +17,7 @@ export default function AppLayout() {
   const STANDALONE_ACTIVE: Record<string, string> = {
     '/biblioteca': 'biblioteca',
     '/demandas': 'demanda',
+    '/ficha': 'ficha',
   }
   const active =
     STANDALONE_ACTIVE[location.pathname] ?? new URLSearchParams(location.search).get('secao')

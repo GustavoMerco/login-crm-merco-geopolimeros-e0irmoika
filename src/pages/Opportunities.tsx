@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import {
@@ -14,6 +14,7 @@ import {
   resolveOpportunityId,
   type OpportunityListItem,
 } from '@/lib/opportunityList'
+import { techSheetUrl } from '@/lib/techSheetForm'
 import { AlertTriangle, CheckCircle2, ClipboardList, Search } from 'lucide-react'
 
 const inputClass =
@@ -195,13 +196,23 @@ export default function Opportunities() {
         <div>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-[15px] font-bold text-[#0F1F1C]">Detalhe da demanda</h3>
-            <button
-              type="button"
-              onClick={backToList}
-              className="min-h-[44px] rounded-lg border border-[#CBD5D1] bg-white px-4 text-sm font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
-            >
-              Voltar para a lista
-            </button>
+            <div className="flex flex-wrap gap-2">
+              {detail && (
+                <Link
+                  to={techSheetUrl(detail.id)}
+                  className="min-h-[44px] rounded-lg bg-[#064E3B] px-4 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 inline-flex items-center"
+                >
+                  Abrir ficha técnica
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={backToList}
+                className="min-h-[44px] rounded-lg border border-[#CBD5D1] bg-white px-4 text-sm font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+              >
+                Voltar para a lista
+              </button>
+            </div>
           </div>
 
           {isLoadingDetail && (

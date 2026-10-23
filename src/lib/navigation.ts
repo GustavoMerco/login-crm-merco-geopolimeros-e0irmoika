@@ -19,10 +19,11 @@ export const SECTIONS = [
 ] as const
 
 // Superfícies já extraídas para página própria. As demais continuam no painel
-// legado por seção até a task de extração correspondente (T2.32, T2.34, T2.36).
+// legado por seção até a task de extração correspondente (T2.34, T2.36).
 const STANDALONE_ROUTES: Record<string, string> = {
   biblioteca: '/biblioteca',
   demanda: '/demandas',
+  ficha: '/ficha',
 }
 
 export const sectionUrl = (id: string) =>

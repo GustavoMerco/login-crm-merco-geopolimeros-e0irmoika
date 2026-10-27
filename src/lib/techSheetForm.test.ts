@@ -159,6 +159,35 @@ describe('contexto e estados da ficha (T2.32)', () => {
     expect(describeTechSheetState({ ...base, opportunityError: 'other' })).toBe('error')
   })
 
+  // Regressão do item 9 do roteiro (2026-10-27): o PocketBase responde 404, não
+  // 403, quando a viewRule barra o registro. Sem estado próprio, a negação caía
+  // no erro genérico e a mensagem de permissão nunca aparecia.
+  it('trata negacao de leitura (404 do PocketBase) como indisponivel, nao como erro generico', () => {
+    const base = {
+      loadingOpportunity: false,
+      loadingHistory: false,
+      opportunityError: null,
+      historyError: null,
+      hasOpportunity: false,
+      versionCount: 0,
+    }
+    expect(describeTechSheetState({ ...base, opportunityError: 'not-found' })).toBe('unavailable')
+    expect(describeTechSheetState({ ...base, opportunityError: 'unauthorized' })).toBe(
+      'unavailable',
+    )
+    expect(
+      describeTechSheetState({ ...base, hasOpportunity: true, historyError: 'not-found' }),
+    ).toBe('unavailable')
+    // um 500 continua sendo erro, não acesso negado
+    expect(describeTechSheetState({ ...base, opportunityError: 'other' })).toBe('error')
+  })
+
+  it('a mensagem de acesso negado explica a restricao ao responsavel', () => {
+    const message = techSheetAccessMessage('not-found')
+    expect(message).toContain('não está disponível')
+    expect(message).toContain('responsável'.slice(0, 5))
+  })
+
   it('explica o 403 sem revelar dados do registro', () => {
     const kind = classifyTechSheetError(403)
     expect(kind).toBe('forbidden')

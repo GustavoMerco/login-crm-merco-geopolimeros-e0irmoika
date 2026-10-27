@@ -798,16 +798,16 @@ export default function TechSheet() {
         </p>
       )}
 
-      {screenState === 'forbidden' && (
+      {(screenState === 'forbidden' || screenState === 'unavailable') && (
         <div
           className="rounded-[12px] border border-[#FED7AA] bg-[#FFF7ED] p-4 text-sm text-[#9A3412]"
           role="alert"
           aria-live="assertive"
         >
-          <p>{techSheetAccessMessage('forbidden')}</p>
+          <p>{techSheetAccessMessage(screenState === 'forbidden' ? 'forbidden' : 'not-found')}</p>
           <p className="mt-1">
             A consulta e o registro da ficha seguem restritos ao responsável pela demanda, como
-            definido no servidor.
+            definido no servidor. Nenhum dado desta ficha é exibido.
           </p>
           <button
             type="button"
@@ -849,7 +849,7 @@ export default function TechSheet() {
 
       {contextBar}
 
-      {(screenState === 'no-context' || (!opportunity && screenState !== 'loading')) && selection}
+      {screenState === 'no-context' && selection}
 
       {(screenState === 'empty' || screenState === 'ready') && form}
       {(screenState === 'empty' || screenState === 'ready') && historyBlock}

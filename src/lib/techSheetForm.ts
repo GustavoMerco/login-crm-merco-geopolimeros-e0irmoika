@@ -208,7 +208,7 @@ export function techSheetAccessMessage(kind: TechSheetErrorKind): string | null 
     return 'Somente o responsável pela demanda pode consultar ou registrar a ficha técnica.'
   }
   if (kind === 'not-found') {
-    return 'A demanda informada não existe ou não está disponível para o seu usuário.'
+    return 'Esta demanda não está disponível para o seu usuário. A ficha técnica é restrita ao responsável pela demanda.'
   }
   if (kind === 'unauthorized') {
     return 'Sua sessão expirou. Entre novamente para continuar.'
@@ -220,10 +220,16 @@ export type TechSheetScreenState =
   | 'loading'
   | 'error'
   | 'forbidden'
+  | 'unavailable'
   | 'no-context'
   | 'empty'
   | 'ready'
 
+/**
+ * Negação de leitura precisa de estado próprio. O PocketBase aplica `viewRule`
+ * como checagem binária e responde 404 (não 403) quando o registro não é
+ * acessível — por isso "não encontrado" aqui é acesso negado, não erro de rede.
+ */
 export function describeTechSheetState(input: {
   loadingOpportunity: boolean
   loadingHistory: boolean
@@ -235,6 +241,14 @@ export function describeTechSheetState(input: {
   if (input.loadingOpportunity) return 'loading'
   if (input.opportunityError === 'forbidden' || input.historyError === 'forbidden')
     return 'forbidden'
+  if (
+    input.opportunityError === 'not-found' ||
+    input.opportunityError === 'unauthorized' ||
+    input.historyError === 'not-found' ||
+    input.historyError === 'unauthorized'
+  ) {
+    return 'unavailable'
+  }
   if (input.opportunityError || input.historyError) return 'error'
   if (!input.hasOpportunity) return 'no-context'
   if (input.loadingHistory) return 'loading'

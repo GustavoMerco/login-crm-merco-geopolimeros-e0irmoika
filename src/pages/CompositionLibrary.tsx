@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCompositionDraft } from '@/contexts/CompositionDraftContext'
 import { checkPermission } from '@/services/security'
@@ -9,6 +9,8 @@ import {
   getCompositions,
   type CompositionListItem,
 } from '@/services/compositions'
+import { getUnits, type UnitRecord } from '@/services/units'
+import { getTechSheets, type TechSheetParameter, type TechSheetRecord } from '@/services/techSheets'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission } from '@/lib/auth/permissions'
 import { afterCompositionSaved, type CompositionDraftForm } from '@/lib/compositionDraft'
@@ -62,6 +64,10 @@ function FieldMessage({ message }: { message: string | null }) {
 export default function CompositionLibrary() {
   const { user } = useAuth()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  // T2.17: quando há oportunidade no contexto, a lista de parâmetros da ficha
+  // vem da consulta segura existente; sem contexto, o vínculo segue por texto.
+  const opportunityContext = searchParams.get('oportunidade') ?? ''
   const headingRef = useRef<HTMLHeadingElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const { compositionForm, setCompositionForm, markCompositionSaved } = useCompositionDraft()
@@ -76,6 +82,12 @@ export default function CompositionLibrary() {
   const [isLoadingCompositions, setIsLoadingCompositions] = useState(true)
   const [isSubmittingComposition, setIsSubmittingComposition] = useState(false)
   const [showErrors, setShowErrors] = useState(false)
+  const [sheetParameters, setSheetParameters] = useState<TechSheetParameter[]>([])
+  const [sheetError, setSheetError] = useState<string | null>(null)
+  const [isLoadingSheet, setIsLoadingSheet] = useState(false)
+  const [units, setUnits] = useState<UnitRecord[]>([])
+  const [unitsError, setUnitsError] = useState<string | null>(null)
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -117,10 +129,59 @@ export default function CompositionLibrary() {
     }
   }, [])
 
+  const loadSheetParameters = useCallback(async (opportunityId: string) => {
+    setIsLoadingSheet(true)
+    try {
+      const result = await getTechSheets(opportunityId)
+      const parameters: TechSheetParameter[] = []
+      const seen = new Set<string>()
+      // Última versão primeiro: o nome mais recente vence sem duplicar.
+      for (const sheet of result.items as TechSheetRecord[]) {
+        for (const parameter of sheet.parameters ?? []) {
+          const key = parameter.name.toLowerCase()
+          if (seen.has(key)) continue
+          seen.add(key)
+          parameters.push(parameter)
+        }
+      }
+      setSheetParameters(parameters)
+      setSheetError(null)
+    } catch (error: unknown) {
+      setSheetParameters([])
+      setSheetError(getErrorMessage(error))
+    } finally {
+      setIsLoadingSheet(false)
+    }
+  }, [])
+
+  const loadUnits = useCallback(async () => {
+    setIsLoadingUnits(true)
+    try {
+      const result = await getUnits('homologado')
+      setUnits(result.items)
+      setUnitsError(null)
+    } catch (error: unknown) {
+      setUnits([])
+      setUnitsError(getErrorMessage(error))
+    } finally {
+      setIsLoadingUnits(false)
+    }
+  }, [])
+
   useEffect(() => {
     void loadCompositions()
     void loadCatalogItems()
-  }, [loadCompositions, loadCatalogItems])
+    void loadUnits()
+  }, [loadCompositions, loadCatalogItems, loadUnits])
+
+  useEffect(() => {
+    if (!opportunityContext) {
+      setSheetParameters([])
+      setSheetError(null)
+      return
+    }
+    void loadSheetParameters(opportunityContext)
+  }, [opportunityContext, loadSheetParameters])
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -297,8 +358,9 @@ export default function CompositionLibrary() {
           </h2>
           <p className="mt-1 text-[13px] text-[#5B6B66]">
             Consulte versões salvas e crie novos rascunhos. Insumos e recursos são preenchidos em
-            tabelas, com o catálogo escolhido por nome. Reabrir ou editar uma versão salva ainda não
-            faz parte desta página.
+            tabelas, com o catálogo escolhido por nome; cada insumo pode ser vinculado ao parâmetro
+            da ficha técnica por nome, unidade e origem. Reabrir ou editar uma versão salva ainda
+            não faz parte desta página.
           </p>
         </div>
       </div>
@@ -535,27 +597,6 @@ export default function CompositionLibrary() {
               />
               <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.tolerance)} />
             </div>
-          </div>
-
-          <div>
-            <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.source}>
-              Fonte *
-            </label>
-            <input
-              id={COMPOSITION_FIELD_IDS.source}
-              disabled={isSubmittingComposition}
-              required
-              maxLength={MAX_SOURCE}
-              aria-invalid={errorFor(COMPOSITION_FIELD_IDS.source) ? true : undefined}
-              value={compositionForm.source}
-              onChange={(event) => handleCompositionChange('source', event.target.value)}
-              className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.source))}
-              placeholder="Origem do contrato ou referência sintética"
-            />
-            <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.source)} />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.validFrom}>
                 Início da vigência *
@@ -590,10 +631,48 @@ export default function CompositionLibrary() {
             </div>
           </div>
 
+          {opportunityContext && sheetError && (
+            <div
+              className="rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] p-3 text-sm text-[#9A3412]"
+              role="alert"
+              aria-live="assertive"
+            >
+              <p>
+                Não foi possível consultar os parâmetros da ficha desta oportunidade. O vínculo
+                permanece disponível como texto validado; a lista suspensa volta quando a consulta
+                funcionar.
+              </p>
+              <p className="mt-1">{sheetError}</p>
+              <button
+                type="button"
+                onClick={() => void loadSheetParameters(opportunityContext)}
+                disabled={isLoadingSheet || isSubmittingComposition}
+                className="mt-2 min-h-[44px] rounded border border-[#B45309] px-3 font-semibold disabled:opacity-60"
+              >
+                Tentar consultar a ficha novamente
+              </button>
+            </div>
+          )}
+          {opportunityContext && !sheetError && isLoadingSheet && (
+            <p className="text-[12px] text-[#5B6B66]" role="status" aria-live="polite">
+              Carregando parâmetros da ficha da oportunidade…
+            </p>
+          )}
+          {opportunityContext && !sheetError && !isLoadingSheet && sheetParameters.length === 0 && (
+            <p
+              className="rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] p-3 text-sm text-[#9A3412]"
+              role="status"
+            >
+              Esta oportunidade ainda não tem ficha técnica com parâmetros. O vínculo fica para
+              quando a ficha existir; ausência de dado é pendência, não zero.
+            </p>
+          )}
+
           <CompositionInputTable
             rows={compositionForm.inputs}
             errors={activeErrors}
             disabled={isSubmittingComposition}
+            sheetParameters={sheetParameters}
             onChange={updateInputRow}
             onAdd={addInputRow}
             onRemove={removeInputRow}

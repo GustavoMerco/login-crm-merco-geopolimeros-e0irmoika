@@ -1,18 +1,22 @@
 import type { CompositionFieldError, CompositionInputRow } from '@/lib/compositionRows'
 import {
-  MAX_COMPOSITION_ROWS,
   MAX_INPUT_BOUND,
   MAX_INPUT_NAME,
   MAX_INPUT_UNIT,
+  MAX_COMPOSITION_ROWS,
   compositionFieldId,
   errorForTarget,
+  sheetParamFieldId,
 } from '@/lib/compositionRows'
 import { Plus, Trash2 } from 'lucide-react'
+import type { TechSheetParameter } from '@/services/techSheets'
 
 type Props = {
   rows: readonly CompositionInputRow[]
   errors: readonly CompositionFieldError[]
   disabled: boolean
+  /** Parâmetros da ficha disponíveis para vincular (T2.17); vazio quando não há contexto. */
+  sheetParameters: readonly TechSheetParameter[]
   onChange: (index: number, changes: Partial<CompositionInputRow>) => void
   onAdd: () => void
   onRemove: (index: number) => void
@@ -30,11 +34,15 @@ function cellClass(hasError: boolean): string {
 /**
  * Tabela de insumos da composição (T2.33). Uma linha por insumo, com rótulo em
  * cada coluna: nada de pipe nem texto livre para interpretar.
+ *
+ * T2.17: cada insumo pode ser vinculado a um parâmetro da ficha técnica por
+ * nome/unidade/origem, com mínimo/máximo do vínculo visíveis na linha.
  */
 export default function CompositionInputTable({
   rows,
   errors,
   disabled,
+  sheetParameters,
   onChange,
   onAdd,
   onRemove,
@@ -42,8 +50,16 @@ export default function CompositionInputTable({
   const errorFor = (index: number, column: 'name' | 'unit' | 'min' | 'max') =>
     errorForTarget(errors, compositionFieldId('inputs', index, column))
 
+  const linkErrorFor = (index: number, column: 'name' | 'unit' | 'origin' | 'min' | 'max') =>
+    errorForTarget(errors, sheetParamFieldId(index, column))
+
   const emptyTableError = rows.every(
-    (row) => !row.name.trim() && !row.unit.trim() && !row.min.trim() && !row.max.trim(),
+    (row) =>
+      !row.name.trim() &&
+      !row.unit.trim() &&
+      !row.min.trim() &&
+      !row.max.trim() &&
+      !row.sheet_param,
   )
     ? errorForTarget(errors, compositionFieldId('inputs', 0, 'name'))
     : null
@@ -54,10 +70,11 @@ export default function CompositionInputTable({
         Insumos * ({rows.length}/{MAX_COMPOSITION_ROWS})
       </legend>
       <p className="mb-3 text-[12px] text-[#5B6B66]">
-        Cada insumo é uma linha. Uma linha totalmente vazia é ignorada ao salvar.
+        Cada insumo é uma linha. Uma linha totalmente vazia é ignorada ao salvar. O vínculo com o
+        parâmetro da ficha é opcional e identifica de onde vem o valor do insumo.
       </p>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] border-separate border-spacing-y-2 text-left">
+        <table className="w-full min-w-[880px] border-separate border-spacing-y-2 text-left">
           <thead>
             <tr className="text-[11px] font-bold uppercase tracking-wide text-[#5B6B66]">
               <th scope="col" className="px-1">
@@ -76,6 +93,9 @@ export default function CompositionInputTable({
                 Máximo
               </th>
               <th scope="col" className="px-1">
+                Parâmetro da ficha (opcional)
+              </th>
+              <th scope="col" className="px-1">
                 <span className="sr-only">Ações</span>
               </th>
             </tr>
@@ -86,6 +106,12 @@ export default function CompositionInputTable({
               const unitError = errorFor(index, 'unit')
               const minError = errorFor(index, 'min')
               const maxError = errorFor(index, 'max')
+              const link = row.sheet_param
+              const linkNameError = linkErrorFor(index, 'name')
+              const linkUnitError = linkErrorFor(index, 'unit')
+              const linkOriginError = linkErrorFor(index, 'origin')
+              const linkMinError = linkErrorFor(index, 'min')
+              const linkMaxError = linkErrorFor(index, 'max')
               return (
                 <tr key={row.key}>
                   <td className="px-1 align-top">
@@ -185,6 +211,138 @@ export default function CompositionInputTable({
                     {maxError && (
                       <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
                         {maxError}
+                      </p>
+                    )}
+                  </td>
+                  <td className="min-w-[220px] px-1 align-top">
+                    <label className="sr-only" htmlFor={sheetParamFieldId(index, 'name')}>
+                      Parâmetro da ficha do insumo {index + 1}
+                    </label>
+                    <select
+                      id={sheetParamFieldId(index, 'name')}
+                      disabled={disabled}
+                      value={link?.name ?? ''}
+                      onChange={(event) => {
+                        const selected = sheetParameters.find(
+                          (parameter) => parameter.name === event.target.value,
+                        )
+                        if (!selected) {
+                          // Sem seleção: limpa o vínculo inteiro, sem inventar valor.
+                          onChange(index, { sheet_param: undefined })
+                          return
+                        }
+                        onChange(index, {
+                          sheet_param: {
+                            name: selected.name,
+                            unit: selected.unit,
+                            origin: selected.origin,
+                            min: link?.min ?? '',
+                            max: link?.max ?? '',
+                          },
+                        })
+                      }}
+                      className={cellClass(!!linkNameError || !!linkUnitError)}
+                    >
+                      <option value="">
+                        {sheetParameters.length === 0
+                          ? 'Sem vínculo (parâmetros indisponíveis)'
+                          : 'Sem vínculo com a ficha'}
+                      </option>
+                      {sheetParameters.map((parameter) => (
+                        <option key={parameter.name} value={parameter.name}>
+                          {parameter.name} · {parameter.unit} · {parameter.origin}
+                        </option>
+                      ))}
+                    </select>
+                    {link && (
+                      <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+                        <div>
+                          <label className="sr-only" htmlFor={sheetParamFieldId(index, 'origin')}>
+                            Origem do parâmetro do insumo {index + 1}
+                          </label>
+                          <input
+                            id={sheetParamFieldId(index, 'origin')}
+                            disabled={disabled}
+                            maxLength={MAX_INPUT_NAME}
+                            aria-invalid={linkOriginError ? true : undefined}
+                            value={link.origin}
+                            onChange={(event) =>
+                              onChange(index, {
+                                sheet_param: { ...link, origin: event.target.value },
+                              })
+                            }
+                            className={cellClass(!!linkOriginError)}
+                            placeholder="Origem"
+                          />
+                          {linkOriginError && (
+                            <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                              {linkOriginError}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="sr-only" htmlFor={sheetParamFieldId(index, 'min')}>
+                            Mínimo do vínculo do insumo {index + 1}
+                          </label>
+                          <input
+                            id={sheetParamFieldId(index, 'min')}
+                            disabled={disabled}
+                            maxLength={MAX_INPUT_BOUND}
+                            inputMode="decimal"
+                            aria-invalid={linkMinError ? true : undefined}
+                            value={link.min}
+                            onChange={(event) =>
+                              onChange(index, {
+                                sheet_param: { ...link, min: event.target.value },
+                              })
+                            }
+                            className={cellClass(!!linkMinError)}
+                            placeholder="Mín. vínculo"
+                          />
+                          {linkMinError && (
+                            <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                              {linkMinError}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="sr-only" htmlFor={sheetParamFieldId(index, 'max')}>
+                            Máximo do vínculo do insumo {index + 1}
+                          </label>
+                          <input
+                            id={sheetParamFieldId(index, 'max')}
+                            disabled={disabled}
+                            maxLength={MAX_INPUT_BOUND}
+                            inputMode="decimal"
+                            aria-invalid={linkMaxError ? true : undefined}
+                            value={link.max}
+                            onChange={(event) =>
+                              onChange(index, {
+                                sheet_param: { ...link, max: event.target.value },
+                              })
+                            }
+                            className={cellClass(!!linkMaxError)}
+                            placeholder="Máx. vínculo"
+                          />
+                          {linkMaxError && (
+                            <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                              {linkMaxError}
+                            </p>
+                          )}
+                        </div>
+                        <p className="self-center text-[11px] text-[#5B6B66]">
+                          Unidade do vínculo: {link.unit || '—'}
+                        </p>
+                      </div>
+                    )}
+                    {linkNameError && (
+                      <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                        {linkNameError}
+                      </p>
+                    )}
+                    {linkUnitError && (
+                      <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                        {linkUnitError}
                       </p>
                     )}
                   </td>

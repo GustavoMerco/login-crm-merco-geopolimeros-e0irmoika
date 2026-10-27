@@ -38,7 +38,7 @@ export const COMPOSITION_FIELD_IDS = {
   resources: 'composicao-recursos',
 } as const
 
-export type CompositionInputColumn = 'name' | 'unit' | 'required' | 'min' | 'max'
+export type CompositionInputColumn = 'name' | 'unit' | 'required' | 'min' | 'max' | 'sheet_param'
 export type CompositionResourceColumn = 'catalog_item_id' | 'unit' | 'coefficient' | 'source'
 
 export type CompositionRowGroup = 'inputs' | 'resources'
@@ -56,11 +56,31 @@ export function compositionFieldId(
   return `${ROW_PREFIX[group]}-${index}-${column}`
 }
 
+/**
+ * Identificadores estáveis dos campos do vínculo com a ficha (T2.17),
+ * derivados do id da linha de insumo para foco e mensagem por campo.
+ */
+export function sheetParamFieldId(
+  index: number,
+  column: 'name' | 'unit' | 'origin' | 'min' | 'max',
+): string {
+  return `composicao-insumo-${index}-param-${column}`
+}
+
 /** Chave local de renderização; não vai para a API. */
 let rowKeySeed = 0
 function nextRowKey(prefix: string): string {
   rowKeySeed += 1
   return `${prefix}-${rowKeySeed}`
+}
+
+/** Vínculo com o parâmetro da ficha técnica (T2.17), nos limites do hook. */
+export type SheetParamLink = {
+  name: string
+  unit: string
+  origin: string
+  min: string
+  max: string
 }
 
 export type CompositionInputRow = {
@@ -70,6 +90,8 @@ export type CompositionInputRow = {
   required: boolean
   min: string
   max: string
+  /** Opcional: vínculo com o parâmetro da ficha técnica. */
+  sheet_param?: SheetParamLink
 }
 
 export type CompositionResourceRow = {
@@ -90,7 +112,32 @@ export function createInputRow(
     required: values.required ?? false,
     min: values.min ?? '',
     max: values.max ?? '',
+    sheet_param: values.sheet_param,
   }
+}
+
+export function createSheetParamLink(
+  values: Partial<Omit<SheetParamLink, 'min' | 'max'>> = {},
+): SheetParamLink {
+  return {
+    name: values.name ?? '',
+    unit: values.unit ?? '',
+    origin: values.origin ?? '',
+    min: values.min ?? '',
+    max: values.max ?? '',
+  }
+}
+
+/** O vínculo só entra no payload quando algo foi preenchido nele. */
+export function isFilledSheetParam(link: SheetParamLink | undefined): boolean {
+  if (!link) return false
+  return (
+    link.name.trim().length > 0 ||
+    link.unit.trim().length > 0 ||
+    link.origin.trim().length > 0 ||
+    link.min.trim().length > 0 ||
+    link.max.trim().length > 0
+  )
 }
 
 export function createResourceRow(
@@ -111,7 +158,8 @@ export function isFilledInputRow(row: CompositionInputRow): boolean {
     row.name.trim().length > 0 ||
     row.unit.trim().length > 0 ||
     row.min.trim().length > 0 ||
-    row.max.trim().length > 0
+    row.max.trim().length > 0 ||
+    isFilledSheetParam(row.sheet_param)
   )
 }
 
@@ -138,6 +186,14 @@ export type CompositionInputPayload = {
   required?: boolean
   min?: string
   max?: string
+  /** Vínculo com o parâmetro da ficha técnica (T2.17). */
+  sheet_param?: {
+    name: string
+    unit: string
+    origin: string
+    min?: string
+    max?: string
+  }
 }
 
 export type CompositionResourcePayload = {
@@ -160,6 +216,17 @@ export function toInputPayloads(rows: readonly CompositionInputRow[]): Compositi
     if (row.required) payload.required = true
     if (row.min.trim()) payload.min = row.min.trim()
     if (row.max.trim()) payload.max = row.max.trim()
+    if (isFilledSheetParam(row.sheet_param)) {
+      const link = row.sheet_param as SheetParamLink
+      const sheetPayload: NonNullable<CompositionInputPayload['sheet_param']> = {
+        name: link.name.trim(),
+        unit: link.unit.trim(),
+        origin: link.origin.trim(),
+      }
+      if (link.min.trim()) sheetPayload.min = link.min.trim()
+      if (link.max.trim()) sheetPayload.max = link.max.trim()
+      payload.sheet_param = sheetPayload
+    }
     return payload
   })
 }
@@ -448,6 +515,109 @@ export function validateCompositionDraft(
           targetId: compositionFieldId('inputs', index, 'max'),
           message: 'O mínimo não pode ser maior que o máximo.',
         })
+      }
+
+      // T2.17: vínculo com o parâmetro da ficha — mesmo contrato do servidor.
+      if (isFilledSheetParam(row.sheet_param)) {
+        const link = row.sheet_param as SheetParamLink
+        const linkName = link.name.trim()
+        if (!linkName) {
+          add({
+            index,
+            group: 'inputs',
+            column: 'sheet_param',
+            targetId: sheetParamFieldId(index, 'name'),
+            message: 'Informe o nome do parâmetro da ficha.',
+          })
+        } else if (linkName.length > MAX_INPUT_NAME) {
+          add({
+            index,
+            group: 'inputs',
+            column: 'sheet_param',
+            targetId: sheetParamFieldId(index, 'name'),
+            message: `Use no máximo ${MAX_INPUT_NAME} caracteres.`,
+          })
+        }
+
+        const linkUnit = link.unit.trim()
+        if (!linkUnit) {
+          add({
+            index,
+            group: 'inputs',
+            column: 'sheet_param',
+            targetId: sheetParamFieldId(index, 'unit'),
+            message: 'Informe a unidade do parâmetro da ficha.',
+          })
+        } else if (linkUnit.length > MAX_INPUT_UNIT) {
+          add({
+            index,
+            group: 'inputs',
+            column: 'sheet_param',
+            targetId: sheetParamFieldId(index, 'unit'),
+            message: `Use no máximo ${MAX_INPUT_UNIT} caracteres.`,
+          })
+        } else if (linkUnit !== unit) {
+          add({
+            index,
+            group: 'inputs',
+            column: 'sheet_param',
+            targetId: sheetParamFieldId(index, 'unit'),
+            message: `A unidade do parâmetro (${linkUnit}) diverge da unidade do insumo (${unit}).`,
+          })
+        }
+
+        const linkOrigin = link.origin.trim()
+        if (!linkOrigin) {
+          add({
+            index,
+            group: 'inputs',
+            column: 'sheet_param',
+            targetId: sheetParamFieldId(index, 'origin'),
+            message: 'Informe a origem do parâmetro da ficha.',
+          })
+        } else if (linkOrigin.length > MAX_INPUT_NAME) {
+          add({
+            index,
+            group: 'inputs',
+            column: 'sheet_param',
+            targetId: sheetParamFieldId(index, 'origin'),
+            message: `Use no máximo ${MAX_INPUT_NAME} caracteres.`,
+          })
+        }
+
+        const linkMin = link.min.trim()
+        const linkMax = link.max.trim()
+        if (linkMin && !DECIMAL_PATTERN.test(linkMin)) {
+          add({
+            index,
+            group: 'inputs',
+            column: 'sheet_param',
+            targetId: sheetParamFieldId(index, 'min'),
+            message: 'Use um decimal textual para o mínimo do vínculo (ex.: 0 ou 1.5).',
+          })
+        }
+        if (linkMax && !DECIMAL_PATTERN.test(linkMax)) {
+          add({
+            index,
+            group: 'inputs',
+            column: 'sheet_param',
+            targetId: sheetParamFieldId(index, 'max'),
+            message: 'Use um decimal textual para o máximo do vínculo (ex.: 10 ou 2.75).',
+          })
+        }
+        if (
+          DECIMAL_PATTERN.test(linkMin) &&
+          DECIMAL_PATTERN.test(linkMax) &&
+          Number(linkMin) > Number(linkMax)
+        ) {
+          add({
+            index,
+            group: 'inputs',
+            column: 'sheet_param',
+            targetId: sheetParamFieldId(index, 'max'),
+            message: 'O mínimo do vínculo não pode ser maior que o máximo.',
+          })
+        }
       }
     })
   }

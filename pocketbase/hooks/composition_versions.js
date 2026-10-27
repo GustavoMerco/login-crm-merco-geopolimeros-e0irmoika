@@ -105,6 +105,30 @@ routerAdd(
     if (!outputUnit)
       return reject('output_unit_required', 'Informe a unidade de saída (caminho: output_unit).')
 
+    // T2.17 (prova adiada da T2.16): só unidade homologada pode ser usada na
+    // saída ou em entrada (SPEC-2-007, regra 1; CA-2-12). Negativa com campo.
+    const unitIsHomologado = (unitCode) => {
+      const safe = unitCode.replace(/"/g, '')
+      const found = $app.findRecordsByFilter(
+        'units',
+        'code = "' + safe + '" && status = "homologado"',
+        '',
+        1,
+        0,
+      )
+      return found.length > 0
+    }
+    if (!unitIsHomologado(outputUnit)) {
+      return e.json(400, {
+        error:
+          'A unidade de saída ' +
+          outputUnit +
+          ' não está homologada. Cadastre e homologue a unidade antes de usar (T2.16).',
+        reason: 'unit_not_homologado',
+        field: 'output_unit',
+      })
+    }
+
     const source = text(body.source, 200)
     if (!source)
       return reject('source_required', 'Informe a fonte da composição (caminho: source).')
@@ -178,6 +202,101 @@ routerAdd(
           'inputs_invalid',
           'Cada insumo precisa de unidade (caminho: inputs[' + index + '].unit).',
         )
+      }
+      if (!unitIsHomologado(inputUnit)) {
+        return e.json(400, {
+          error:
+            'A unidade ' +
+            inputUnit +
+            ' do insumo ' +
+            (index + 1) +
+            ' não está homologada. Cadastre e homologue a unidade antes de usar (T2.16).',
+          reason: 'unit_not_homologado',
+          field: 'inputs[' + index + '].unit',
+        })
+      }
+
+      // T2.17: vínculo opcional com o parâmetro da ficha técnica.
+      // {name, unit, origin} nos mesmos limites do hook da ficha; unidade
+      // divergente e faixa inválida são negadas com o campo exato.
+      const sheetParam = item.sheet_param
+      if (sheetParam !== undefined && sheetParam !== null) {
+        if (typeof sheetParam !== 'object' || Array.isArray(sheetParam)) {
+          return reject(
+            'sheet_param_invalid',
+            'O vínculo com a ficha deve ser um objeto (caminho: inputs[' +
+              index +
+              '].sheet_param).',
+          )
+        }
+        const spName = typeof sheetParam.name === 'string' ? sheetParam.name.trim() : ''
+        if (!spName || spName.length > 120) {
+          return reject(
+            'sheet_param_required',
+            'Informe o nome do parâmetro da ficha (caminho: inputs[' +
+              index +
+              '].sheet_param.name).',
+          )
+        }
+        const spUnit = typeof sheetParam.unit === 'string' ? sheetParam.unit.trim() : ''
+        if (!spUnit || spUnit.length > 40) {
+          return reject(
+            'sheet_param_required',
+            'Informe a unidade do parâmetro da ficha (caminho: inputs[' +
+              index +
+              '].sheet_param.unit).',
+          )
+        }
+        if (spUnit !== inputUnit) {
+          return e.json(400, {
+            error:
+              'A unidade do parâmetro da ficha (' +
+              spUnit +
+              ') diverge da unidade do insumo (' +
+              inputUnit +
+              ').',
+            reason: 'sheet_unit_mismatch',
+            field: 'inputs[' + index + '].sheet_param.unit',
+          })
+        }
+        const spOrigin = typeof sheetParam.origin === 'string' ? sheetParam.origin.trim() : ''
+        if (!spOrigin || spOrigin.length > 120) {
+          return reject(
+            'sheet_param_required',
+            'Informe a origem do parâmetro da ficha (caminho: inputs[' +
+              index +
+              '].sheet_param.origin).',
+          )
+        }
+        const spMin = typeof sheetParam.min === 'string' ? sheetParam.min.trim() : ''
+        const spMax = typeof sheetParam.max === 'string' ? sheetParam.max.trim() : ''
+        if (spMin && !/^-?\d+(\.\d+)?$/.test(spMin)) {
+          return e.json(400, {
+            error: 'O mínimo do vínculo deve ser decimal textual (ex.: 0 ou 1.5).',
+            reason: 'sheet_range_invalid',
+            field: 'inputs[' + index + '].sheet_param.min',
+          })
+        }
+        if (spMax && !/^-?\d+(\.\d+)?$/.test(spMax)) {
+          return e.json(400, {
+            error: 'O máximo do vínculo deve ser decimal textual (ex.: 10 ou 2.75).',
+            reason: 'sheet_range_invalid',
+            field: 'inputs[' + index + '].sheet_param.max',
+          })
+        }
+        if (
+          spMin &&
+          spMax &&
+          /^-?\d+(\.\d+)?$/.test(spMin) &&
+          /^-?\d+(\.\d+)?$/.test(spMax) &&
+          Number(spMin) > Number(spMax)
+        ) {
+          return e.json(400, {
+            error: 'O mínimo do vínculo não pode ser maior que o máximo.',
+            reason: 'sheet_range_invalid',
+            field: 'inputs[' + index + '].sheet_param.max',
+          })
+        }
       }
     }
 
@@ -259,7 +378,23 @@ routerAdd(
       composition.set('version', 1)
       composition.set('status', 'rascunho')
       composition.set('output_unit', outputUnit)
-      composition.set('inputs', JSON.stringify(inputs))
+      // Normaliza o vínculo antes de salvar: só campos validados, sem lixo.
+      const normalizedInputs = inputs.map((item) => {
+        if (!item || typeof item !== 'object' || !item.sheet_param) return item
+        const sp = item.sheet_param
+        const link = { name: sp.name, unit: sp.unit, origin: sp.origin }
+        if (typeof sp.min === 'string' && sp.min.trim()) link.min = sp.min.trim()
+        if (typeof sp.max === 'string' && sp.max.trim()) link.max = sp.max.trim()
+        return {
+          name: item.name,
+          unit: item.unit,
+          required: item.required,
+          min: item.min,
+          max: item.max,
+          sheet_param: link,
+        }
+      })
+      composition.set('inputs', JSON.stringify(normalizedInputs))
       composition.set('resources', JSON.stringify(resources))
       composition.set('formula_ast', JSON.stringify(formulaAst))
       composition.set('source', source)
@@ -347,6 +482,29 @@ routerAdd(
     const outputUnit = text(body.output_unit, 40)
     if (!outputUnit) return reject('output_unit_required', 'Informe a unidade de saída.')
 
+    // T2.17 (prova adiada da T2.16): só unidade homologada na saída/entrada.
+    const unitIsHomologado = (unitCode) => {
+      const safe = unitCode.replace(/"/g, '')
+      const found = $app.findRecordsByFilter(
+        'units',
+        'code = "' + safe + '" && status = "homologado"',
+        '',
+        1,
+        0,
+      )
+      return found.length > 0
+    }
+    if (!unitIsHomologado(outputUnit)) {
+      return e.json(400, {
+        error:
+          'A unidade de saída ' +
+          outputUnit +
+          ' não está homologada. Cadastre e homologue a unidade antes de usar (T2.16).',
+        reason: 'unit_not_homologado',
+        field: 'output_unit',
+      })
+    }
+
     const source = text(body.source, 200)
     if (!source) return reject('source_required', 'Informe a fonte da composição.')
 
@@ -400,6 +558,100 @@ routerAdd(
           'inputs_unit_invalid',
           'Cada insumo precisa de unidade (caminho: inputs[' + index + '].unit).',
         )
+      }
+      if (!unitIsHomologado(unit)) {
+        return e.json(400, {
+          error:
+            'A unidade ' +
+            unit +
+            ' do insumo ' +
+            (index + 1) +
+            ' não está homologada. Cadastre e homologue a unidade antes de usar (T2.16).',
+          reason: 'unit_not_homologado',
+          field: 'inputs[' + index + '].unit',
+        })
+      }
+
+      // T2.17: vínculo opcional com o parâmetro da ficha técnica (mesmas
+      // regras do create; unidade divergente e faixa inválida negadas).
+      const sheetParam = input.sheet_param
+      if (sheetParam !== undefined && sheetParam !== null) {
+        if (typeof sheetParam !== 'object' || Array.isArray(sheetParam)) {
+          return reject(
+            'sheet_param_invalid',
+            'O vínculo com a ficha deve ser um objeto (caminho: inputs[' +
+              index +
+              '].sheet_param).',
+          )
+        }
+        const spName = typeof sheetParam.name === 'string' ? sheetParam.name.trim() : ''
+        if (!spName || spName.length > 120) {
+          return reject(
+            'sheet_param_required',
+            'Informe o nome do parâmetro da ficha (caminho: inputs[' +
+              index +
+              '].sheet_param.name).',
+          )
+        }
+        const spUnit = typeof sheetParam.unit === 'string' ? sheetParam.unit.trim() : ''
+        if (!spUnit || spUnit.length > 40) {
+          return reject(
+            'sheet_param_required',
+            'Informe a unidade do parâmetro da ficha (caminho: inputs[' +
+              index +
+              '].sheet_param.unit).',
+          )
+        }
+        if (spUnit !== unit) {
+          return e.json(400, {
+            error:
+              'A unidade do parâmetro da ficha (' +
+              spUnit +
+              ') diverge da unidade do insumo (' +
+              unit +
+              ').',
+            reason: 'sheet_unit_mismatch',
+            field: 'inputs[' + index + '].sheet_param.unit',
+          })
+        }
+        const spOrigin = typeof sheetParam.origin === 'string' ? sheetParam.origin.trim() : ''
+        if (!spOrigin || spOrigin.length > 120) {
+          return reject(
+            'sheet_param_required',
+            'Informe a origem do parâmetro da ficha (caminho: inputs[' +
+              index +
+              '].sheet_param.origin).',
+          )
+        }
+        const spMin = typeof sheetParam.min === 'string' ? sheetParam.min.trim() : ''
+        const spMax = typeof sheetParam.max === 'string' ? sheetParam.max.trim() : ''
+        if (spMin && !/^-?\d+(\.\d+)?$/.test(spMin)) {
+          return e.json(400, {
+            error: 'O mínimo do vínculo deve ser decimal textual (ex.: 0 ou 1.5).',
+            reason: 'sheet_range_invalid',
+            field: 'inputs[' + index + '].sheet_param.min',
+          })
+        }
+        if (spMax && !/^-?\d+(\.\d+)?$/.test(spMax)) {
+          return e.json(400, {
+            error: 'O máximo do vínculo deve ser decimal textual (ex.: 10 ou 2.75).',
+            reason: 'sheet_range_invalid',
+            field: 'inputs[' + index + '].sheet_param.max',
+          })
+        }
+        if (
+          spMin &&
+          spMax &&
+          /^-?\d+(\.\d+)?$/.test(spMin) &&
+          /^-?\d+(\.\d+)?$/.test(spMax) &&
+          Number(spMin) > Number(spMax)
+        ) {
+          return e.json(400, {
+            error: 'O mínimo do vínculo não pode ser maior que o máximo.',
+            reason: 'sheet_range_invalid',
+            field: 'inputs[' + index + '].sheet_param.max',
+          })
+        }
       }
     }
 
@@ -476,7 +728,23 @@ routerAdd(
       revision.set('version', newVersion)
       revision.set('status', 'rascunho')
       revision.set('output_unit', outputUnit)
-      revision.set('inputs', JSON.stringify(inputs))
+      // Normaliza o vínculo antes de salvar (mesma regra do create).
+      const normalizedInputs = inputs.map((item) => {
+        if (!item || typeof item !== 'object' || !item.sheet_param) return item
+        const sp = item.sheet_param
+        const link = { name: sp.name, unit: sp.unit, origin: sp.origin }
+        if (typeof sp.min === 'string' && sp.min.trim()) link.min = sp.min.trim()
+        if (typeof sp.max === 'string' && sp.max.trim()) link.max = sp.max.trim()
+        return {
+          name: item.name,
+          unit: item.unit,
+          required: item.required,
+          min: item.min,
+          max: item.max,
+          sheet_param: link,
+        }
+      })
+      revision.set('inputs', JSON.stringify(normalizedInputs))
       revision.set('resources', JSON.stringify(resources))
       revision.set('formula_ast', JSON.stringify(formulaAst))
       revision.set('source', source)

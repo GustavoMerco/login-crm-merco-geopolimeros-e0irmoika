@@ -55,7 +55,24 @@ function signature(form: CompositionDraftForm): string {
     tolerance: form.tolerance,
     valid_from: form.valid_from,
     valid_until: form.valid_until,
-    inputs: form.inputs.map((row) => [row.name, row.unit, row.required, row.min, row.max]),
+    // T2.17: o vínculo com a ficha entra na assinatura — trocá-lo é alteração
+    // não salva, igual a qualquer outro campo.
+    inputs: form.inputs.map((row) => [
+      row.name,
+      row.unit,
+      row.required,
+      row.min,
+      row.max,
+      row.sheet_param
+        ? [
+            row.sheet_param.name,
+            row.sheet_param.unit,
+            row.sheet_param.origin,
+            row.sheet_param.min,
+            row.sheet_param.max,
+          ]
+        : null,
+    ]),
     resources: form.resources.map((row) => [
       row.catalog_item_id,
       row.unit,

@@ -7,9 +7,13 @@ import {
   countFilledResourceRows,
   createInputRow,
   createResourceRow,
+  createSheetParamLink,
   errorForTarget,
+  isFilledInputRow,
+  isFilledSheetParam,
   resolveResourceId,
   resourceOptionLabel,
+  sheetParamFieldId,
   toInputPayloads,
   toResourcePayloads,
   validateCompositionDraft,
@@ -447,5 +451,207 @@ describe('field-level validation mirroring the server hook (T2.33)', () => {
     expect(new Set(ids).size).toBe(ids.length)
     expect(compositionFieldId('inputs', 12, 'min')).toBe('composicao-insumo-12-min')
     expect(compositionFieldId('resources', 4, 'source')).toBe('composicao-recurso-4-source')
+  })
+})
+
+describe('sheet param link (T2.17)', () => {
+  const linked = () =>
+    createInputRow({
+      name: 'Área',
+      unit: 'm2',
+      sheet_param: createSheetParamLink({
+        name: 'Área construída',
+        unit: 'm2',
+        origin: 'Levantamento planimétrico',
+        min: '0',
+        max: '250',
+      }),
+    })
+
+  it('is absent by default and never invented', () => {
+    expect(createInputRow().sheet_param).toBeUndefined()
+    expect(isFilledSheetParam(undefined)).toBe(false)
+    expect(isFilledSheetParam(createSheetParamLink())).toBe(false)
+  })
+
+  it('keeps an empty link out of the payload', () => {
+    const payloads = toInputPayloads([
+      createInputRow({ name: 'Área', unit: 'm2', sheet_param: createSheetParamLink() }),
+    ])
+    expect(payloads[0]).not.toHaveProperty('sheet_param')
+  })
+
+  it('carries the link into the payload only with filled fields', () => {
+    const payloads = toInputPayloads([linked()])
+    expect(payloads[0].sheet_param).toEqual({
+      name: 'Área construída',
+      unit: 'm2',
+      origin: 'Levantamento planimétrico',
+      min: '0',
+      max: '250',
+    })
+  })
+
+  it('keeps optional link bounds out of the payload when blank', () => {
+    const payloads = toInputPayloads([
+      createInputRow({
+        name: 'Área',
+        unit: 'm2',
+        sheet_param: createSheetParamLink({
+          name: 'Área construída',
+          unit: 'm2',
+          origin: 'Levantamento',
+        }),
+      }),
+    ])
+    expect(payloads[0].sheet_param).toEqual({
+      name: 'Área construída',
+      unit: 'm2',
+      origin: 'Levantamento',
+    })
+  })
+
+  it('makes a row with only a link count as filled', () => {
+    expect(
+      isFilledInputRow(createInputRow({ sheet_param: createSheetParamLink({ name: 'x' }) })),
+    ).toBe(true)
+  })
+
+  it('accepts a valid link with matching unit and decimal bounds', () => {
+    const result = validateCompositionDraft(draft({ inputs: [linked()] }), catalog)
+    expect(result.valid).toBe(true)
+    expect(result.errors).toEqual([])
+  })
+
+  it('rejects a link with a unit that diverges from the input unit', () => {
+    const result = validateCompositionDraft(
+      draft({
+        inputs: [
+          createInputRow({
+            name: 'Área',
+            unit: 'm2',
+            sheet_param: createSheetParamLink({
+              name: 'Peso',
+              unit: 'kg',
+              origin: 'Ensaio',
+            }),
+          }),
+        ],
+      }),
+      catalog,
+    )
+    expect(result.valid).toBe(false)
+    const message = errorForTarget(result.errors, sheetParamFieldId(0, 'unit'))
+    expect(message).toContain('diverge')
+    expect(message).toContain('kg')
+    expect(message).toContain('m2')
+  })
+
+  it('rejects a link with an inverted range', () => {
+    const result = validateCompositionDraft(
+      draft({
+        inputs: [
+          createInputRow({
+            name: 'Área',
+            unit: 'm2',
+            sheet_param: createSheetParamLink({
+              name: 'Área construída',
+              unit: 'm2',
+              origin: 'Levantamento',
+              min: '10',
+              max: '1',
+            }),
+          }),
+        ],
+      }),
+      catalog,
+    )
+    expect(errorForTarget(result.errors, sheetParamFieldId(0, 'max'))).toContain(
+      'mínimo do vínculo não pode ser maior',
+    )
+  })
+
+  it('rejects non-decimal link bounds', () => {
+    const result = validateCompositionDraft(
+      draft({
+        inputs: [
+          createInputRow({
+            name: 'Área',
+            unit: 'm2',
+            sheet_param: createSheetParamLink({
+              name: 'Área construída',
+              unit: 'm2',
+              origin: 'Levantamento',
+              min: 'um',
+            }),
+          }),
+        ],
+      }),
+      catalog,
+    )
+    expect(errorForTarget(result.errors, sheetParamFieldId(0, 'min'))).toContain('decimal textual')
+  })
+
+  it('treats a completely empty link as no link, like the selector does', () => {
+    const result = validateCompositionDraft(
+      draft({
+        inputs: [
+          createInputRow({
+            name: 'Área',
+            unit: 'm2',
+            sheet_param: createSheetParamLink(),
+          }),
+        ],
+      }),
+      catalog,
+    )
+    expect(result.valid).toBe(true)
+  })
+
+  it('requires unit and origin when a link is started with only the name', () => {
+    const result = validateCompositionDraft(
+      draft({
+        inputs: [
+          createInputRow({
+            name: 'Área',
+            unit: 'm2',
+            sheet_param: createSheetParamLink({ name: 'Área construída' }),
+          }),
+        ],
+      }),
+      catalog,
+    )
+    const targets = result.errors.map((error) => error.targetId)
+    expect(targets).not.toContain(sheetParamFieldId(0, 'name'))
+    expect(targets).toContain(sheetParamFieldId(0, 'unit'))
+    expect(targets).toContain(sheetParamFieldId(0, 'origin'))
+  })
+
+  it('accepts an inclusive boundary at the maximum of the range', () => {
+    const result = validateCompositionDraft(
+      draft({
+        inputs: [
+          createInputRow({
+            name: 'Área',
+            unit: 'm2',
+            sheet_param: createSheetParamLink({
+              name: 'Área construída',
+              unit: 'm2',
+              origin: 'Levantamento',
+              min: '0',
+              max: '250',
+            }),
+          }),
+        ],
+      }),
+      catalog,
+    )
+    expect(result.valid).toBe(true)
+  })
+
+  it('gives link fields stable ids derived from the input row', () => {
+    expect(sheetParamFieldId(0, 'name')).toBe('composicao-insumo-0-param-name')
+    expect(sheetParamFieldId(2, 'max')).toBe('composicao-insumo-2-param-max')
+    expect(sheetParamFieldId(0, 'unit')).not.toBe(compositionFieldId('inputs', 0, 'unit'))
   })
 })

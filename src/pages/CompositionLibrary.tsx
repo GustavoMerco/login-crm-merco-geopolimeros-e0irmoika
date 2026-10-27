@@ -11,26 +11,59 @@ import {
 } from '@/services/compositions'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission } from '@/lib/auth/permissions'
-import type { CompositionDraftForm } from '@/lib/compositionDraft'
+import { afterCompositionSaved, type CompositionDraftForm } from '@/lib/compositionDraft'
 import {
   canSubmitCompositionForCatalog,
   catalogItemOptionLabel,
   resolveCatalogItemId,
 } from '@/lib/compositionCatalog'
+import {
+  COMPOSITION_FIELD_IDS,
+  MAX_CODE,
+  MAX_FIXTURE_REF,
+  MAX_OUTPUT_UNIT,
+  MAX_PRECISION,
+  MAX_SOURCE,
+  MAX_TOLERANCE,
+  createInputRow,
+  createResourceRow,
+  errorForTarget,
+  toInputPayloads,
+  toResourcePayloads,
+  validateCompositionDraft,
+  type CompositionInputRow,
+  type CompositionResourceRow,
+} from '@/lib/compositionRows'
+import CompositionInputTable from '@/components/compositions/CompositionInputTable'
+import CompositionResourceTable from '@/components/compositions/CompositionResourceTable'
 import { AlertTriangle, Boxes } from 'lucide-react'
 
 type ServerPermissionState = 'loading' | 'allowed' | 'denied' | 'unavailable'
 
-const inputClass =
-  'mt-1.5 min-h-[44px] w-full rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15 disabled:bg-[#F1F5F4]'
-const textAreaClass =
-  'mt-1.5 w-full rounded-[10px] border border-[#E1E8E5] bg-white px-3 py-2.5 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15 disabled:bg-[#F1F5F4]'
+const inputBase =
+  'mt-1.5 min-h-[44px] w-full rounded-[10px] border bg-white px-3 text-[14px] font-normal outline-none focus:ring-4 disabled:bg-[#F1F5F4]'
+const inputOk = 'border-[#E1E8E5] focus:border-[#10B981] focus:ring-[#10B981]/15'
+const inputBad = 'border-[#DC2626] focus:border-[#DC2626] focus:ring-[#DC2626]/15'
 const labelClass = 'block text-[13px] font-semibold text-[#0F1F1C]'
+
+function fieldClass(hasError: boolean): string {
+  return `${inputBase} ${hasError ? inputBad : inputOk}`
+}
+
+function FieldMessage({ message }: { message: string | null }) {
+  if (!message) return null
+  return (
+    <p className="mt-1 text-[12px] font-medium text-[#B91C1C]" role="alert">
+      {message}
+    </p>
+  )
+}
 
 export default function CompositionLibrary() {
   const { user } = useAuth()
   const location = useLocation()
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
   const { compositionForm, setCompositionForm, markCompositionSaved } = useCompositionDraft()
   const [serverPermission, setServerPermission] = useState<ServerPermissionState>('loading')
   const [compositions, setCompositions] = useState<CompositionListItem[]>([])
@@ -42,6 +75,7 @@ export default function CompositionLibrary() {
   const [compositionInfo, setCompositionInfo] = useState<string | null>(null)
   const [isLoadingCompositions, setIsLoadingCompositions] = useState(true)
   const [isSubmittingComposition, setIsSubmittingComposition] = useState(false)
+  const [showErrors, setShowErrors] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -95,13 +129,83 @@ export default function CompositionLibrary() {
     return () => cancelAnimationFrame(frame)
   }, [location.pathname])
 
+  const validation = validateCompositionDraft(compositionForm, catalogItems)
+  const activeErrors = showErrors ? validation.errors : []
+  const errorFor = (targetId: string) => errorForTarget(activeErrors, targetId)
+
+  const clearNotices = () => {
+    setCompositionError(null)
+    setCompositionInfo(null)
+  }
+
   const handleCompositionChange = <K extends keyof CompositionDraftForm>(
     field: K,
     value: CompositionDraftForm[K],
   ) => {
     setCompositionForm((previous) => ({ ...previous, [field]: value }))
-    setCompositionError(null)
-    setCompositionInfo(null)
+    clearNotices()
+  }
+
+  const updateInputRow = (index: number, changes: Partial<CompositionInputRow>) => {
+    setCompositionForm((previous) => ({
+      ...previous,
+      inputs: previous.inputs.map((row, rowIndex) =>
+        rowIndex === index ? { ...row, ...changes } : row,
+      ),
+    }))
+    clearNotices()
+  }
+
+  const updateResourceRow = (index: number, changes: Partial<CompositionResourceRow>) => {
+    setCompositionForm((previous) => ({
+      ...previous,
+      resources: previous.resources.map((row, rowIndex) =>
+        rowIndex === index ? { ...row, ...changes } : row,
+      ),
+    }))
+    clearNotices()
+  }
+
+  const addInputRow = () => {
+    setCompositionForm((previous) => ({
+      ...previous,
+      inputs: [...previous.inputs, createInputRow()],
+    }))
+    clearNotices()
+  }
+
+  const removeInputRow = (index: number) => {
+    setCompositionForm((previous) => {
+      const next = previous.inputs.filter((_, rowIndex) => rowIndex !== index)
+      // A tabela nunca fica sem linha: vazio seria ambíguo para quem preenche.
+      return { ...previous, inputs: next.length > 0 ? next : [createInputRow()] }
+    })
+    clearNotices()
+  }
+
+  const addResourceRow = () => {
+    setCompositionForm((previous) => ({
+      ...previous,
+      resources: [...previous.resources, createResourceRow()],
+    }))
+    clearNotices()
+  }
+
+  const removeResourceRow = (index: number) => {
+    setCompositionForm((previous) => {
+      const next = previous.resources.filter((_, rowIndex) => rowIndex !== index)
+      return { ...previous, resources: next.length > 0 ? next : [createResourceRow()] }
+    })
+    clearNotices()
+  }
+
+  const focusFirstError = (targetId: string | null) => {
+    if (!targetId) return
+    // Os IDs vêm de compositionFieldId (letras, números e hífen), sem aspas.
+    const element = formRef.current?.querySelector<HTMLElement>(`[id="${targetId}"]`)
+    if (!element) return
+    element.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    element.focus({ preventScroll: true })
   }
 
   const localCompositionPermission = hasPermission(user?.role, 'manageCompositions')
@@ -117,59 +221,51 @@ export default function CompositionLibrary() {
 
   const handleCompositionSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setCompositionError(null)
-    setCompositionInfo(null)
+    clearNotices()
+    setShowErrors(true)
+
     if (!selectedCatalogItemId) {
       setCompositionError('Selecione um item existente do catálogo antes de criar o rascunho.')
+      focusFirstError(COMPOSITION_FIELD_IDS.catalogItem)
+      return
+    }
+
+    const check = validateCompositionDraft(compositionForm, catalogItems)
+    if (!check.valid) {
+      focusFirstError(check.firstTargetId)
       return
     }
 
     setIsSubmittingComposition(true)
     const submittedForm = compositionForm
     try {
-      const inputs = submittedForm.inputs_text
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line) => {
-          const [name, unit] = line.split('|').map((part) => part.trim())
-          return { name: name || '', unit: unit || '' }
-        })
-      const resources = submittedForm.resources_text
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line) => {
-          const [id, unit, coefficient, source] = line.split('|').map((part) => part.trim())
-          return {
-            id: id || '',
-            unit: unit || '',
-            coefficient: coefficient || '',
-            source: source || '',
-          }
-        })
       const result = await createComposition({
         catalog_item_id: selectedCatalogItemId,
-        code: submittedForm.code,
-        output_unit: submittedForm.output_unit,
-        source: submittedForm.source,
-        fixture_ref: submittedForm.fixture_ref,
-        precision: submittedForm.precision,
+        code: submittedForm.code.trim(),
+        output_unit: submittedForm.output_unit.trim(),
+        source: submittedForm.source.trim(),
+        fixture_ref: submittedForm.fixture_ref.trim(),
+        precision: submittedForm.precision.trim(),
         rounding: submittedForm.rounding,
-        tolerance: submittedForm.tolerance,
+        tolerance: submittedForm.tolerance.trim(),
         valid_from: submittedForm.valid_from,
         valid_until: submittedForm.valid_until,
         owner_id: user?.id || '',
-        inputs,
-        resources,
+        inputs: toInputPayloads(submittedForm.inputs),
+        resources: toResourcePayloads(submittedForm.resources),
         formula_ast: { op: 'sum', args: [] },
       })
-      const savedForm = { ...submittedForm, code: '' }
+      const savedForm = afterCompositionSaved(submittedForm)
       setCompositionForm(savedForm)
       markCompositionSaved(savedForm)
-      setCompositionInfo(`Rascunho criado: versão ${result.version} (status ${result.status}).`)
+      setShowErrors(false)
+      setCompositionInfo(
+        `Rascunho criado: versão ${result.version} (status ${result.status}). A composição aparece em "Versões registradas".`,
+      )
       await loadCompositions()
     } catch (error: unknown) {
+      // O formulário não é limpo aqui: se a API negar, nada foi salvo e o que a
+      // Engenharia preencheu precisa continuar na tela.
       setCompositionError(getErrorMessage(error))
     } finally {
       setIsSubmittingComposition(false)
@@ -184,7 +280,7 @@ export default function CompositionLibrary() {
         : 'Somente Engenharia/Admin podem criar composições; seu papel tem acesso de visualização.'
 
   return (
-    <section className="mx-auto mt-0 w-full max-w-5xl rounded-[16px] border border-[#E1E8E5] bg-white p-6 shadow-[0_12px_40px_rgba(2,44,34,0.06)] sm:p-8">
+    <section className="mx-auto mt-0 w-full max-w-6xl rounded-[16px] border border-[#E1E8E5] bg-white p-6 shadow-[0_12px_40px_rgba(2,44,34,0.06)] sm:p-8">
       <div className="mb-6 flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#ECFDF5] text-[#047857]">
           <Boxes className="h-5 w-5" />
@@ -200,8 +296,9 @@ export default function CompositionLibrary() {
             Biblioteca de composições
           </h2>
           <p className="mt-1 text-[13px] text-[#5B6B66]">
-            Consulte versões salvas e crie novos rascunhos. Reabrir aqui significa localizar e
-            consultar um rascunho persistido; edição de rascunho não faz parte desta página.
+            Consulte versões salvas e crie novos rascunhos. Insumos e recursos são preenchidos em
+            tabelas, com o catálogo escolhido por nome. Reabrir ou editar uma versão salva ainda não
+            faz parte desta página.
           </p>
         </div>
       </div>
@@ -278,7 +375,8 @@ export default function CompositionLibrary() {
                     <span className="font-normal text-[#5B6B66]">{composition.family}</span>
                   </p>
                   <p className="text-[12px] text-[#5B6B66]">
-                    {composition.outputUnit} · vigência {composition.validFrom} a{' '}
+                    {composition.outputUnit} · {composition.inputsCount} insumo(s) ·{' '}
+                    {composition.resourcesCount} recurso(s) · vigência {composition.validFrom} a{' '}
                     {composition.validUntil} · fonte: {composition.source}
                   </p>
                 </div>
@@ -304,10 +402,13 @@ export default function CompositionLibrary() {
       </div>
 
       {canManageCompositions ? (
-        <form onSubmit={handleCompositionSubmit} className="space-y-4" noValidate>
-          <label className={labelClass}>
-            Item do catálogo *
+        <form ref={formRef} onSubmit={handleCompositionSubmit} className="space-y-5" noValidate>
+          <div>
+            <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.catalogItem}>
+              Item do catálogo *
+            </label>
             <select
+              id={COMPOSITION_FIELD_IDS.catalogItem}
               disabled={
                 isSubmittingComposition ||
                 isLoadingCatalogItems ||
@@ -315,9 +416,10 @@ export default function CompositionLibrary() {
                 catalogItems.length === 0
               }
               required
+              aria-invalid={errorFor(COMPOSITION_FIELD_IDS.catalogItem) ? true : undefined}
               value={compositionForm.catalog_item_id}
               onChange={(event) => handleCompositionChange('catalog_item_id', event.target.value)}
-              className={inputClass}
+              className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.catalogItem))}
             >
               <option value="">
                 {isLoadingCatalogItems
@@ -334,7 +436,8 @@ export default function CompositionLibrary() {
                 </option>
               ))}
             </select>
-          </label>
+            <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.catalogItem)} />
+          </div>
 
           {catalogItemsError && (
             <div
@@ -364,136 +467,179 @@ export default function CompositionLibrary() {
             </p>
           )}
 
-          <label className={labelClass}>
-            Código da composição *
+          <div>
+            <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.code}>
+              Código da composição *
+            </label>
             <input
+              id={COMPOSITION_FIELD_IDS.code}
               disabled={isSubmittingComposition}
               required
-              maxLength={64}
+              maxLength={MAX_CODE}
+              aria-invalid={errorFor(COMPOSITION_FIELD_IDS.code) ? true : undefined}
               value={compositionForm.code}
               onChange={(event) => handleCompositionChange('code', event.target.value)}
-              className={inputClass}
+              className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.code))}
               placeholder="Ex.: COMP-GEO-001"
             />
-          </label>
+            <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.code)} />
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <label className={labelClass}>
-              Unidade de saída *
+            <div>
+              <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.outputUnit}>
+                Unidade de saída *
+              </label>
               <input
+                id={COMPOSITION_FIELD_IDS.outputUnit}
                 disabled={isSubmittingComposition}
                 required
-                maxLength={40}
+                maxLength={MAX_OUTPUT_UNIT}
+                aria-invalid={errorFor(COMPOSITION_FIELD_IDS.outputUnit) ? true : undefined}
                 value={compositionForm.output_unit}
                 onChange={(event) => handleCompositionChange('output_unit', event.target.value)}
-                className={inputClass}
+                className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.outputUnit))}
                 placeholder="Ex.: m³"
               />
-            </label>
-            <label className={labelClass}>
-              Precisão *
+              <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.outputUnit)} />
+            </div>
+            <div>
+              <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.precision}>
+                Precisão *
+              </label>
               <input
+                id={COMPOSITION_FIELD_IDS.precision}
                 disabled={isSubmittingComposition}
                 required
-                maxLength={40}
+                maxLength={MAX_PRECISION}
+                aria-invalid={errorFor(COMPOSITION_FIELD_IDS.precision) ? true : undefined}
                 value={compositionForm.precision}
                 onChange={(event) => handleCompositionChange('precision', event.target.value)}
-                className={inputClass}
+                className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.precision))}
               />
-            </label>
-            <label className={labelClass}>
-              Tolerância *
+              <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.precision)} />
+            </div>
+            <div>
+              <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.tolerance}>
+                Tolerância *
+              </label>
               <input
+                id={COMPOSITION_FIELD_IDS.tolerance}
                 disabled={isSubmittingComposition}
                 required
-                maxLength={40}
+                maxLength={MAX_TOLERANCE}
+                aria-invalid={errorFor(COMPOSITION_FIELD_IDS.tolerance) ? true : undefined}
                 value={compositionForm.tolerance}
                 onChange={(event) => handleCompositionChange('tolerance', event.target.value)}
-                className={inputClass}
+                className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.tolerance))}
               />
-            </label>
+              <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.tolerance)} />
+            </div>
           </div>
 
-          <label className={labelClass}>
-            Fonte *
+          <div>
+            <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.source}>
+              Fonte *
+            </label>
             <input
+              id={COMPOSITION_FIELD_IDS.source}
               disabled={isSubmittingComposition}
               required
-              maxLength={200}
+              maxLength={MAX_SOURCE}
+              aria-invalid={errorFor(COMPOSITION_FIELD_IDS.source) ? true : undefined}
               value={compositionForm.source}
               onChange={(event) => handleCompositionChange('source', event.target.value)}
-              className={inputClass}
+              className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.source))}
               placeholder="Origem do contrato ou referência sintética"
             />
-          </label>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelClass}>
-              Início da vigência *
-              <input
-                disabled={isSubmittingComposition}
-                required
-                type="date"
-                value={compositionForm.valid_from}
-                onChange={(event) => handleCompositionChange('valid_from', event.target.value)}
-                className={inputClass}
-              />
-            </label>
-            <label className={labelClass}>
-              Fim da vigência *
-              <input
-                disabled={isSubmittingComposition}
-                required
-                type="date"
-                value={compositionForm.valid_until}
-                onChange={(event) => handleCompositionChange('valid_until', event.target.value)}
-                className={inputClass}
-              />
-            </label>
+            <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.source)} />
           </div>
 
-          <label className={labelClass}>
-            Insumos * (um por linha: nome | unidade)
-            <textarea
-              disabled={isSubmittingComposition}
-              required
-              rows={2}
-              value={compositionForm.inputs_text}
-              onChange={(event) => handleCompositionChange('inputs_text', event.target.value)}
-              className={textAreaClass}
-              placeholder={'Insumo A | m2\nInsumo B | kg'}
-            />
-          </label>
-
-          <label className={labelClass}>
-            Recursos * (um por linha: id | unidade | coeficiente | fonte)
-            <textarea
-              disabled={isSubmittingComposition}
-              required
-              rows={2}
-              value={compositionForm.resources_text}
-              onChange={(event) => handleCompositionChange('resources_text', event.target.value)}
-              className={textAreaClass}
-              placeholder="id do recurso | m2 | 1.5 | fonte/versão"
-            />
-          </label>
-
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelClass}>
-              Referência da fixture *
+            <div>
+              <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.validFrom}>
+                Início da vigência *
+              </label>
               <input
+                id={COMPOSITION_FIELD_IDS.validFrom}
                 disabled={isSubmittingComposition}
                 required
-                maxLength={500}
+                type="date"
+                aria-invalid={errorFor(COMPOSITION_FIELD_IDS.validFrom) ? true : undefined}
+                value={compositionForm.valid_from}
+                onChange={(event) => handleCompositionChange('valid_from', event.target.value)}
+                className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.validFrom))}
+              />
+              <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.validFrom)} />
+            </div>
+            <div>
+              <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.validUntil}>
+                Fim da vigência *
+              </label>
+              <input
+                id={COMPOSITION_FIELD_IDS.validUntil}
+                disabled={isSubmittingComposition}
+                required
+                type="date"
+                aria-invalid={errorFor(COMPOSITION_FIELD_IDS.validUntil) ? true : undefined}
+                value={compositionForm.valid_until}
+                onChange={(event) => handleCompositionChange('valid_until', event.target.value)}
+                className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.validUntil))}
+              />
+              <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.validUntil)} />
+            </div>
+          </div>
+
+          <CompositionInputTable
+            rows={compositionForm.inputs}
+            errors={activeErrors}
+            disabled={isSubmittingComposition}
+            onChange={updateInputRow}
+            onAdd={addInputRow}
+            onRemove={removeInputRow}
+          />
+
+          <CompositionResourceTable
+            rows={compositionForm.resources}
+            errors={activeErrors}
+            catalogItems={catalogItems}
+            isLoadingCatalog={isLoadingCatalogItems}
+            disabled={isSubmittingComposition}
+            onChange={updateResourceRow}
+            onAdd={addResourceRow}
+            onRemove={removeResourceRow}
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.fixtureRef}>
+                Caso de referência (referência documental assinada) *
+              </label>
+              <input
+                id={COMPOSITION_FIELD_IDS.fixtureRef}
+                disabled={isSubmittingComposition}
+                required
+                maxLength={MAX_FIXTURE_REF}
+                aria-invalid={errorFor(COMPOSITION_FIELD_IDS.fixtureRef) ? true : undefined}
+                aria-describedby="composicao-referencia-ajuda"
                 value={compositionForm.fixture_ref}
                 onChange={(event) => handleCompositionChange('fixture_ref', event.target.value)}
-                className={inputClass}
-                placeholder="Referência à massa de teste aprovada"
+                className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.fixtureRef))}
+                placeholder="Ex.: docs/fixtures/COMP-GEO-001.v1.assinada.pdf"
               />
-            </label>
-            <label className={labelClass}>
-              Arredondamento *
+              <p id="composicao-referencia-ajuda" className="mt-1 text-[11px] text-[#5B6B66]">
+                O sistema não escolhe nem cria esse caso por você. Sem uma referência verificável
+                fornecida pela Engenharia, o rascunho não é salvo, e nada é registrado em nome de
+                uma referência fictícia.
+              </p>
+              <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.fixtureRef)} />
+            </div>
+            <div>
+              <label className={labelClass} htmlFor="composicao-arredondamento">
+                Arredondamento *
+              </label>
               <select
+                id="composicao-arredondamento"
                 disabled={isSubmittingComposition}
                 required
                 value={compositionForm.rounding}
@@ -503,14 +649,34 @@ export default function CompositionLibrary() {
                     event.target.value as CompositionDraftForm['rounding'],
                   )
                 }
-                className={inputClass}
+                className={`${inputBase} ${inputOk}`}
               >
                 <option value="normal">Normal</option>
                 <option value="up">Para cima</option>
                 <option value="down">Para baixo</option>
               </select>
-            </label>
+              <p className="mt-1 text-[11px] text-[#5B6B66]">
+                Opções do contrato atual do servidor (normal, up, down).
+              </p>
+            </div>
           </div>
+
+          {showErrors && validation.errors.length > 0 && (
+            <div
+              className="rounded-[10px] border-l-4 border-[#DC2626] bg-[#FEF2F2] p-3.5 text-[13px] text-[#B91C1C]"
+              role="alert"
+              aria-live="assertive"
+            >
+              <p className="font-semibold">
+                {validation.errors.length === 1
+                  ? 'Há 1 pendência para salvar o rascunho.'
+                  : `Há ${validation.errors.length} pendências para salvar o rascunho.`}
+              </p>
+              <p className="mt-1">
+                O primeiro campo com problema recebeu foco. Nada foi enviado ao servidor.
+              </p>
+            </div>
+          )}
 
           <button
             type="submit"

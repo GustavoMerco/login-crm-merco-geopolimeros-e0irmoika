@@ -41,6 +41,22 @@ export type CompositionRecord = {
   created: string
 }
 
+export type CompositionInputPayload = {
+  name: string
+  unit: string
+  /** Opcionais homologados (o hook aceita e não exige). */
+  required?: boolean
+  min?: string
+  max?: string
+}
+
+export type CompositionResourcePayload = {
+  id: string
+  unit: string
+  coefficient: string
+  source: string
+}
+
 export type CreateCompositionInput = {
   catalog_item_id: string
   code: string
@@ -53,8 +69,8 @@ export type CreateCompositionInput = {
   valid_from: string
   valid_until: string
   owner_id: string
-  inputs: { name: string; unit: string }[]
-  resources: { id: string; unit: string; coefficient: string; source: string }[]
+  inputs: CompositionInputPayload[]
+  resources: CompositionResourcePayload[]
   formula_ast: Record<string, unknown>
 }
 

@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import {
+  createInitialCompositionDraft,
   hasUnsavedCompositionChanges,
-  INITIAL_COMPOSITION_DRAFT,
   type CompositionDraftForm,
 } from '@/lib/compositionDraft'
 
@@ -16,9 +16,10 @@ type CompositionDraftContextValue = {
 const CompositionDraftContext = createContext<CompositionDraftContextValue | null>(null)
 
 export function CompositionDraftProvider({ children }: { children: ReactNode }) {
-  const [compositionForm, setCompositionForm] =
-    useState<CompositionDraftForm>(INITIAL_COMPOSITION_DRAFT)
-  const [savedForm, setSavedForm] = useState<CompositionDraftForm>(INITIAL_COMPOSITION_DRAFT)
+  const [compositionForm, setCompositionForm] = useState<CompositionDraftForm>(
+    createInitialCompositionDraft,
+  )
+  const [savedForm, setSavedForm] = useState<CompositionDraftForm>(createInitialCompositionDraft)
   const hasUnsavedChanges = hasUnsavedCompositionChanges(compositionForm, savedForm)
 
   useEffect(() => {

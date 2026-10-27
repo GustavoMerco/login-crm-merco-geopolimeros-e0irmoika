@@ -631,6 +631,24 @@ export default function CompositionLibrary() {
             </div>
           </div>
 
+          <div>
+            <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.source}>
+              Fonte *
+            </label>
+            <input
+              id={COMPOSITION_FIELD_IDS.source}
+              disabled={isSubmittingComposition}
+              required
+              maxLength={MAX_SOURCE}
+              aria-invalid={errorFor(COMPOSITION_FIELD_IDS.source) ? true : undefined}
+              value={compositionForm.source}
+              onChange={(event) => handleCompositionChange('source', event.target.value)}
+              className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.source))}
+              placeholder="Origem do contrato ou referência sintética"
+            />
+            <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.source)} />
+          </div>
+
           {opportunityContext && sheetError && (
             <div
               className="rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] p-3 text-sm text-[#9A3412]"

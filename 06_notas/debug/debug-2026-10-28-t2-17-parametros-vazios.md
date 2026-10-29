@@ -7,3 +7,11 @@
 - **Verificação:** conferência de integridade dos dois arquivos gravados (9/9 checagens); Vitest local 153/153; QA do Skip 0.0.138/90e7e4f PASS (setup/estática/build/integrações; suíte `ran:false`).
 - **Registro de processo:** entre 0.0.90 e 0.0.137 foram criadas versões sem mudança de código durante o diagnóstico (chamadas repetidas de apply_changes) — erro de procedimento, não afeta o produto; o código efetivo é 0.0.89 + correção 0.0.138.
 - **Gate:** volta a `aguardando_teste_humano`.
+
+## Segunda rodada (2026-10-29, logs do servidor)
+
+- **Sintoma:** "Não consegui fazer vinculo pq diz nao ter nenhum homologado." — o salvamento do rascunho é negado.
+- **Evidência dos logs (Skip Cloud):** `GET /backend/v1/units?status=homologado` → 200; **dois `POST /backend/v1/compositions` → 400** (14:23 e 14:24). A negativa é a nova regra server-side `unit_not_homologado` (prova adiada da T2.16): a unidade de saída/insumo digitada não existe homologada em `units`.
+- **Causa raiz:** defeito de apresentação do meu frontend — a Biblioteca carrega as unidades homologadas mas **nunca as exibe**; os campos de unidade são texto livre sem mostrar os códigos válidos. O usuário não tem como saber o que digitar (ex.: `m2` homologado vs `m³` inválido).
+- **Correção (0.0.139/b9d55f8):** dica visível sob o campo "Unidade de saída" listando os códigos homologados ("Homologadas: m2, ..."), com estados para nenhuma homologada ("Cadastre e homologue em /unidades") e consulta indisponível; dica "Use um código homologado (ex.: m2, kg)" sob a unidade do insumo. Nenhuma regra alterada — a negativa server-side permanece.
+- **Gate:** volta a `aguardando_teste_humano`.

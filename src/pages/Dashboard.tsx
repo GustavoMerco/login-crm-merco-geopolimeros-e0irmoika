@@ -93,6 +93,7 @@ import { approveReadiness, getReadiness, type ReadinessStatus } from '@/services
 
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
+import { buildSlaOptions } from '@/lib/readinessOptions'
 import { MercoLogo } from '@/components/MercoLogo'
 import {
   AlertTriangle,
@@ -228,6 +229,12 @@ export const Dashboard: React.FC = () => {
     recovery_evidence_ref: '',
     phase1_receipt_ref: '',
   })
+
+  // T2.34: seleção por rótulos, sem digitar IDs. As opções vêm das consultas
+  // seguras já existentes (pilot_params e baseline_snapshots); o ID vai por baixo
+  // e o payload enviado continua exatamente o mesmo (backend revalida).
+  const slaOptions = buildSlaOptions(pilotParams)
+  const baselineOptions = baselines
 
   const [pilotParams, setPilotParams] = useState<PilotParamRecord[]>([])
   const [paramStatus, setParamStatus] = useState<ParamStatusResponse | null>(null)
@@ -2179,26 +2186,60 @@ export const Dashboard: React.FC = () => {
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-[13px] font-semibold text-[#0F1F1C]">
-                  ID do SLA homologado *
-                  <input
+                  SLA homologado *
+                  <select
                     required
-                    maxLength={15}
                     value={readinessForm.sla_record_id}
                     onChange={(event) => handleReadinessChange('sla_record_id', event.target.value)}
                     className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
-                    placeholder="id pilot_params"
-                  />
+                  >
+                    <option value="">
+                      {slaOptions.length === 0
+                        ? 'Nenhum SLA homologado disponível'
+                        : 'Selecione o SLA homologado'}
+                    </option>
+                    {slaOptions.map((param) => (
+                      <option key={param.id} value={param.id}>
+                        {param.family} — {param.value}
+                        {param.unit ? ' ' + param.unit : ''} · fonte: {param.source}
+                      </option>
+                    ))}
+                    {/* rótulo construído por slaOptionLabel — ver src/lib/readinessOptions.ts */}
+                  </select>
+                  {slaOptions.length === 0 && (
+                    <span className="mt-1 block text-[12px] text-[#B45309]">
+                      Nenhum parâmetro de SLA homologado. Homologue em Administração → Regras e SLA
+                      do piloto antes de assinar a prontidão.
+                    </span>
+                  )}
                 </label>
                 <label className="block text-[13px] font-semibold text-[#0F1F1C]">
-                  ID do baseline congelado *
-                  <input
+                  Baseline congelado *
+                  <select
                     required
-                    maxLength={15}
                     value={readinessForm.baseline_id}
                     onChange={(event) => handleReadinessChange('baseline_id', event.target.value)}
                     className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
-                    placeholder="id baseline_snapshots"
-                  />
+                  >
+                    <option value="">
+                      {baselineOptions.length === 0
+                        ? 'Nenhum baseline disponível'
+                        : 'Selecione o baseline congelado'}
+                    </option>
+                    {baselineOptions.map((baseline) => (
+                      <option key={baseline.id} value={baseline.id}>
+                        {baseline.service_family} — janela {baseline.window_start} a{' '}
+                        {baseline.window_end} · congelado em {baseline.frozen_at}
+                      </option>
+                    ))}
+                  </select>
+                  {baselineOptions.length === 0 && (
+                    <span className="mt-1 block text-[12px] text-[#B45309]">
+                      Nenhum baseline congelado visível para você (a consulta mostra apenas os
+                      seus). Congele um baseline em Administração → Baseline antes de assinar a
+                      prontidão.
+                    </span>
+                  )}
                 </label>
               </div>
               <label className="block text-[13px] font-semibold text-[#0F1F1C]">

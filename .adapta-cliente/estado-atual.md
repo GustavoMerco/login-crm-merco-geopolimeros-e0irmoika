@@ -1,13 +1,13 @@
 # Estado atual — Adapta Cliente
 
-- task_id: T2.17
+- task_id: T2.34
 - champion: Paulo Romeiro
-- spec: 04_fase-atual/specs/spec-2-007.md
-- etapa: em_correcao
-- autorizacao_implementacao: confirmada 2026-10-27T16:30 — "Seguir com a implementação"
-- teste_humano: falhou 2026-10-28T11:25 — "Não consegui fazer vinculo pq diz nao ter nenhum homologado." (bloqueio ao salvar rascunho com vínculo)
-- verificacao_automatica: passou — Vitest 153/153; QA 0.0.138 PASS; falha atual é de dados/regra, não de build
-- aprendizado: capturado:06_notas/debug/debug-2026-10-28-t2-17-parametros-vazios.md
-- ultima_acao: debug iniciado — mensagem de "nenhum homologado" ao tentar salvar vínculo
-- proxima_acao: localizar a origem exata da mensagem e diagnosticar
-- atualizado_em: 2026-10-28T11:26:00-03:00
+- spec: 04_fase-atual/specs/spec-2-001.md (UX-F2-001; UX-001-UI)
+- etapa: implementando
+- autorizacao_implementacao: confirmada 2026-10-29T14:22 — "Autorizar implementação da T2.34 conforme o plano"
+- teste_humano: pendente
+- verificacao_automatica: pendente — patch aplicado em src/pages/Dashboard.tsx (seletores por rótulo SLA/baseline), falta QA
+- aprendizado: pendente
+- ultima_acao: 2 patches aplicados no Dashboard (estado slaOptions/baselineOptions + substituição dos inputs de ID por seletores); arquivo relido e conferido
+- proxima_acao: rodar skip_project_apply_changes (QA) e depois apresentar teste humano
+- atualizado_em: 2026-10-29T14:35:00-03:00

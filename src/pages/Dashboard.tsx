@@ -230,7 +230,8 @@ export const Dashboard: React.FC = () => {
     phase1_receipt_ref: '',
   })
 
-  const [pilotParams, setPilotParams] = useState<PilotParamRecord[]>([])  const [paramStatus, setParamStatus] = useState<ParamStatusResponse | null>(null)
+  const [pilotParams, setPilotParams] = useState<PilotParamRecord[]>([])
+  const [paramStatus, setParamStatus] = useState<ParamStatusResponse | null>(null)
   const [paramForm, setParamForm] = useState({
     param_type: 'bdi' as 'bdi' | 'iss' | 'margem' | 'sla' | 'alcada' | 'arredondamento',
     family: '',

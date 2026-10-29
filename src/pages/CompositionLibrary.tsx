@@ -564,6 +564,24 @@ export default function CompositionLibrary() {
                 placeholder="Ex.: m³"
               />
               <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.outputUnit)} />
+              {unitsError ? (
+                <p className="mt-1 text-[11px] text-[#9A3412]" role="status">
+                  Não foi possível consultar as unidades homologadas; o servidor pode recusar a
+                  unidade digitada.
+                </p>
+              ) : isLoadingUnits ? (
+                <p className="mt-1 text-[11px] text-[#5B6B66]" role="status">
+                  Carregando unidades homologadas…
+                </p>
+              ) : units.length === 0 ? (
+                <p className="mt-1 text-[11px] text-[#9A3412]" role="status">
+                  Nenhuma unidade homologada. Cadastre e homologue em /unidades antes de salvar.
+                </p>
+              ) : (
+                <p className="mt-1 text-[11px] text-[#5B6B66]" role="status">
+                  Homologadas: {units.map((unit) => unit.code).join(', ')}
+                </p>
+              )}
             </div>
             <div>
               <label className={labelClass} htmlFor={COMPOSITION_FIELD_IDS.precision}>

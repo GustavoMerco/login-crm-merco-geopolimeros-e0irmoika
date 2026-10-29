@@ -1,0 +1,9 @@
+# Debug 2026-10-28 — T2.17: seletor de parâmetros vazio
+
+- **Sintoma relatado pelo champion:** "aparece sem parametros para eu tentar selecionar." — a coluna "Parâmetro da ficha" mostra apenas a opção vazia, sem parâmetros para escolher.
+- **Reprodução:** abrir `/biblioteca` pelo menu (sem `?oportunidade=` na URL) e olhar o seletor do vínculo.
+- **Causa raiz (demonstrada no código):** a lista de parâmetros só é carregada quando a URL tem `?oportunidade=<id>` (a ficha técnica pertence a uma oportunidade e a consulta segura existente exige esse contexto). Aberta pelo menu, a Biblioteca não tem contexto → `sheetParameters` fica vazio e o seletor não tem opções. O recorte original deixou o vínculo dependente de um contexto que a navegação normal não fornece — o teste humano ficou impossível sem digitar URL manualmente.
+- **Correção mínima (dentro do recorte aprovado na análise):** quando a lista está vazia, o seletor é desabilitado com rótulo honesto ("Sem ficha no contexto (usar entrada manual)") e **dois campos manuais aparecem** (nome e unidade do parâmetro), com as mesmas validações do hook (nome ≤120, unidade ≤40, unidade divergente negada). A Biblioteca exibe aviso explicando o contexto e como abrir com `?oportunidade=<id>`. Com ficha no contexto, o comportamento do seletor permanece o mesmo.
+- **Verificação:** conferência de integridade dos dois arquivos gravados (9/9 checagens); Vitest local 153/153; QA do Skip 0.0.138/90e7e4f PASS (setup/estática/build/integrações; suíte `ran:false`).
+- **Registro de processo:** entre 0.0.90 e 0.0.137 foram criadas versões sem mudança de código durante o diagnóstico (chamadas repetidas de apply_changes) — erro de procedimento, não afeta o produto; o código efetivo é 0.0.89 + correção 0.0.138.
+- **Gate:** volta a `aguardando_teste_humano`.

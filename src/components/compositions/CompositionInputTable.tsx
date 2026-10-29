@@ -160,6 +160,11 @@ export default function CompositionInputTable({
                         {unitError}
                       </p>
                     )}
+                    {sheetParameters.length === 0 && (
+                      <p className="mt-1 text-[10px] text-[#5B6B66]">
+                        Use um código homologado (ex.: m2, kg).
+                      </p>
+                    )}
                   </td>
                   <td className="px-1 align-top">
                     <label className="flex min-h-[40px] items-center gap-2 text-[12px] text-[#2C3B36]">

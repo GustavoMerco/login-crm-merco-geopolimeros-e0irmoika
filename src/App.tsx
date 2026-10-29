@@ -13,6 +13,7 @@ import Opportunities from './pages/Opportunities'
 import TechSheet from './pages/TechSheet'
 import Units from './pages/Units'
 import DashboardLegacy from './pages/Dashboard'
+import AdminIndex from './pages/AdminIndex'
 import NotFound from './pages/NotFound'
 import { legacySectionRedirect } from './lib/navigation'
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/ficha" element={<TechSheet />} />
             <Route path="/biblioteca" element={<CompositionLibrary />} />
             <Route path="/unidades" element={<Units />} />
+            <Route path="/administracao" element={<AdminIndex />} />
             <Route path="/clientes" element={<Navigate to="/dashboard" replace />} />
             <Route path="/propostas" element={<Navigate to="/dashboard" replace />} />
             <Route path="/projetos" element={<Navigate to="/dashboard" replace />} />

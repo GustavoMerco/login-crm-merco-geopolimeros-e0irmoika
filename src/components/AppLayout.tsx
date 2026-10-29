@@ -18,13 +18,19 @@ export default function AppLayout() {
     '/biblioteca': 'biblioteca',
     '/demandas': 'demanda',
     '/ficha': 'ficha',
+    '/administracao': 'administracao',
+    '/unidades': 'unidades',
   }
   const active =
     STANDALONE_ACTIVE[location.pathname] ?? new URLSearchParams(location.search).get('secao')
   const title =
     location.pathname === '/dashboard'
       ? 'Central de trabalho técnico'
-      : sections.find(([id]) => id === active)?.[1] || 'Painel técnico'
+      : location.pathname === '/administracao'
+        ? 'Administração e evidências'
+        : location.pathname === '/unidades'
+          ? 'Unidades e dimensões'
+          : sections.find(([id]) => id === active)?.[1] || 'Painel técnico'
   const nav = (
     <nav aria-label="Navegação principal" className="flex-1 overflow-y-auto p-3">
       <Link
@@ -37,7 +43,21 @@ export default function AppLayout() {
       {sections.map(([id, label], index) => (
         <React.Fragment key={id}>
           {index === 4 && (
-            <p className="mt-4 px-3 text-sm font-semibold text-white">Administração e evidências</p>
+            <>
+              <p className="mt-4 px-3 text-sm font-semibold text-white">
+                Administração e evidências
+              </p>
+              {/* T2.36: o rótulo abre o índice administrativo; as seções continuam
+                  alcançáveis pelo índice e pelas URLs existentes. */}
+              <Link
+                aria-current={active === 'administracao' ? 'page' : undefined}
+                className={`block min-h-[44px] rounded p-3 text-sm hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-300 ${active === 'administracao' ? 'border-l-4 border-orange-300 bg-emerald-800 font-bold' : ''}`}
+                to="/administracao"
+                onClick={() => setOpen(false)}
+              >
+                Índice da administração
+              </Link>
+            </>
           )}
           <Link
             aria-current={active === id ? 'page' : undefined}

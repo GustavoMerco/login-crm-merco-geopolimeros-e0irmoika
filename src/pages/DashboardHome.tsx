@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { sectionsForRole, sectionUrl } from '@/lib/navigation'
+import { ADMIN_INDEX_URL, sectionsForRole, sectionUrl } from '@/lib/navigation'
 
 export default function DashboardHome() {
   const { user } = useAuth()
@@ -17,7 +17,18 @@ export default function DashboardHome() {
       <ul className="grid gap-3 sm:grid-cols-2">
         {sections.map(([id, label], index) => (
           <li key={id}>
-            {index === 4 && <h2 className="mb-3 font-semibold">Administração e evidências</h2>}
+            {index === 4 && (
+              <>
+                <h2 className="mb-3 font-semibold">Administração e evidências</h2>
+                {/* T2.36: entrada para o índice administrativo organizado. */}
+                <Link
+                  className="mb-3 flex min-h-[44px] items-center rounded-lg border border-emerald-200 bg-emerald-50 p-4 font-semibold text-[#064E3B] hover:bg-emerald-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+                  to={ADMIN_INDEX_URL}
+                >
+                  Índice da administração — todos os destinos com descrição
+                </Link>
+              </>
+            )}
             <Link
               className="flex min-h-[44px] items-center rounded-lg border border-[#E1E8E5] bg-white p-4 font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
               to={sectionUrl(id)}

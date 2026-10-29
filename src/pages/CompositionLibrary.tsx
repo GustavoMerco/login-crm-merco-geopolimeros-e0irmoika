@@ -649,6 +649,17 @@ export default function CompositionLibrary() {
             <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.source)} />
           </div>
 
+          {!opportunityContext && (
+            <p
+              className="rounded-[10px] border border-[#E1E8E5] bg-[#F8FAF9] p-3 text-sm text-[#5B6B66]"
+              role="status"
+            >
+              Esta página foi aberta sem oportunidade no contexto, então o seletor não lista os
+              parâmetros da ficha. Preencha o vínculo manualmente (nome e unidade na linha do
+              insumo) ou abra a Biblioteca com ?oportunidade=&lt;id&gt; para carregar os parâmetros
+              reais da demanda.
+            </p>
+          )}
           {opportunityContext && sheetError && (
             <div
               className="rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] p-3 text-sm text-[#9A3412]"

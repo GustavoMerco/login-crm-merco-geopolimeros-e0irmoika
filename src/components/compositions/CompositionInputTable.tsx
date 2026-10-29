@@ -36,7 +36,8 @@ function cellClass(hasError: boolean): string {
  * cada coluna: nada de pipe nem texto livre para interpretar.
  *
  * T2.17: cada insumo pode ser vinculado a um parâmetro da ficha técnica por
- * nome/unidade/origem, com mínimo/máximo do vínculo visíveis na linha.
+ * nome/unidade/origem, com mínimo/máximo do vínculo visíveis na linha. Sem a
+ * lista da ficha no contexto, o vínculo continua possível por entrada manual.
  */
 export default function CompositionInputTable({
   rows,
@@ -220,7 +221,7 @@ export default function CompositionInputTable({
                     </label>
                     <select
                       id={sheetParamFieldId(index, 'name')}
-                      disabled={disabled}
+                      disabled={disabled || sheetParameters.length === 0}
                       value={link?.name ?? ''}
                       onChange={(event) => {
                         const selected = sheetParameters.find(
@@ -245,7 +246,7 @@ export default function CompositionInputTable({
                     >
                       <option value="">
                         {sheetParameters.length === 0
-                          ? 'Sem vínculo (parâmetros indisponíveis)'
+                          ? 'Sem ficha no contexto (usar entrada manual)'
                           : 'Sem vínculo com a ficha'}
                       </option>
                       {sheetParameters.map((parameter) => (
@@ -254,6 +255,76 @@ export default function CompositionInputTable({
                         </option>
                       ))}
                     </select>
+                    {sheetParameters.length === 0 && (
+                      <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+                        <div>
+                          <label
+                            className="sr-only"
+                            htmlFor={`${sheetParamFieldId(index, 'name')}-m`}
+                          >
+                            Nome manual do parâmetro do insumo {index + 1}
+                          </label>
+                          <input
+                            id={`${sheetParamFieldId(index, 'name')}-m`}
+                            disabled={disabled}
+                            maxLength={MAX_INPUT_NAME}
+                            aria-invalid={linkNameError ? true : undefined}
+                            value={link?.name ?? ''}
+                            onChange={(event) =>
+                              onChange(index, {
+                                sheet_param: {
+                                  name: event.target.value,
+                                  unit: link?.unit ?? '',
+                                  origin: link?.origin ?? '',
+                                  min: link?.min ?? '',
+                                  max: link?.max ?? '',
+                                },
+                              })
+                            }
+                            className={cellClass(!!linkNameError)}
+                            placeholder="Nome do parâmetro"
+                          />
+                          {linkNameError && (
+                            <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                              {linkNameError}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <label
+                            className="sr-only"
+                            htmlFor={`${sheetParamFieldId(index, 'unit')}-m`}
+                          >
+                            Unidade manual do parâmetro do insumo {index + 1}
+                          </label>
+                          <input
+                            id={`${sheetParamFieldId(index, 'unit')}-m`}
+                            disabled={disabled}
+                            maxLength={MAX_INPUT_UNIT}
+                            aria-invalid={linkUnitError ? true : undefined}
+                            value={link?.unit ?? ''}
+                            onChange={(event) =>
+                              onChange(index, {
+                                sheet_param: {
+                                  name: link?.name ?? '',
+                                  unit: event.target.value,
+                                  origin: link?.origin ?? '',
+                                  min: link?.min ?? '',
+                                  max: link?.max ?? '',
+                                },
+                              })
+                            }
+                            className={cellClass(!!linkUnitError)}
+                            placeholder="Unidade (ex.: m2)"
+                          />
+                          {linkUnitError && (
+                            <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                              {linkUnitError}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     {link && (
                       <div className="mt-1.5 grid grid-cols-2 gap-1.5">
                         <div>
@@ -334,16 +405,6 @@ export default function CompositionInputTable({
                           Unidade do vínculo: {link.unit || '—'}
                         </p>
                       </div>
-                    )}
-                    {linkNameError && (
-                      <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
-                        {linkNameError}
-                      </p>
-                    )}
-                    {linkUnitError && (
-                      <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
-                        {linkUnitError}
-                      </p>
                     )}
                   </td>
                   <td className="px-1 align-top">

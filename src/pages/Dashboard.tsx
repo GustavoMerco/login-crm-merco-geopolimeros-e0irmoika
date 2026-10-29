@@ -230,14 +230,7 @@ export const Dashboard: React.FC = () => {
     phase1_receipt_ref: '',
   })
 
-  // T2.34: seleção por rótulos, sem digitar IDs. As opções vêm das consultas
-  // seguras já existentes (pilot_params e baseline_snapshots); o ID vai por baixo
-  // e o payload enviado continua exatamente o mesmo (backend revalida).
-  const slaOptions = buildSlaOptions(pilotParams)
-  const baselineOptions = baselines
-
-  const [pilotParams, setPilotParams] = useState<PilotParamRecord[]>([])
-  const [paramStatus, setParamStatus] = useState<ParamStatusResponse | null>(null)
+  const [pilotParams, setPilotParams] = useState<PilotParamRecord[]>([])  const [paramStatus, setParamStatus] = useState<ParamStatusResponse | null>(null)
   const [paramForm, setParamForm] = useState({
     param_type: 'bdi' as 'bdi' | 'iss' | 'margem' | 'sla' | 'alcada' | 'arredondamento',
     family: '',
@@ -259,6 +252,12 @@ export const Dashboard: React.FC = () => {
   const [homologateParamUnit, setHomologateParamUnit] = useState('')
   const [gates, setGates] = useState<GateRecord[]>([])
   const [gateStatus, setGateStatus] = useState<GateStatusResponse | null>(null)
+
+  // T2.34: seleção por rótulos, sem digitar IDs. As opções vêm das consultas
+  // seguras já existentes (pilot_params e baseline_snapshots); o ID vai por baixo
+  // e o payload enviado continua exatamente o mesmo (backend revalida).
+  const slaOptions = buildSlaOptions(pilotParams)
+  const baselineOptions = baselines
   const [gateForm, setGateForm] = useState({
     title: '',
     description: '',

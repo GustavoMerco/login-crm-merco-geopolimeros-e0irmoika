@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider } from './contexts/AuthContext'
+import { PermissionsProvider } from './contexts/PermissionsContext'
 import { CompositionDraftProvider } from './contexts/CompositionDraftContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import AppLayout from './components/AppLayout'
@@ -42,9 +43,11 @@ const App = () => (
           <Route
             element={
               <ProtectedRoute>
-                <CompositionDraftProvider>
-                  <AppLayout />
-                </CompositionDraftProvider>
+                <PermissionsProvider>
+                  <CompositionDraftProvider>
+                    <AppLayout />
+                  </CompositionDraftProvider>
+                </PermissionsProvider>
               </ProtectedRoute>
             }
           >

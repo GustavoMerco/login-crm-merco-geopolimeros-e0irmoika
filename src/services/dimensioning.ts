@@ -45,3 +45,45 @@ export const approveReadiness = (input: ApproveReadinessInput) =>
       headers: { 'Content-Type': 'application/json' },
     },
   )
+
+// T2.5 — prova do motor decimal no servidor (SPEC-2-003; D-T2.5). Somente
+// leitura: o servidor executa fixtures sintéticas fixas e nada é gravado.
+export type CalculationStep = {
+  passo: number
+  operacao: string
+  a: { valor: string; unidade: string; origem: string }
+  b: { valor: string; unidade: string; origem: string }
+  resultado: { valor: string; unidade: string }
+  exato: boolean
+}
+
+export type CalculationProofCase = {
+  id: string
+  tipo: 'GREEN' | 'RED'
+  descricao: string
+  esperado: string
+  obtido: string
+  mensagem: string
+  passou: boolean
+}
+
+export type CalculationProofReport = {
+  modo: 'simulacao'
+  aprovacao: false
+  aviso: string
+  runtime: string
+  executadoEm: string
+  versaoMotor: string
+  resumo: { total: number; passou: number; falhou: number }
+  casos: CalculationProofCase[]
+  memoria: {
+    resultado: { valor: string; unidade: string }
+    bruto: string
+    precisao: number
+    arredondamento: string
+    passos: CalculationStep[]
+  } | null
+}
+
+export const runCalculationProof = () =>
+  pb.send<CalculationProofReport>('/backend/v1/dimensioning/selftest', { method: 'GET' })

@@ -4,7 +4,15 @@
 // Nenhuma etapa é inventada: precificação e aprovação entram quando as Fases 3
 // e 4 existirem no backend. Desfecho (ganha/perdida): emenda D-UX-01.
 
-export type StageId = 'recebida' | 'qualificacao' | 'apta' | 'engenharia' | 'pronta' | 'enviada' | 'ganha' | 'perdida'
+export type StageId =
+  | 'recebida'
+  | 'qualificacao'
+  | 'apta'
+  | 'engenharia'
+  | 'pronta'
+  | 'enviada'
+  | 'ganha'
+  | 'perdida'
 
 export type Stage = {
   id: StageId
@@ -13,11 +21,27 @@ export type Stage = {
 }
 
 export const STAGES: Stage[] = [
-  { id: 'recebida', label: 'Recebida', description: 'Demanda registrada; aptidão ainda não avaliada.' },
-  { id: 'qualificacao', label: 'Em qualificação', description: 'Faltam dados obrigatórios do checklist de aptidão.' },
+  {
+    id: 'recebida',
+    label: 'Recebida',
+    description: 'Demanda registrada; aptidão ainda não avaliada.',
+  },
+  {
+    id: 'qualificacao',
+    label: 'Em qualificação',
+    description: 'Faltam dados obrigatórios do checklist de aptidão.',
+  },
   { id: 'apta', label: 'Apta', description: 'Pronta para a engenharia abrir a ficha técnica.' },
-  { id: 'engenharia', label: 'Em engenharia', description: 'Ficha técnica aberta; composição e dimensionamento em andamento.' },
-  { id: 'pronta', label: 'Pronta para envio', description: 'Proposta pronta; falta enviar ao cliente.' },
+  {
+    id: 'engenharia',
+    label: 'Em engenharia',
+    description: 'Ficha técnica aberta; composição e dimensionamento em andamento.',
+  },
+  {
+    id: 'pronta',
+    label: 'Pronta para envio',
+    description: 'Proposta pronta; falta enviar ao cliente.',
+  },
   { id: 'enviada', label: 'Enviada', description: 'Aguardando a resposta do cliente.' },
   { id: 'ganha', label: 'Ganha', description: 'Cliente aprovou a proposta.' },
   { id: 'perdida', label: 'Perdida', description: 'Cliente recusou; motivo registrado.' },
@@ -130,7 +154,12 @@ export function stageLabel(stage: StageId): string {
 export function civilDate(value: string | Date, timeZone = TIME_ZONE): string {
   const date = typeof value === 'string' ? new Date(value.replace(' ', 'T')) : value
   if (Number.isNaN(date.getTime())) return ''
-  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
 }
 
 // Campo de data do PocketBase ("2026-11-20 00:00:00.000Z" ou "2026-11-20").
@@ -141,7 +170,9 @@ export function dateOnly(value: string | undefined): string {
 }
 
 export function daysBetween(fromCivil: string, toCivil: string): number {
-  return Math.round((Date.parse(`${toCivil}T00:00:00Z`) - Date.parse(`${fromCivil}T00:00:00Z`)) / DAY_MS)
+  return Math.round(
+    (Date.parse(`${toCivil}T00:00:00Z`) - Date.parse(`${fromCivil}T00:00:00Z`)) / DAY_MS,
+  )
 }
 
 export function dias(n: number): string {
@@ -184,7 +215,8 @@ export function deadlineInfo(
       : { state: 'cumprido', label: 'Enviada no prazo', days: late }
   }
   const remaining = daysBetween(todayCivil, deadline)
-  if (remaining < 0) return { state: 'vencido', label: `Vencido há ${dias(-remaining)}`, days: remaining }
+  if (remaining < 0)
+    return { state: 'vencido', label: `Vencido há ${dias(-remaining)}`, days: remaining }
   if (remaining === 0) return { state: 'hoje', label: 'Vence hoje', days: 0 }
   if (remaining <= NEAR_DEADLINE_DAYS) {
     return { state: 'proximo', label: `Vence em ${dias(remaining)}`, days: remaining }
@@ -216,18 +248,22 @@ export function buildCards(
       hasTechSheet,
       sentAt,
       readyAt,
-      deadline: deadlineInfo(opportunity.deadline_date, today, sentAt ? civilDate(sentAt) : undefined),
+      deadline: deadlineInfo(
+        opportunity.deadline_date,
+        today,
+        sentAt ? civilDate(sentAt) : undefined,
+      ),
       pendingCount: opportunity.pending_items?.length ?? 0,
-      outcomeNote: own.find((event) => event.milestone === 'won' || event.milestone === 'lost')?.note ?? '',
+      outcomeNote:
+        own.find((event) => event.milestone === 'won' || event.milestone === 'lost')?.note ?? '',
     }
   })
 }
 
 export function groupByStage(cards: PipelineCard[]): Record<StageId, PipelineCard[]> {
-  const groups = Object.fromEntries(STAGES.map((stage) => [stage.id, [] as PipelineCard[]])) as Record<
-    StageId,
-    PipelineCard[]
-  >
+  const groups = Object.fromEntries(
+    STAGES.map((stage) => [stage.id, [] as PipelineCard[]]),
+  ) as Record<StageId, PipelineCard[]>
   for (const card of cards) groups[card.stage] = [...groups[card.stage], card]
   return groups
 }
@@ -247,18 +283,25 @@ export function filterCards(cards: PipelineCard[], filter: PipelineFilter): Pipe
   const query = normalizeKey(filter.query)
   return cards.filter(({ opportunity }) => {
     if (filter.family && opportunity.service_family !== filter.family) return false
-    if (filter.customerKey && normalizeKey(opportunity.customer_name) !== filter.customerKey) return false
+    if (filter.customerKey && normalizeKey(opportunity.customer_name) !== filter.customerKey)
+      return false
     if (!query) return true
     const haystack = normalizeKey(
-      [opportunity.customer_name, opportunity.contact_name, opportunity.service_family, opportunity.location, opportunity.origin].join(' '),
+      [
+        opportunity.customer_name,
+        opportunity.contact_name,
+        opportunity.service_family,
+        opportunity.location,
+        opportunity.origin,
+      ].join(' '),
     )
     return haystack.includes(query)
   })
 }
 
 export function familiesOf(cards: PipelineCard[]): string[] {
-  return [...new Set(cards.map((card) => card.opportunity.service_family).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b, 'pt-BR'),
+  return [...new Set(cards.map((card) => card.opportunity.service_family).filter(Boolean))].sort(
+    (a, b) => a.localeCompare(b, 'pt-BR'),
   )
 }
 
@@ -269,7 +312,8 @@ export type QueueGroup = { id: QueueGroupId; title: string; hint: string; cards:
 
 export function buildQueue(cards: PipelineCard[]): QueueGroup[] {
   const open = cards.filter((card) => !CLOSED_STAGES.has(card.stage))
-  const byDeadline = (a: PipelineCard, b: PipelineCard) => (a.deadline.days ?? 9_999) - (b.deadline.days ?? 9_999)
+  const byDeadline = (a: PipelineCard, b: PipelineCard) =>
+    (a.deadline.days ?? 9_999) - (b.deadline.days ?? 9_999)
   const groups: QueueGroup[] = [
     {
       id: 'vencidos',
@@ -281,7 +325,9 @@ export function buildQueue(cards: PipelineCard[]): QueueGroup[] {
       id: 'proximos',
       title: `Vence em até ${NEAR_DEADLINE_DAYS} dias`,
       hint: 'Priorize estas antes de abrir novas demandas.',
-      cards: open.filter((card) => card.deadline.state === 'hoje' || card.deadline.state === 'proximo').sort(byDeadline),
+      cards: open
+        .filter((card) => card.deadline.state === 'hoje' || card.deadline.state === 'proximo')
+        .sort(byDeadline),
     },
     {
       id: 'enviar',
@@ -332,12 +378,17 @@ export function summarizeCustomers(cards: PipelineCard[]): CustomerSummary[] {
     map.set(key, [...(map.get(key) ?? []), card])
   }
   const summaries = [...map.entries()].map(([key, list]) => {
-    const sorted = [...list].sort((a, b) => b.opportunity.received_at.localeCompare(a.opportunity.received_at))
+    const sorted = [...list].sort((a, b) =>
+      b.opportunity.received_at.localeCompare(a.opportunity.received_at),
+    )
     const contacts = new Map<string, { name: string; email: string }>()
     for (const { opportunity } of sorted) {
       const contactKey = normalizeKey(opportunity.contact_email || opportunity.contact_name)
       if (contactKey && !contacts.has(contactKey)) {
-        contacts.set(contactKey, { name: opportunity.contact_name, email: opportunity.contact_email ?? '' })
+        contacts.set(contactKey, {
+          name: opportunity.contact_name,
+          email: opportunity.contact_email ?? '',
+        })
       }
     }
     return {
@@ -347,7 +398,9 @@ export function summarizeCustomers(cards: PipelineCard[]): CustomerSummary[] {
       open: list.filter((card) => !CLOSED_STAGES.has(card.stage)).length,
       sent: list.filter((card) => CLOSED_STAGES.has(card.stage)).length,
       overdue: list.filter((card) => card.deadline.state === 'vencido').length,
-      families: [...new Set(list.map((card) => card.opportunity.service_family).filter(Boolean))].sort(),
+      families: [
+        ...new Set(list.map((card) => card.opportunity.service_family).filter(Boolean)),
+      ].sort(),
       contacts: [...contacts.values()],
       lastReceivedAt: sorted[0].opportunity.received_at,
     }
@@ -373,13 +426,18 @@ export type PipelineMetrics = {
 }
 
 export function computeMetrics(cards: PipelineCard[]): PipelineMetrics {
-  const byStage = Object.fromEntries(STAGES.map((stage) => [stage.id, 0])) as Record<StageId, number>
+  const byStage = Object.fromEntries(STAGES.map((stage) => [stage.id, 0])) as Record<
+    StageId,
+    number
+  >
   for (const card of cards) byStage[card.stage] += 1
   const sent = cards.filter((card) => CLOSED_STAGES.has(card.stage) && card.sentAt)
   const durations = sent
     .map((card) => daysBetween(civilDate(card.opportunity.received_at), civilDate(card.sentAt)))
     .filter((days) => Number.isFinite(days) && days >= 0)
-  const withDeadline = sent.filter((card) => card.deadline.state === 'cumprido' || card.deadline.state === 'atrasado')
+  const withDeadline = sent.filter(
+    (card) => card.deadline.state === 'cumprido' || card.deadline.state === 'atrasado',
+  )
   const onTime = withDeadline.filter((card) => card.deadline.state === 'cumprido').length
   const reasons = new Map<string, number>()
   for (const card of cards) {
@@ -394,14 +452,19 @@ export function computeMetrics(cards: PipelineCard[]): PipelineMetrics {
     overdue: cards.filter((card) => card.deadline.state === 'vencido').length,
     byStage,
     sentCount: sent.length,
-    avgDaysToSend: durations.length > 0 ? durations.reduce((sum, days) => sum + days, 0) / durations.length : null,
+    avgDaysToSend:
+      durations.length > 0
+        ? durations.reduce((sum, days) => sum + days, 0) / durations.length
+        : null,
     sentWithDeadline: withDeadline.length,
     sentOnTime: onTime,
     onTimeRate: withDeadline.length > 0 ? onTime / withDeadline.length : null,
     won: byStage.ganha,
     lost: byStage.perdida,
     winRate: decided > 0 ? byStage.ganha / decided : null,
-    lossReasons: [...reasons.entries()].map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count),
+    lossReasons: [...reasons.entries()]
+      .map(([reason, count]) => ({ reason, count }))
+      .sort((a, b) => b.count - a.count),
   }
 }
 

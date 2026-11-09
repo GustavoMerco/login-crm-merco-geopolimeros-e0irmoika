@@ -5,7 +5,15 @@ import { createOpportunity, type CreateOpportunityInput } from '@/services/oppor
 import { usePipeline } from '@/services/pipeline'
 import { usePermissions } from '@/contexts/PermissionsContext'
 import { cardUrl, civilDate, familiesOf, filterCards, formatCivil } from '@/lib/pipeline'
-import { Button, DeadlinePill, EmptyState, Notice, PageHeader, Panel, StagePill } from '@/components/crm/ui'
+import {
+  Button,
+  DeadlinePill,
+  EmptyState,
+  Notice,
+  PageHeader,
+  Panel,
+  StagePill,
+} from '@/components/crm/ui'
 
 // Demandas (RF-01): cadastro da demanda recebida e lista de todas as
 // oportunidades com etapa e prazo. O detalhe é o card da oportunidade. O
@@ -25,7 +33,13 @@ const EMPTY: CreateOpportunityInput = {
   deadline_date: '',
 }
 
-const ORIGINS = ['Indicação', 'Cliente da carteira', 'Portal do cliente (Ariba, ME…)', 'Licitação', 'Site / contato direto']
+const ORIGINS = [
+  'Indicação',
+  'Cliente da carteira',
+  'Portal do cliente (Ariba, ME…)',
+  'Licitação',
+  'Site / contato direto',
+]
 
 function Field({
   label,
@@ -50,10 +64,12 @@ function NewDemandForm({ families, onCancel }: { families: string[]; onCancel: (
   const [form, setForm] = useState<CreateOpportunityInput>(EMPTY)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const set = (field: keyof CreateOpportunityInput) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm((current) => ({ ...current, [field]: event.target.value }))
-    setError(null)
-  }
+  const set =
+    (field: keyof CreateOpportunityInput) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      setForm((current) => ({ ...current, [field]: event.target.value }))
+      setError(null)
+    }
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -79,19 +95,43 @@ function NewDemandForm({ families, onCancel }: { families: string[]; onCancel: (
         <fieldset className="grid gap-4 sm:grid-cols-3">
           <legend className="mg-eyebrow mb-3 text-mg-muted">Cliente e contato</legend>
           <Field label="Cliente">
-            <input className={inputClass} value={form.customer_name} onChange={set('customer_name')} required placeholder="Empresa e unidade" />
+            <input
+              className={inputClass}
+              value={form.customer_name}
+              onChange={set('customer_name')}
+              required
+              placeholder="Empresa e unidade"
+            />
           </Field>
           <Field label="Contato">
-            <input className={inputClass} value={form.contact_name} onChange={set('contact_name')} required placeholder="Quem pediu a proposta" />
+            <input
+              className={inputClass}
+              value={form.contact_name}
+              onChange={set('contact_name')}
+              required
+              placeholder="Quem pediu a proposta"
+            />
           </Field>
           <Field label="E-mail do contato" hint="Opcional.">
-            <input className={inputClass} type="email" value={form.contact_email} onChange={set('contact_email')} />
+            <input
+              className={inputClass}
+              type="email"
+              value={form.contact_email}
+              onChange={set('contact_email')}
+            />
           </Field>
         </fieldset>
         <fieldset className="grid gap-4 sm:grid-cols-3">
           <legend className="mg-eyebrow mb-3 text-mg-muted">Serviço e local</legend>
           <Field label="Família de serviço">
-            <input className={inputClass} value={form.service_family} onChange={set('service_family')} required list="familias-servico" placeholder="Ex.: Nivelamento de pisos" />
+            <input
+              className={inputClass}
+              value={form.service_family}
+              onChange={set('service_family')}
+              required
+              list="familias-servico"
+              placeholder="Ex.: Nivelamento de pisos"
+            />
             <datalist id="familias-servico">
               {families.map((family) => (
                 <option key={family} value={family} />
@@ -99,10 +139,22 @@ function NewDemandForm({ families, onCancel }: { families: string[]; onCancel: (
             </datalist>
           </Field>
           <Field label="Local da obra">
-            <input className={inputClass} value={form.location} onChange={set('location')} required placeholder="Cidade/UF" />
+            <input
+              className={inputClass}
+              value={form.location}
+              onChange={set('location')}
+              required
+              placeholder="Cidade/UF"
+            />
           </Field>
           <Field label="Origem">
-            <input className={inputClass} value={form.origin} onChange={set('origin')} required list="origens-demanda" />
+            <input
+              className={inputClass}
+              value={form.origin}
+              onChange={set('origin')}
+              required
+              list="origens-demanda"
+            />
             <datalist id="origens-demanda">
               {ORIGINS.map((origin) => (
                 <option key={origin} value={origin} />
@@ -113,12 +165,29 @@ function NewDemandForm({ families, onCancel }: { families: string[]; onCancel: (
         <fieldset className="grid gap-4 sm:grid-cols-3">
           <legend className="mg-eyebrow mb-3 text-mg-muted">Datas</legend>
           <Field label="Data da demanda" hint="Quando o cliente pediu.">
-            <input className={`${inputClass} mg-num`} type="date" value={form.demand_date} onChange={set('demand_date')} required />
+            <input
+              className={`${inputClass} mg-num`}
+              type="date"
+              value={form.demand_date}
+              onChange={set('demand_date')}
+              required
+            />
           </Field>
-          <Field label="Prazo do cliente" hint="Opcional, mas é o que alimenta os alertas de prazo.">
-            <input className={`${inputClass} mg-num`} type="date" value={form.deadline_date} onChange={set('deadline_date')} />
+          <Field
+            label="Prazo do cliente"
+            hint="Opcional, mas é o que alimenta os alertas de prazo."
+          >
+            <input
+              className={`${inputClass} mg-num`}
+              type="date"
+              value={form.deadline_date}
+              onChange={set('deadline_date')}
+            />
           </Field>
-          <p className="self-center text-[12px] text-mg-muted">O recebimento é registrado pelo servidor no momento do cadastro e inicia a medição do tempo até o envio.</p>
+          <p className="self-center text-[12px] text-mg-muted">
+            O recebimento é registrado pelo servidor no momento do cadastro e inicia a medição do
+            tempo até o envio.
+          </p>
         </fieldset>
         {error && <Notice tone="crit">{error}</Notice>}
         <div className="flex flex-wrap gap-2">
@@ -142,10 +211,15 @@ export default function Opportunities() {
   const location = useLocation()
   const { can } = usePermissions()
   const { cards, isLoading, error } = usePipeline()
-  const [isFormOpen, setIsFormOpen] = useState(() => new URLSearchParams(location.search).get('nova') === '1')
+  const [isFormOpen, setIsFormOpen] = useState(
+    () => new URLSearchParams(location.search).get('nova') === '1',
+  )
   const [query, setQuery] = useState('')
   const families = useMemo(() => familiesOf(cards), [cards])
-  const visible = useMemo(() => filterCards(cards, { query, family: '', customerKey: '' }), [cards, query])
+  const visible = useMemo(
+    () => filterCards(cards, { query, family: '', customerKey: '' }),
+    [cards, query],
+  )
   const canCreate = can('demandas', 'create')
 
   return (
@@ -163,7 +237,9 @@ export default function Opportunities() {
         }
       />
 
-      {isFormOpen && canCreate && <NewDemandForm families={families} onCancel={() => setIsFormOpen(false)} />}
+      {isFormOpen && canCreate && (
+        <NewDemandForm families={families} onCancel={() => setIsFormOpen(false)} />
+      )}
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <label className={`${labelClass} w-full sm:w-80`}>
@@ -189,7 +265,11 @@ export default function Opportunities() {
       ) : visible.length === 0 && !error ? (
         <EmptyState
           title={cards.length === 0 ? 'Nenhuma demanda registrada' : 'Nada encontrado'}
-          description={cards.length === 0 ? 'Registre a primeira demanda recebida.' : 'Tente outro termo de busca.'}
+          description={
+            cards.length === 0
+              ? 'Registre a primeira demanda recebida.'
+              : 'Tente outro termo de busca.'
+          }
         />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-mg-line bg-mg-surface">
@@ -208,7 +288,10 @@ export default function Opportunities() {
               {visible.map((card) => (
                 <tr key={card.opportunity.id} className="hover:bg-mg-surface-2">
                   <td className="px-4 py-3">
-                    <Link to={cardUrl(card.opportunity.id)} className="font-bold text-mg-ink hover:text-mg-brand hover:underline">
+                    <Link
+                      to={cardUrl(card.opportunity.id)}
+                      className="font-bold text-mg-ink hover:text-mg-brand hover:underline"
+                    >
                       {card.opportunity.customer_name}
                     </Link>
                     <span className="block text-[12px] text-mg-muted">
@@ -222,7 +305,9 @@ export default function Opportunities() {
                   <td className="px-4 py-3">
                     <DeadlinePill deadline={card.deadline} />
                   </td>
-                  <td className="mg-num px-4 py-3 text-[13px] text-mg-muted">{formatCivil(civilDate(card.opportunity.received_at))}</td>
+                  <td className="mg-num px-4 py-3 text-[13px] text-mg-muted">
+                    {formatCivil(civilDate(card.opportunity.received_at))}
+                  </td>
                 </tr>
               ))}
             </tbody>

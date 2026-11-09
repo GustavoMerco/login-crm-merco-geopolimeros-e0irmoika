@@ -112,14 +112,33 @@ describe('T2.36 — índice administrativo', () => {
 })
 
 describe('navegação por perfil (CRM de propostas)', () => {
-  const ids = (role: Parameters<typeof navForRole>[0]) => navForRole(role).flatMap((g) => g.items.map((i) => i.id))
+  const ids = (role: Parameters<typeof navForRole>[0]) =>
+    navForRole(role).flatMap((g) => g.items.map((i) => i.id))
 
   it('comercial trabalha pelo funil e não vê evidências nem configurações', () => {
-    expect(ids('comercial')).toEqual(['hoje', 'funil', 'demandas', 'clientes', 'ficha', 'biblioteca', 'painel'])
+    expect(ids('comercial')).toEqual([
+      'hoje',
+      'funil',
+      'demandas',
+      'clientes',
+      'ficha',
+      'biblioteca',
+      'painel',
+    ])
   })
 
   it('engenharia vê o trabalho, a engenharia, configurações e evidências', () => {
-    expect(ids('engenharia')).toEqual(['hoje', 'funil', 'demandas', 'clientes', 'ficha', 'biblioteca', 'painel', 'configuracoes', 'evidencias'])
+    expect(ids('engenharia')).toEqual([
+      'hoje',
+      'funil',
+      'demandas',
+      'clientes',
+      'ficha',
+      'biblioteca',
+      'painel',
+      'configuracoes',
+      'evidencias',
+    ])
   })
 
   it('financeiro, aprovador e gestão começam pelo painel', () => {
@@ -131,7 +150,14 @@ describe('navegação por perfil (CRM de propostas)', () => {
   })
 
   it('nenhum grupo vazio e nenhum grupo com mais de 7 itens', () => {
-    for (const role of ['comercial', 'engenharia', 'financeiro', 'aprovador', 'gestao', 'admin'] as const) {
+    for (const role of [
+      'comercial',
+      'engenharia',
+      'financeiro',
+      'aprovador',
+      'gestao',
+      'admin',
+    ] as const) {
       for (const group of navForRole(role)) {
         expect(group.items.length).toBeGreaterThan(0)
         expect(group.items.length).toBeLessThanOrEqual(7)

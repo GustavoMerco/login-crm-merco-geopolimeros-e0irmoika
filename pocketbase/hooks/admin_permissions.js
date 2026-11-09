@@ -14,7 +14,9 @@ routerAdd(
       return e.forbiddenError('Usuário desativado.')
     }
     const role = e.auth.getString('role')
-    const rows = $app.findRecordsByFilter('role_permissions', 'role = {:role}', 'module', 100, 0, { role: role })
+    const rows = $app.findRecordsByFilter('role_permissions', 'role = {:role}', 'module', 100, 0, {
+      role: role,
+    })
     const modules = {}
     for (const row of rows) {
       modules[row.getString('module')] = {
@@ -36,7 +38,14 @@ routerAdd(
     const role = e.auth.getString('role')
     const allowed = (() => {
       if (role === 'admin') return true
-      const rows = $app.findRecordsByFilter('role_permissions', 'role = {:role} && module = "usuarios"', '', 1, 0, { role: role })
+      const rows = $app.findRecordsByFilter(
+        'role_permissions',
+        'role = {:role} && module = "usuarios"',
+        '',
+        1,
+        0,
+        { role: role },
+      )
       return rows.length > 0 && rows[0].getBool('can_view')
     })()
     if (!allowed || e.auth.getBool('disabled')) {
@@ -66,11 +75,30 @@ routerAdd(
   '/backend/v1/admin/permissions',
   (e) => {
     const ROLES = ['comercial', 'engenharia', 'financeiro', 'aprovador', 'gestao', 'admin']
-    const MODULES = ['demandas', 'clientes', 'ficha', 'biblioteca', 'catalogo', 'unidades', 'parametros', 'modelos', 'painel', 'evidencias', 'usuarios']
+    const MODULES = [
+      'demandas',
+      'clientes',
+      'ficha',
+      'biblioteca',
+      'catalogo',
+      'unidades',
+      'parametros',
+      'modelos',
+      'painel',
+      'evidencias',
+      'usuarios',
+    ]
     const role = e.auth.getString('role')
     const allowed = (() => {
       if (role === 'admin') return true
-      const rows = $app.findRecordsByFilter('role_permissions', 'role = {:role} && module = "usuarios"', '', 1, 0, { role: role })
+      const rows = $app.findRecordsByFilter(
+        'role_permissions',
+        'role = {:role} && module = "usuarios"',
+        '',
+        1,
+        0,
+        { role: role },
+      )
       return rows.length > 0 && rows[0].getBool('can_edit')
     })()
     if (!allowed || e.auth.getBool('disabled')) {
@@ -103,10 +131,17 @@ routerAdd(
           flags.can_edit = true
           flags.can_delete = true
         }
-        const found = txApp.findRecordsByFilter('role_permissions', 'role = {:role} && module = {:module}', '', 1, 0, {
-          role: item.role,
-          module: item.module,
-        })
+        const found = txApp.findRecordsByFilter(
+          'role_permissions',
+          'role = {:role} && module = {:module}',
+          '',
+          1,
+          0,
+          {
+            role: item.role,
+            module: item.module,
+          },
+        )
         let record = found.length > 0 ? found[0] : null
         if (!record) {
           record = new Record(txApp.findCollectionByNameOrId('role_permissions'))

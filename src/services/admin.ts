@@ -18,10 +18,15 @@ export type UpdateUserInput = { name?: string; role?: UserRole; disabled?: boole
 
 const json = { 'Content-Type': 'application/json' }
 
-export const listUsers = () => pb.send<{ items: AdminUser[] }>('/backend/v1/admin/users', { method: 'GET' })
+export const listUsers = () =>
+  pb.send<{ items: AdminUser[] }>('/backend/v1/admin/users', { method: 'GET' })
 
 export const createUser = (input: CreateUserInput) =>
-  pb.send<AdminUser>('/backend/v1/admin/users', { method: 'POST', body: JSON.stringify(input), headers: json })
+  pb.send<AdminUser>('/backend/v1/admin/users', {
+    method: 'POST',
+    body: JSON.stringify(input),
+    headers: json,
+  })
 
 export const updateUser = (id: string, input: UpdateUserInput) =>
   pb.send<AdminUser>(`/backend/v1/admin/users/${encodeURIComponent(id)}`, {
@@ -31,17 +36,27 @@ export const updateUser = (id: string, input: UpdateUserInput) =>
   })
 
 export const getPermissionMatrix = () =>
-  pb.send<{ items: Array<MatrixRow & { updated: string; updated_by: string }> }>('/backend/v1/admin/permissions', { method: 'GET' })
+  pb.send<{ items: Array<MatrixRow & { updated: string; updated_by: string }> }>(
+    '/backend/v1/admin/permissions',
+    { method: 'GET' },
+  )
 
 export const savePermissionMatrix = (items: MatrixRow[]) =>
-  pb.send<{ changed: number }>('/backend/v1/admin/permissions', { method: 'PUT', body: JSON.stringify({ items }), headers: json })
+  pb.send<{ changed: number }>('/backend/v1/admin/permissions', {
+    method: 'PUT',
+    body: JSON.stringify({ items }),
+    headers: json,
+  })
 
 export type MyPermissions = {
   role: UserRole
-  modules: Partial<Record<AccessModule, { view: boolean; create: boolean; edit: boolean; delete: boolean }>>
+  modules: Partial<
+    Record<AccessModule, { view: boolean; create: boolean; edit: boolean; delete: boolean }>
+  >
 }
 
-export const getMyPermissions = () => pb.send<MyPermissions>('/backend/v1/me/permissions', { method: 'GET' })
+export const getMyPermissions = () =>
+  pb.send<MyPermissions>('/backend/v1/me/permissions', { method: 'GET' })
 
 // Senha inicial forte e legível (sem caracteres ambíguos), gerada no navegador.
 export function generatePassword(length = 14): string {

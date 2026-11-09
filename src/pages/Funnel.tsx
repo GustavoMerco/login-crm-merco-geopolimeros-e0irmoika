@@ -11,7 +11,14 @@ import {
   normalizeKey,
   type PipelineCard,
 } from '@/lib/pipeline'
-import { DeadlinePill, EmptyState, Notice, PageHeader, PrimaryLink, deadlineBar } from '@/components/crm/ui'
+import {
+  DeadlinePill,
+  EmptyState,
+  Notice,
+  PageHeader,
+  PrimaryLink,
+  deadlineBar,
+} from '@/components/crm/ui'
 
 // Funil de propostas: quadro por etapa, da demanda ao envio. As etapas vêm dos
 // dados do servidor (aptidão, ficha, marcos); mover de etapa acontece pelas
@@ -24,8 +31,13 @@ function FunnelCard({ card }: { card: PipelineCard }) {
         to={cardUrl(opportunity.id)}
         className="group relative block overflow-hidden rounded-lg border border-mg-line bg-mg-surface p-3 pl-4 transition-[border-color,box-shadow] duration-150 hover:border-mg-brand/50 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
       >
-        <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-[3px] ${deadlineBar(card.deadline)}`} />
-        <p className="truncate text-[14px] font-bold text-mg-ink group-hover:text-mg-brand">{opportunity.customer_name}</p>
+        <span
+          aria-hidden="true"
+          className={`absolute inset-y-0 left-0 w-[3px] ${deadlineBar(card.deadline)}`}
+        />
+        <p className="truncate text-[14px] font-bold text-mg-ink group-hover:text-mg-brand">
+          {opportunity.customer_name}
+        </p>
         <p className="mt-0.5 truncate text-[12px] text-mg-muted">
           {opportunity.service_family}
           {opportunity.location ? ` · ${opportunity.location}` : ''}
@@ -52,11 +64,15 @@ export default function Funnel() {
   const family = searchParams.get('familia') ?? ''
   const customerKey = searchParams.get('cliente') ?? ''
 
-  const filtered = useMemo(() => filterCards(cards, { query, family, customerKey }), [cards, query, family, customerKey])
+  const filtered = useMemo(
+    () => filterCards(cards, { query, family, customerKey }),
+    [cards, query, family, customerKey],
+  )
   const groups = useMemo(() => groupByStage(filtered), [filtered])
   const families = useMemo(() => familiesOf(cards), [cards])
   const customerName = customerKey
-    ? cards.find((card) => normalizeKey(card.opportunity.customer_name) === customerKey)?.opportunity.customer_name
+    ? cards.find((card) => normalizeKey(card.opportunity.customer_name) === customerKey)
+        ?.opportunity.customer_name
     : ''
 
   const setParam = (key: string, value: string) => {
@@ -110,7 +126,11 @@ export default function Funnel() {
             Cliente: {customerName || customerKey} ✕
           </button>
         )}
-        <p className="ml-auto text-[12px] text-mg-muted">{teamView ? 'Mostrando as oportunidades de todo o time.' : 'Mostrando as oportunidades em que você é o responsável.'}</p>
+        <p className="ml-auto text-[12px] text-mg-muted">
+          {teamView
+            ? 'Mostrando as oportunidades de todo o time.'
+            : 'Mostrando as oportunidades em que você é o responsável.'}
+        </p>
       </div>
 
       {partialWarnings.map((warning) => (
@@ -134,11 +154,17 @@ export default function Funnel() {
         <div className="-mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           <div className="grid min-w-[1360px] grid-cols-8 gap-3">
             {STAGES.map((stage) => (
-              <section key={stage.id} aria-label={stage.label} className="flex min-h-[320px] flex-col rounded-xl border border-mg-line bg-mg-surface-2">
+              <section
+                key={stage.id}
+                aria-label={stage.label}
+                className="flex min-h-[320px] flex-col rounded-xl border border-mg-line bg-mg-surface-2"
+              >
                 <header className="border-b border-mg-line px-3 py-3">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="text-[13px] font-bold text-mg-ink">{stage.label}</h3>
-                    <span className="mg-num rounded-full bg-mg-surface px-2 text-[12px] text-mg-muted">{groups[stage.id].length}</span>
+                    <span className="mg-num rounded-full bg-mg-surface px-2 text-[12px] text-mg-muted">
+                      {groups[stage.id].length}
+                    </span>
                   </div>
                   <p className="mt-1 text-[11px] leading-snug text-mg-muted">{stage.description}</p>
                 </header>
@@ -146,7 +172,11 @@ export default function Funnel() {
                   {groups[stage.id].map((card) => (
                     <FunnelCard key={card.opportunity.id} card={card} />
                   ))}
-                  {groups[stage.id].length === 0 && <li className="px-2 py-6 text-center text-[12px] text-mg-muted">Nada nesta etapa.</li>}
+                  {groups[stage.id].length === 0 && (
+                    <li className="px-2 py-6 text-center text-[12px] text-mg-muted">
+                      Nada nesta etapa.
+                    </li>
+                  )}
                 </ul>
               </section>
             ))}

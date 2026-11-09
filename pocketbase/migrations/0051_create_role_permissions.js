@@ -8,8 +8,17 @@
 migrate(
   (app) => {
     const MODULES = [
-      'demandas', 'clientes', 'ficha', 'biblioteca', 'catalogo', 'unidades',
-      'parametros', 'modelos', 'painel', 'evidencias', 'usuarios',
+      'demandas',
+      'clientes',
+      'ficha',
+      'biblioteca',
+      'catalogo',
+      'unidades',
+      'parametros',
+      'modelos',
+      'painel',
+      'evidencias',
+      'usuarios',
     ]
     // [ver, criar, editar, apagar]
     const NONE = [false, false, false, false]
@@ -17,12 +26,84 @@ migrate(
     const WRITE = [true, true, true, false]
     const FULL = [true, true, true, true]
     const DEFAULTS = {
-      admin: { demandas: FULL, clientes: FULL, ficha: FULL, biblioteca: FULL, catalogo: FULL, unidades: FULL, parametros: FULL, modelos: FULL, painel: VIEW, evidencias: FULL, usuarios: FULL },
-      engenharia: { demandas: WRITE, clientes: WRITE, ficha: WRITE, biblioteca: WRITE, catalogo: WRITE, unidades: WRITE, parametros: WRITE, modelos: WRITE, painel: VIEW, evidencias: VIEW, usuarios: NONE },
-      comercial: { demandas: WRITE, clientes: WRITE, ficha: VIEW, biblioteca: VIEW, catalogo: NONE, unidades: NONE, parametros: NONE, modelos: NONE, painel: VIEW, evidencias: NONE, usuarios: NONE },
-      financeiro: { demandas: VIEW, clientes: VIEW, ficha: NONE, biblioteca: NONE, catalogo: VIEW, unidades: NONE, parametros: WRITE, modelos: VIEW, painel: VIEW, evidencias: NONE, usuarios: NONE },
-      aprovador: { demandas: VIEW, clientes: VIEW, ficha: VIEW, biblioteca: NONE, catalogo: NONE, unidades: NONE, parametros: VIEW, modelos: VIEW, painel: VIEW, evidencias: NONE, usuarios: NONE },
-      gestao: { demandas: VIEW, clientes: VIEW, ficha: VIEW, biblioteca: VIEW, catalogo: VIEW, unidades: VIEW, parametros: VIEW, modelos: VIEW, painel: VIEW, evidencias: VIEW, usuarios: NONE },
+      admin: {
+        demandas: FULL,
+        clientes: FULL,
+        ficha: FULL,
+        biblioteca: FULL,
+        catalogo: FULL,
+        unidades: FULL,
+        parametros: FULL,
+        modelos: FULL,
+        painel: VIEW,
+        evidencias: FULL,
+        usuarios: FULL,
+      },
+      engenharia: {
+        demandas: WRITE,
+        clientes: WRITE,
+        ficha: WRITE,
+        biblioteca: WRITE,
+        catalogo: WRITE,
+        unidades: WRITE,
+        parametros: WRITE,
+        modelos: WRITE,
+        painel: VIEW,
+        evidencias: VIEW,
+        usuarios: NONE,
+      },
+      comercial: {
+        demandas: WRITE,
+        clientes: WRITE,
+        ficha: VIEW,
+        biblioteca: VIEW,
+        catalogo: NONE,
+        unidades: NONE,
+        parametros: NONE,
+        modelos: NONE,
+        painel: VIEW,
+        evidencias: NONE,
+        usuarios: NONE,
+      },
+      financeiro: {
+        demandas: VIEW,
+        clientes: VIEW,
+        ficha: NONE,
+        biblioteca: NONE,
+        catalogo: VIEW,
+        unidades: NONE,
+        parametros: WRITE,
+        modelos: VIEW,
+        painel: VIEW,
+        evidencias: NONE,
+        usuarios: NONE,
+      },
+      aprovador: {
+        demandas: VIEW,
+        clientes: VIEW,
+        ficha: VIEW,
+        biblioteca: NONE,
+        catalogo: NONE,
+        unidades: NONE,
+        parametros: VIEW,
+        modelos: VIEW,
+        painel: VIEW,
+        evidencias: NONE,
+        usuarios: NONE,
+      },
+      gestao: {
+        demandas: VIEW,
+        clientes: VIEW,
+        ficha: VIEW,
+        biblioteca: VIEW,
+        catalogo: VIEW,
+        unidades: VIEW,
+        parametros: VIEW,
+        modelos: VIEW,
+        painel: VIEW,
+        evidencias: VIEW,
+        usuarios: NONE,
+      },
     }
 
     const collection = new Collection({
@@ -45,7 +126,9 @@ migrate(
     collection.fields.add(new TextField({ name: 'updated_by', max: 40 }))
     collection.fields.add(new AutodateField({ name: 'created', onCreate: true, onUpdate: false }))
     collection.fields.add(new AutodateField({ name: 'updated', onCreate: true, onUpdate: true }))
-    collection.indexes = ['CREATE UNIQUE INDEX idx_role_permissions_role_module ON role_permissions (role, module)']
+    collection.indexes = [
+      'CREATE UNIQUE INDEX idx_role_permissions_role_module ON role_permissions (role, module)',
+    ]
     app.save(collection)
 
     const saved = app.findCollectionByNameOrId('role_permissions')

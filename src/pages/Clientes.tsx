@@ -13,7 +13,11 @@ export default function Clientes() {
   const customers = useMemo(() => summarizeCustomers(cards), [cards])
   const visible = useMemo(() => {
     const key = normalizeKey(query)
-    return key ? customers.filter((c) => c.key.includes(key) || c.contacts.some((p) => normalizeKey(p.name).includes(key))) : customers
+    return key
+      ? customers.filter(
+          (c) => c.key.includes(key) || c.contacts.some((p) => normalizeKey(p.name).includes(key)),
+        )
+      : customers
   }, [customers, query])
 
   return (
@@ -59,7 +63,9 @@ export default function Clientes() {
                   <p className="text-[15px] font-bold text-mg-ink">{customer.name}</p>
                   {customer.overdue > 0 && <Pill tone="crit">{customer.overdue} vencida(s)</Pill>}
                 </div>
-                <p className="mt-1 text-[12px] text-mg-muted">{customer.families.join(' · ') || 'Família não informada'}</p>
+                <p className="mt-1 text-[12px] text-mg-muted">
+                  {customer.families.join(' · ') || 'Família não informada'}
+                </p>
                 <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-mg-line pt-3">
                   {[
                     ['Propostas', customer.total],
@@ -73,9 +79,14 @@ export default function Clientes() {
                   ))}
                 </dl>
                 <p className="mt-3 truncate text-[12px] text-mg-muted">
-                  {customer.contacts.map((contact) => contact.name).filter(Boolean).join(', ') || 'Sem contato registrado'}
+                  {customer.contacts
+                    .map((contact) => contact.name)
+                    .filter(Boolean)
+                    .join(', ') || 'Sem contato registrado'}
                 </p>
-                <p className="mg-num mt-1 text-[11px] text-mg-muted">Última demanda {formatCivil(civilDate(customer.lastReceivedAt))}</p>
+                <p className="mg-num mt-1 text-[11px] text-mg-muted">
+                  Última demanda {formatCivil(civilDate(customer.lastReceivedAt))}
+                </p>
               </Link>
             </li>
           ))}

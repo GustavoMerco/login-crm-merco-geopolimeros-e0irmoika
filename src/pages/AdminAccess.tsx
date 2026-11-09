@@ -55,7 +55,12 @@ function UsersTab() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [form, setForm] = useState<CreateUserInput>({ name: '', email: '', role: 'comercial', password: '' })
+  const [form, setForm] = useState<CreateUserInput>({
+    name: '',
+    email: '',
+    role: 'comercial',
+    password: '',
+  })
   const [formError, setFormError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState('')
 
@@ -81,7 +86,9 @@ function UsersTab() {
     setFormError(null)
     try {
       const created = await createUser(form)
-      setInfo(`Usuário ${created.name} criado. Envie a senha inicial por um canal seguro; ele pode trocá-la em "Esqueci a senha".`)
+      setInfo(
+        `Usuário ${created.name} criado. Envie a senha inicial por um canal seguro; ele pode trocá-la em "Esqueci a senha".`,
+      )
       setForm({ name: '', email: '', role: 'comercial', password: '' })
       setIsFormOpen(false)
       await load()
@@ -90,7 +97,11 @@ function UsersTab() {
     }
   }
 
-  const change = async (target: AdminUser, input: { role?: UserRole; disabled?: boolean }, success: string) => {
+  const change = async (
+    target: AdminUser,
+    input: { role?: UserRole; disabled?: boolean },
+    success: string,
+  ) => {
     setBusyId(target.id)
     setError(null)
     setInfo(null)
@@ -113,10 +124,15 @@ function UsersTab() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-mg-muted">
-          {users.length} usuário(s). Desativar corta o acesso na hora e preserva o histórico de quem fez o quê.
+          {users.length} usuário(s). Desativar corta o acesso na hora e preserva o histórico de quem
+          fez o quê.
         </p>
         {canCreate && (
-          <Button variant="primary" onClick={() => setIsFormOpen((open) => !open)} aria-expanded={isFormOpen}>
+          <Button
+            variant="primary"
+            onClick={() => setIsFormOpen((open) => !open)}
+            aria-expanded={isFormOpen}
+          >
             {isFormOpen ? 'Fechar cadastro' : 'Novo usuário'}
           </Button>
         )}
@@ -124,25 +140,47 @@ function UsersTab() {
 
       {isFormOpen && (
         <Panel title="Novo usuário">
-          <form onSubmit={(event) => void submit(event)} className="grid gap-4 sm:grid-cols-2" noValidate>
+          <form
+            onSubmit={(event) => void submit(event)}
+            className="grid gap-4 sm:grid-cols-2"
+            noValidate
+          >
             <label className={labelClass}>
               Nome
-              <input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required maxLength={120} />
+              <input
+                className={inputClass}
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                maxLength={120}
+              />
             </label>
             <label className={labelClass}>
               E-mail
-              <input className={inputClass} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+              <input
+                className={inputClass}
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+              />
             </label>
             <label className={labelClass}>
               Perfil
-              <select className={inputClass} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}>
+              <select
+                className={inputClass}
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
+              >
                 {ROLES.map((role) => (
                   <option key={role} value={role}>
                     {ROLE_LABELS[role]}
                   </option>
                 ))}
               </select>
-              <span className="mt-1 block text-[12px] font-normal text-mg-muted">{ROLE_HINTS[form.role]}</span>
+              <span className="mt-1 block text-[12px] font-normal text-mg-muted">
+                {ROLE_HINTS[form.role]}
+              </span>
             </label>
             <label className={labelClass}>
               Senha inicial
@@ -154,9 +192,13 @@ function UsersTab() {
                   minLength={10}
                   required
                 />
-                <Button onClick={() => setForm({ ...form, password: generatePassword() })}>Gerar</Button>
+                <Button onClick={() => setForm({ ...form, password: generatePassword() })}>
+                  Gerar
+                </Button>
               </span>
-              <span className="mt-1 block text-[12px] font-normal text-mg-muted">Mínimo de 10 caracteres.</span>
+              <span className="mt-1 block text-[12px] font-normal text-mg-muted">
+                Mínimo de 10 caracteres.
+              </span>
             </label>
             {formError && (
               <div className="sm:col-span-2">
@@ -204,7 +246,10 @@ function UsersTab() {
                 return (
                   <tr key={item.id} className={item.disabled ? 'opacity-60' : ''}>
                     <td className="px-4 py-3 font-semibold text-mg-ink">
-                      {item.name || '—'} {isMe && <span className="ml-1 text-[12px] font-normal text-mg-muted">(você)</span>}
+                      {item.name || '—'}{' '}
+                      {isMe && (
+                        <span className="ml-1 text-[12px] font-normal text-mg-muted">(você)</span>
+                      )}
                     </td>
                     <td className="mg-num px-4 py-3 text-[13px] text-mg-muted">{item.email}</td>
                     <td className="px-4 py-3">
@@ -213,7 +258,13 @@ function UsersTab() {
                         className="min-h-[36px] rounded-lg border border-mg-line-strong bg-mg-surface px-2 text-sm text-mg-ink disabled:opacity-60"
                         value={item.role}
                         disabled={!canEdit || isMe || busyId === item.id}
-                        onChange={(e) => void change(item, { role: e.target.value as UserRole }, `Perfil de ${item.name} alterado para ${ROLE_LABELS[e.target.value as UserRole]}.`)}
+                        onChange={(e) =>
+                          void change(
+                            item,
+                            { role: e.target.value as UserRole },
+                            `Perfil de ${item.name} alterado para ${ROLE_LABELS[e.target.value as UserRole]}.`,
+                          )
+                        }
                       >
                         {ROLES.map((role) => (
                           <option key={role} value={role}>
@@ -222,7 +273,13 @@ function UsersTab() {
                         ))}
                       </select>
                     </td>
-                    <td className="px-4 py-3">{item.disabled ? <Pill tone="neutral">Desativado</Pill> : <Pill tone="ok">Ativo</Pill>}</td>
+                    <td className="px-4 py-3">
+                      {item.disabled ? (
+                        <Pill tone="neutral">Desativado</Pill>
+                      ) : (
+                        <Pill tone="ok">Ativo</Pill>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-right">
                       {canDisable && !isMe && (
                         <Button
@@ -232,7 +289,9 @@ function UsersTab() {
                             void change(
                               item,
                               { disabled: !item.disabled },
-                              item.disabled ? `${item.name} reativado.` : `${item.name} desativado; as sessões abertas foram encerradas.`,
+                              item.disabled
+                                ? `${item.name} reativado.`
+                                : `${item.name} desativado; as sessões abertas foram encerradas.`,
                             )
                           }
                         >
@@ -281,7 +340,10 @@ function PermissionsTab() {
 
   const toggle = (module: AccessModule, action: (typeof ACCESS_ACTIONS)[number]) => {
     if (!draft || !canEdit || isLocked(role, module)) return
-    setDraft({ ...draft, [role]: { ...draft[role], [module]: toggleFlag(role, module, draft[role][module], action) } })
+    setDraft({
+      ...draft,
+      [role]: { ...draft[role], [module]: toggleFlag(role, module, draft[role][module], action) },
+    })
     setInfo(null)
   }
 
@@ -291,7 +353,11 @@ function PermissionsTab() {
     setError(null)
     try {
       const result = await savePermissionMatrix(matrixToRows(draft))
-      setInfo(result.changed > 0 ? `${result.changed} permissão(ões) atualizada(s). Vale no próximo carregamento de cada usuário.` : 'Nada mudou.')
+      setInfo(
+        result.changed > 0
+          ? `${result.changed} permissão(ões) atualizada(s). Vale no próximo carregamento de cada usuário.`
+          : 'Nada mudou.',
+      )
       await load()
       await refresh()
     } catch (err: unknown) {
@@ -302,7 +368,13 @@ function PermissionsTab() {
   }
 
   if (!draft) {
-    return error ? <Notice tone="crit">{error}</Notice> : <p role="status" className="text-sm text-mg-muted">Carregando permissões…</p>
+    return error ? (
+      <Notice tone="crit">{error}</Notice>
+    ) : (
+      <p role="status" className="text-sm text-mg-muted">
+        Carregando permissões…
+      </p>
+    )
   }
 
   return (
@@ -316,7 +388,9 @@ function PermissionsTab() {
             aria-checked={role === item}
             onClick={() => setRole(item)}
             className={`min-h-[36px] rounded-full border px-4 text-[13px] font-semibold transition-colors ${
-              role === item ? 'border-mg-brand-fill bg-mg-brand-fill text-white' : 'border-mg-line-strong bg-mg-surface text-mg-ink hover:bg-mg-brand-soft'
+              role === item
+                ? 'border-mg-brand-fill bg-mg-brand-fill text-white'
+                : 'border-mg-line-strong bg-mg-surface text-mg-ink hover:bg-mg-brand-soft'
             }`}
           >
             {ROLE_LABELS[item]}
@@ -334,7 +408,11 @@ function PermissionsTab() {
                 Módulo
               </th>
               {ACCESS_ACTIONS.map((action) => (
-                <th key={action} scope="col" className="mg-eyebrow px-4 py-3 text-center text-mg-muted">
+                <th
+                  key={action}
+                  scope="col"
+                  className="mg-eyebrow px-4 py-3 text-center text-mg-muted"
+                >
                   {ACTION_LABELS[action]}
                 </th>
               ))}
@@ -348,7 +426,11 @@ function PermissionsTab() {
                 <tr key={module.id}>
                   <th scope="row" className="px-4 py-3 font-normal">
                     <span className="block font-semibold text-mg-ink">{module.label}</span>
-                    <span className="block text-[12px] text-mg-muted">{locked ? 'Fixo: o Administrador sempre administra usuários.' : module.description}</span>
+                    <span className="block text-[12px] text-mg-muted">
+                      {locked
+                        ? 'Fixo: o Administrador sempre administra usuários.'
+                        : module.description}
+                    </span>
                   </th>
                   {ACCESS_ACTIONS.map((action) => (
                     <td key={action} className="px-4 py-3 text-center">
@@ -377,10 +459,18 @@ function PermissionsTab() {
           <Button variant="primary" disabled={!dirty || isSaving} onClick={() => void save()}>
             {isSaving ? 'Salvando…' : 'Salvar permissões'}
           </Button>
-          <Button disabled={!dirty} onClick={() => saved && setDraft(JSON.parse(JSON.stringify(saved)))}>
+          <Button
+            disabled={!dirty}
+            onClick={() => saved && setDraft(JSON.parse(JSON.stringify(saved)))}
+          >
             Descartar alterações
           </Button>
-          <Button variant="quiet" onClick={() => setDraft({ ...draft, [role]: JSON.parse(JSON.stringify(DEFAULT_MATRIX[role])) })}>
+          <Button
+            variant="quiet"
+            onClick={() =>
+              setDraft({ ...draft, [role]: JSON.parse(JSON.stringify(DEFAULT_MATRIX[role])) })
+            }
+          >
             Restaurar padrão deste perfil
           </Button>
         </div>
@@ -410,7 +500,12 @@ function PermissionsTab() {
                   </th>
                   {ROLES.map((item) => {
                     const label = summarize(draft[item][module.id])
-                    const tone = label === 'Sem acesso' ? 'text-mg-muted' : label === 'Só ver' ? 'text-mg-ink' : 'font-semibold text-mg-brand'
+                    const tone =
+                      label === 'Sem acesso'
+                        ? 'text-mg-muted'
+                        : label === 'Só ver'
+                          ? 'text-mg-ink'
+                          : 'font-semibold text-mg-brand'
                     return (
                       <td key={item} className={`px-2 py-2 ${tone}`}>
                         {label}
@@ -430,7 +525,8 @@ function PermissionsTab() {
 export default function AdminAccess() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tab: Tab = searchParams.get('aba') === 'permissoes' ? 'permissoes' : 'usuarios'
-  const go = (next: Tab) => setSearchParams(next === 'usuarios' ? {} : { aba: next }, { replace: true })
+  const go = (next: Tab) =>
+    setSearchParams(next === 'usuarios' ? {} : { aba: next }, { replace: true })
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -439,7 +535,11 @@ export default function AdminAccess() {
         title="Usuários e permissões"
         description="Quem acessa o sistema, com qual perfil, e o que cada perfil pode ver, criar, editar e apagar."
       />
-      <div role="tablist" aria-label="Administração de acesso" className="mb-6 flex gap-1 border-b border-mg-line">
+      <div
+        role="tablist"
+        aria-label="Administração de acesso"
+        className="mb-6 flex gap-1 border-b border-mg-line"
+      >
         {(
           [
             ['usuarios', 'Usuários'],
@@ -455,7 +555,12 @@ export default function AdminAccess() {
             className={`relative min-h-[44px] px-4 text-[14px] font-semibold ${tab === id ? 'text-mg-ink' : 'text-mg-muted hover:text-mg-ink'}`}
           >
             {label}
-            {tab === id && <span aria-hidden="true" className="absolute inset-x-3 bottom-0 h-[2px] rounded-full bg-mg-accent" />}
+            {tab === id && (
+              <span
+                aria-hidden="true"
+                className="absolute inset-x-3 bottom-0 h-[2px] rounded-full bg-mg-accent"
+              />
+            )}
           </button>
         ))}
       </div>

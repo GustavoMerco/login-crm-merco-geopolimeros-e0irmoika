@@ -1555,7 +1555,22 @@ export const Dashboard: React.FC = () => {
 
   // Cada seção abre como página própria: as outras ficam ocultas (antes todas
   // eram empilhadas numa tela só). O id vem de uma lista fechada, sem injeção.
-  const KNOWN_SECTIONS = ['demanda', 'ficha', 'biblioteca', 'prontidao', 'catalogo', 'backup', 'modelos', 'previa', 'fontes', 'gates', 'sla', 'baseline', 'qualidade', 'tempo']
+  const KNOWN_SECTIONS = [
+    'demanda',
+    'ficha',
+    'biblioteca',
+    'prontidao',
+    'catalogo',
+    'backup',
+    'modelos',
+    'previa',
+    'fontes',
+    'gates',
+    'sla',
+    'baseline',
+    'qualidade',
+    'tempo',
+  ]
   const focusedSection = sectionKey && KNOWN_SECTIONS.includes(sectionKey) ? sectionKey : ''
 
   return (
@@ -1802,10 +1817,7 @@ export const Dashboard: React.FC = () => {
                       <p className="font-semibold text-mg-ink">Checklist</p>
                       <ul className="mt-1 space-y-0.5">
                         {Object.entries(aptitudeResult.checklist).map(([field, complete]) => (
-                          <li
-                            key={field}
-                            className={complete ? 'text-mg-brand' : 'text-mg-warn'}
-                          >
+                          <li key={field} className={complete ? 'text-mg-brand' : 'text-mg-warn'}>
                             {complete ? '✓' : '•'} {field}: {complete ? 'preenchido' : 'pendente'}
                           </li>
                         ))}
@@ -2674,7 +2686,10 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="mb-5 rounded-[12px] border border-mg-warn-line bg-mg-warn-bg p-4" role="note">
+          <div
+            className="mb-5 rounded-[12px] border border-mg-warn-line bg-mg-warn-bg p-4"
+            role="note"
+          >
             <p className="text-[14px] font-extrabold tracking-wide text-mg-warn">
               SEM PREÇO — NÃO ENVIAR
             </p>
@@ -2988,10 +3003,7 @@ export const Dashboard: React.FC = () => {
                           ['solution', 'Solução', 'Descreva a solução'],
                         ] as const
                       ).map(([field, label, placeholder]) => (
-                        <label
-                          key={field}
-                          className="block text-[11px] font-semibold text-mg-ink"
-                        >
+                        <label key={field} className="block text-[11px] font-semibold text-mg-ink">
                           {label} *
                           <input
                             required
@@ -3870,9 +3882,7 @@ export const Dashboard: React.FC = () => {
                   >
                     {cut.position}
                   </span>
-                  <span
-                    className={cut.cuttable ? 'text-mg-muted' : 'text-mg-brand font-semibold'}
-                  >
+                  <span className={cut.cuttable ? 'text-mg-muted' : 'text-mg-brand font-semibold'}>
                     {cut.item}
                     {!cut.cuttable && ' — nunca se corta'}
                   </span>
@@ -4422,7 +4432,10 @@ export const Dashboard: React.FC = () => {
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {catalogItems.map((item) => (
-                  <div key={item.id} className="rounded-[9px] border border-mg-line bg-mg-surface p-3">
+                  <div
+                    key={item.id}
+                    className="rounded-[9px] border border-mg-line bg-mg-surface p-3"
+                  >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span className="text-[13px] font-bold text-mg-ink">
                         {item.name} · {item.item_type}
@@ -4885,8 +4898,7 @@ export const Dashboard: React.FC = () => {
                       </div>
                     )}
                     <p className="mt-3 text-[11px] text-mg-muted">
-                      <span className="font-semibold text-mg-ink">Decisão:</span>{' '}
-                      {review.decision}
+                      <span className="font-semibold text-mg-ink">Decisão:</span> {review.decision}
                     </p>
                     <p className="mt-1 text-[10px] text-mg-muted break-all">
                       Assinado em {review.signedAt} · assinatura {review.signature.slice(0, 16)}…

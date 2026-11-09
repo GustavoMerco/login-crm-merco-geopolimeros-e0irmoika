@@ -24,16 +24,19 @@ routerAdd(
     if (e.auth.getBool('disabled')) return e.forbiddenError('Usuário desativado.')
 
     const opportunityId = typeof body.opportunity_id === 'string' ? body.opportunity_id.trim() : ''
-    if (!/^[a-z0-9]{15}$/.test(opportunityId)) return reject('opportunity_id_required', 'Informe a oportunidade.')
+    if (!/^[a-z0-9]{15}$/.test(opportunityId))
+      return reject('opportunity_id_required', 'Informe a oportunidade.')
 
     const outcome = typeof body.outcome === 'string' ? body.outcome.trim() : ''
-    if (outcome !== 'won' && outcome !== 'lost') return reject('outcome_invalid', 'Desfecho inválido; use ganha ou perdida.')
+    if (outcome !== 'won' && outcome !== 'lost')
+      return reject('outcome_invalid', 'Desfecho inválido; use ganha ou perdida.')
 
     const reason = typeof body.reason === 'string' ? body.reason.trim() : ''
     if (outcome === 'lost' && reason.length < 3) {
       return reject('loss_reason_required', 'Informe o motivo da perda (obrigatório).')
     }
-    if (reason.length > 500) return reject('reason_too_long', 'O motivo pode ter até 500 caracteres.')
+    if (reason.length > 500)
+      return reject('reason_too_long', 'O motivo pode ter até 500 caracteres.')
 
     let opportunity
     try {
@@ -46,15 +49,24 @@ routerAdd(
       return e.forbiddenError('Somente o responsável ou o Administrador registram o desfecho.')
     }
 
-    const existing = $app.findRecordsByFilter('opportunity_events', 'opportunity_id = {:id}', '', 50, 0, { id: opportunityId })
+    const existing = $app.findRecordsByFilter(
+      'opportunity_events',
+      'opportunity_id = {:id}',
+      '',
+      50,
+      0,
+      { id: opportunityId },
+    )
     const has = (target) => {
       for (const item of existing) {
         if (item.getString('milestone') === target) return true
       }
       return false
     }
-    if (!has('sent')) return reject('outcome_requires_sent', 'Registre o envio da proposta antes do desfecho.')
-    if (has('won') || has('lost')) return reject('outcome_duplicated', 'O desfecho desta oportunidade já foi registrado.')
+    if (!has('sent'))
+      return reject('outcome_requires_sent', 'Registre o envio da proposta antes do desfecho.')
+    if (has('won') || has('lost'))
+      return reject('outcome_duplicated', 'O desfecho desta oportunidade já foi registrado.')
 
     const occurredAt = new Date().toISOString()
     let eventId = ''
@@ -78,7 +90,12 @@ routerAdd(
       txApp.save(audit)
     })
 
-    return e.json(201, { id: eventId, opportunityId: opportunityId, outcome: outcome, occurredAt: occurredAt })
+    return e.json(201, {
+      id: eventId,
+      opportunityId: opportunityId,
+      outcome: outcome,
+      occurredAt: occurredAt,
+    })
   },
   $apis.requireAuth(),
 )

@@ -45,9 +45,7 @@ export const Propostas: React.FC = () => {
             <span>Módulo em breve</span>
           </div>
 
-          <h3 className="text-xl font-extrabold text-mg-ink">
-            Gestão de propostas e orçamentos
-          </h3>
+          <h3 className="text-xl font-extrabold text-mg-ink">Gestão de propostas e orçamentos</h3>
 
           <p className="mt-2 text-[14px] text-mg-muted leading-relaxed">
             Acompanhe o funil de propostas com status de elaboração, envio para o cliente, validação

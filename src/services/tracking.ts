@@ -70,11 +70,14 @@ export const recordMilestone = (
 
 // Desfecho (RF-22): ganha ou perdida; perda exige motivo (RN-17).
 export const recordOutcome = (opportunityId: string, outcome: 'won' | 'lost', reason: string) =>
-  pb.send<{ id: string; outcome: string; occurredAt: string }>('/backend/v1/opportunities/outcome', {
-    method: 'POST',
-    body: JSON.stringify({ opportunity_id: opportunityId, outcome, reason }),
-    headers: { 'Content-Type': 'application/json' },
-  })
+  pb.send<{ id: string; outcome: string; occurredAt: string }>(
+    '/backend/v1/opportunities/outcome',
+    {
+      method: 'POST',
+      body: JSON.stringify({ opportunity_id: opportunityId, outcome, reason }),
+      headers: { 'Content-Type': 'application/json' },
+    },
+  )
 
 export const startTimeEntry = (opportunityId: string, stage: string) =>
   pb.send<TimeEntryStarted>('/backend/v1/opportunities/time/start', {

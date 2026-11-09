@@ -7,30 +7,30 @@
 
 ## Mapa dos perfis
 
-| Perfil no sistema | Quem é na Mercogeo (call de 12/08) | Começa em | Pergunta que a tela responde |
-|---|---|---|---|
-| **Comercial técnico** | Quem recebe a demanda do cliente e conduz o envio (engenheiros que fazem proposta "na unha") | **Hoje** | "O que eu preciso mandar, cobrar ou destravar agora?" |
-| **Engenharia / orçamentista** | Gustavo Miranda (líder do projeto), Rafael (trainee) e engenheiros | **Hoje** | "Qual proposta está esperando a minha parte técnica?" |
-| **Financeiro / administrativo** | Luiz Miranda (diretor financeiro) | **Painel** | "Os parâmetros de custo e preço estão homologados e em dia?" |
-| **Aprovador** | Paulo Romeiro (CEO — revisa e define preço) | **Painel** | "O que precisa da minha decisão e como está o volume?" |
-| **Gestão** | Diretoria / sócios | **Painel** | "Estamos respondendo rápido e dentro do prazo?" |
-| **Administrador** | Consultoria e TI | **Hoje** | Tudo, mais evidências e controles |
+| Perfil no sistema               | Quem é na Mercogeo (call de 12/08)                                                           | Começa em  | Pergunta que a tela responde                                 |
+| ------------------------------- | -------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------ |
+| **Comercial técnico**           | Quem recebe a demanda do cliente e conduz o envio (engenheiros que fazem proposta "na unha") | **Hoje**   | "O que eu preciso mandar, cobrar ou destravar agora?"        |
+| **Engenharia / orçamentista**   | Gustavo Miranda (líder do projeto), Rafael (trainee) e engenheiros                           | **Hoje**   | "Qual proposta está esperando a minha parte técnica?"        |
+| **Financeiro / administrativo** | Luiz Miranda (diretor financeiro)                                                            | **Painel** | "Os parâmetros de custo e preço estão homologados e em dia?" |
+| **Aprovador**                   | Paulo Romeiro (CEO — revisa e define preço)                                                  | **Painel** | "O que precisa da minha decisão e como está o volume?"       |
+| **Gestão**                      | Diretoria / sócios                                                                           | **Painel** | "Estamos respondendo rápido e dentro do prazo?"              |
+| **Administrador**               | Consultoria e TI                                                                             | **Hoje**   | Tudo, mais evidências e controles                            |
 
 Fora do sistema hoje: o **técnico de campo** (ex.: Ney) que faz a visita técnica. Os registros de visita entram como documento da oportunidade (RF-03) por quem os recebe; um perfil "Campo" só faz sentido quando a visita for registrada no próprio sistema.
 
 ## Menu de cada perfil
 
-| Item | Comercial | Engenharia | Financeiro | Aprovador | Gestão | Admin |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| Hoje | ● | ● | | | | ● |
-| Funil de propostas | ● | ● | ● | ● | ● | ● |
-| Demandas | ● | ● | ● | ● | ● | ● |
-| Clientes | ● | ● | ● | ● | ● | ● |
-| Ficha técnica | ● | ● | | | | ● |
-| Biblioteca técnica | ● | ● | | | | ● |
-| Painel | ● | ● | ● | ● | ● | ● |
-| Configurações | | ● | ● | | | ● |
-| Evidências e controles | | ● | | | ● | ● |
+| Item                   | Comercial | Engenharia | Financeiro | Aprovador | Gestão | Admin |
+| ---------------------- | :-------: | :--------: | :--------: | :-------: | :----: | :---: |
+| Hoje                   |     ●     |     ●      |            |           |        |   ●   |
+| Funil de propostas     |     ●     |     ●      |     ●      |     ●     |   ●    |   ●   |
+| Demandas               |     ●     |     ●      |     ●      |     ●     |   ●    |   ●   |
+| Clientes               |     ●     |     ●      |     ●      |     ●     |   ●    |   ●   |
+| Ficha técnica          |     ●     |     ●      |            |           |        |   ●   |
+| Biblioteca técnica     |     ●     |     ●      |            |           |        |   ●   |
+| Painel                 |     ●     |     ●      |     ●      |     ●     |   ●    |   ●   |
+| Configurações          |           |     ●      |     ●      |           |        |   ●   |
+| Evidências e controles |           |     ●      |            |           |   ●    |   ●   |
 
 O menu é conveniência; quem decide o que cada um pode ler ou alterar é o servidor.
 
@@ -64,7 +64,7 @@ flowchart TD
   V -->|Faltam dados do cliente| C2[Ver pendências no Resumo<br/>cobrar o cliente]
   V -->|Pronta para enviar| C3[Enviar ao cliente pelo portal/e-mail<br/>Registrar envio]
   H -->|Nova demanda| N[Cadastro da demanda] --> A[Avaliar aptidão no card]
-  C1 --> F[Funil] 
+  C1 --> F[Funil]
 ```
 
 1. Abre em **Hoje**: quatro números (em andamento, vencidas, vencem em 2 dias, prontas para enviar) e a fila agrupada por urgência.

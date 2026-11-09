@@ -1,6 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { DEFAULT_MATRIX, type AccessAction, type AccessModule, type RoleMatrix } from '@/lib/auth/accessMatrix'
+import {
+  DEFAULT_MATRIX,
+  type AccessAction,
+  type AccessModule,
+  type RoleMatrix,
+} from '@/lib/auth/accessMatrix'
 import { getMyPermissions } from '@/services/admin'
 
 // Permissões do usuário logado, lidas do servidor (matriz administrada em
@@ -64,13 +69,21 @@ export function usePermissions(): PermissionsValue {
 }
 
 // Bloqueia uma tela inteira quando o perfil não pode ver o módulo.
-export function RequireModule({ module, children }: { module: AccessModule; children: React.ReactNode }) {
+export function RequireModule({
+  module,
+  children,
+}: {
+  module: AccessModule
+  children: React.ReactNode
+}) {
   const { can } = usePermissions()
   if (!can(module, 'view')) {
     return (
       <div className="mx-auto max-w-xl rounded-xl border border-mg-line bg-mg-surface p-8 text-center">
         <p className="font-bold text-mg-ink">Seu perfil não tem acesso a esta área</p>
-        <p className="mt-2 text-sm text-mg-muted">Se precisar, peça ao administrador do sistema para ajustar as permissões do seu perfil.</p>
+        <p className="mt-2 text-sm text-mg-muted">
+          Se precisar, peça ao administrador do sistema para ajustar as permissões do seu perfil.
+        </p>
       </div>
     )
   }

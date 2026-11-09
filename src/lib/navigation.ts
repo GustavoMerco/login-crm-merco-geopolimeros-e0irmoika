@@ -139,7 +139,14 @@ export type NavItem = {
 
 export type NavGroup = { id: string; label: string; items: NavItem[] }
 
-const ALL_ROLES: readonly UserRole[] = ['comercial', 'engenharia', 'financeiro', 'aprovador', 'gestao', 'admin']
+const ALL_ROLES: readonly UserRole[] = [
+  'comercial',
+  'engenharia',
+  'financeiro',
+  'aprovador',
+  'gestao',
+  'admin',
+]
 const TECH_ROLES: readonly UserRole[] = ['comercial', 'engenharia', 'admin']
 
 export const NAV_GROUPS: NavGroup[] = [
@@ -147,34 +154,104 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'trabalho',
     label: 'Trabalho',
     items: [
-      { id: 'hoje', label: 'Hoje', url: '/hoje', description: 'Prazos, pendências e o que fazer agora.', roles: ['comercial', 'engenharia', 'admin'], modules: ['demandas'] },
-      { id: 'funil', label: 'Funil de propostas', url: '/funil', description: 'Oportunidades por etapa, da demanda ao envio.', roles: ALL_ROLES, modules: ['demandas'] },
-      { id: 'demandas', label: 'Demandas', url: '/demandas', description: 'Lista e cadastro de demandas.', roles: ALL_ROLES, modules: ['demandas'] },
-      { id: 'clientes', label: 'Clientes', url: '/clientes', description: 'Empresas, contatos e histórico de propostas.', roles: ALL_ROLES, modules: ['clientes'] },
+      {
+        id: 'hoje',
+        label: 'Hoje',
+        url: '/hoje',
+        description: 'Prazos, pendências e o que fazer agora.',
+        roles: ['comercial', 'engenharia', 'admin'],
+        modules: ['demandas'],
+      },
+      {
+        id: 'funil',
+        label: 'Funil de propostas',
+        url: '/funil',
+        description: 'Oportunidades por etapa, da demanda ao envio.',
+        roles: ALL_ROLES,
+        modules: ['demandas'],
+      },
+      {
+        id: 'demandas',
+        label: 'Demandas',
+        url: '/demandas',
+        description: 'Lista e cadastro de demandas.',
+        roles: ALL_ROLES,
+        modules: ['demandas'],
+      },
+      {
+        id: 'clientes',
+        label: 'Clientes',
+        url: '/clientes',
+        description: 'Empresas, contatos e histórico de propostas.',
+        roles: ALL_ROLES,
+        modules: ['clientes'],
+      },
     ],
   },
   {
     id: 'engenharia',
     label: 'Engenharia',
     items: [
-      { id: 'ficha', label: 'Ficha técnica', url: '/ficha', description: 'Parâmetros técnicos da oportunidade.', roles: TECH_ROLES, modules: ['ficha'] },
-      { id: 'biblioteca', label: 'Biblioteca técnica', url: '/biblioteca', description: 'Composições, insumos e recursos.', roles: TECH_ROLES, modules: ['biblioteca'] },
+      {
+        id: 'ficha',
+        label: 'Ficha técnica',
+        url: '/ficha',
+        description: 'Parâmetros técnicos da oportunidade.',
+        roles: TECH_ROLES,
+        modules: ['ficha'],
+      },
+      {
+        id: 'biblioteca',
+        label: 'Biblioteca técnica',
+        url: '/biblioteca',
+        description: 'Composições, insumos e recursos.',
+        roles: TECH_ROLES,
+        modules: ['biblioteca'],
+      },
     ],
   },
   {
     id: 'gestao',
     label: 'Gestão',
     items: [
-      { id: 'painel', label: 'Painel', url: '/painel', description: 'Volume, prazos e tempo até o envio.', roles: ALL_ROLES, modules: ['painel'] },
+      {
+        id: 'painel',
+        label: 'Painel',
+        url: '/painel',
+        description: 'Volume, prazos e tempo até o envio.',
+        roles: ALL_ROLES,
+        modules: ['painel'],
+      },
     ],
   },
   {
     id: 'sistema',
     label: 'Sistema',
     items: [
-      { id: 'configuracoes', label: 'Configurações', url: '/configuracoes', description: 'Catálogo, unidades, parâmetros e modelos.', roles: ['engenharia', 'financeiro', 'admin'], modules: ['biblioteca', 'catalogo', 'unidades', 'parametros', 'modelos'] },
-      { id: 'usuarios', label: 'Usuários e permissões', url: '/administracao/usuarios', description: 'Criar usuários, definir perfis e permissões.', roles: ['admin'], modules: ['usuarios'] },
-      { id: 'evidencias', label: 'Evidências e controles', url: '/administracao', description: 'Baseline, gates, backup, auditorias e provas.', roles: ['engenharia', 'gestao', 'admin'], modules: ['evidencias'] },
+      {
+        id: 'configuracoes',
+        label: 'Configurações',
+        url: '/configuracoes',
+        description: 'Catálogo, unidades, parâmetros e modelos.',
+        roles: ['engenharia', 'financeiro', 'admin'],
+        modules: ['biblioteca', 'catalogo', 'unidades', 'parametros', 'modelos'],
+      },
+      {
+        id: 'usuarios',
+        label: 'Usuários e permissões',
+        url: '/administracao/usuarios',
+        description: 'Criar usuários, definir perfis e permissões.',
+        roles: ['admin'],
+        modules: ['usuarios'],
+      },
+      {
+        id: 'evidencias',
+        label: 'Evidências e controles',
+        url: '/administracao',
+        description: 'Baseline, gates, backup, auditorias e provas.',
+        roles: ['engenharia', 'gestao', 'admin'],
+        modules: ['evidencias'],
+      },
     ],
   },
 ]
@@ -186,8 +263,11 @@ export function navForRole(
   canView?: (module: AccessModule) => boolean,
 ): NavGroup[] {
   if (!role) return []
-  const visible = (item: NavItem) => (canView ? item.modules.some((module) => canView(module)) : item.roles.includes(role))
-  return NAV_GROUPS.map((group) => ({ ...group, items: group.items.filter(visible) })).filter((group) => group.items.length > 0)
+  const visible = (item: NavItem) =>
+    canView ? item.modules.some((module) => canView(module)) : item.roles.includes(role)
+  return NAV_GROUPS.map((group) => ({ ...group, items: group.items.filter(visible) })).filter(
+    (group) => group.items.length > 0,
+  )
 }
 
 // Página inicial de cada perfil depois do login.
@@ -214,7 +294,8 @@ const EXTRA_TITLES: Record<string, string> = {
 export function activeNavItem(pathname: string): NavItem | undefined {
   const items = NAV_GROUPS.flatMap((group) => group.items)
   if (pathname === '/oportunidade') return items.find((item) => item.id === 'funil')
-  if (pathname.startsWith('/administracao/usuarios')) return items.find((item) => item.id === 'usuarios')
+  if (pathname.startsWith('/administracao/usuarios'))
+    return items.find((item) => item.id === 'usuarios')
   if (pathname.startsWith('/administracao')) return items.find((item) => item.id === 'evidencias')
   if (pathname === '/unidades') return items.find((item) => item.id === 'configuracoes')
   return items.find((item) => item.url === pathname)
@@ -243,5 +324,7 @@ export function activeNavItemFor(pathname: string, search = ''): NavItem | undef
   const items = NAV_GROUPS.flatMap((group) => group.items)
   if (id === 'demanda') return items.find((item) => item.id === 'demandas')
   if (id === 'ficha' || id === 'biblioteca') return items.find((item) => item.id === id)
-  return items.find((item) => item.id === (CONFIG_SECTIONS.has(id) ? 'configuracoes' : 'evidencias'))
+  return items.find(
+    (item) => item.id === (CONFIG_SECTIONS.has(id) ? 'configuracoes' : 'evidencias'),
+  )
 }

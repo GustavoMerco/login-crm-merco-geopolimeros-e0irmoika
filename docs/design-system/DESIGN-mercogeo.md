@@ -12,24 +12,24 @@ Siga este arquivo em todas as telas do sistema. Ele vale mais que o gosto de que
 
 ## Fundos
 
-| Fundo | Cor | Texto | Texto suave | Acento | Onde |
-|---|---|---|---|---|---|
-| Concreto | `#F3F6F6` | `#0E1E22` | `#546368` | `#C2410C` | O fundo de todas as páginas de trabalho |
-| Laje | `#FFFFFF` | `#0E1E22` | `#546368` | `#C2410C` | Cartões, colunas do funil, tabelas, formulários |
-| Névoa petróleo | `#EEF7F9` | `#0B3540` | `#3E5A61` | `#17677A` | Destaques leves, linha selecionada, faixa de contexto do card |
-| Petróleo profundo | `#0B3540` | `#FFFFFF` | `#A9D3DD` | `#FB923C` | A barra lateral e o topo da tela de login |
+| Fundo             | Cor       | Texto     | Texto suave | Acento    | Onde                                                          |
+| ----------------- | --------- | --------- | ----------- | --------- | ------------------------------------------------------------- |
+| Concreto          | `#F3F6F6` | `#0E1E22` | `#546368`   | `#C2410C` | O fundo de todas as páginas de trabalho                       |
+| Laje              | `#FFFFFF` | `#0E1E22` | `#546368`   | `#C2410C` | Cartões, colunas do funil, tabelas, formulários               |
+| Névoa petróleo    | `#EEF7F9` | `#0B3540` | `#3E5A61`   | `#17677A` | Destaques leves, linha selecionada, faixa de contexto do card |
+| Petróleo profundo | `#0B3540` | `#FFFFFF` | `#A9D3DD`   | `#FB923C` | A barra lateral e o topo da tela de login                     |
 
 ### Tema escuro — "Galpão à noite"
 
 O mesmo sistema com a luz apagada: o concreto vira um petróleo quase preto, as lajes sobem um degrau mais claras, e o petróleo claro da logo (`#4FB3C9`) passa a ser a cor de links e estrutura. O laranja da ação continua `#C2410C` (texto branco 5,1:1) e ganha contorno luminoso no foco.
 
-| Fundo | Cor | Texto | Texto suave | Acento | Onde |
-|---|---|---|---|---|---|
-| Concreto noturno | `#0A1417` | `#E6EEF0` | `#93A6AB` | `#F97316` | O fundo de todas as páginas |
-| Laje noturna | `#101D21` | `#E6EEF0` | `#93A6AB` | `#F97316` | Cartões, colunas, tabelas, formulários |
-| Degrau | `#15262B` | `#E6EEF0` | `#93A6AB` | `#4FB3C9` | Hover, linha selecionada, painéis internos |
-| Névoa petróleo | `#12313A` | `#E6EEF0` | `#A9C1C7` | `#4FB3C9` | Destaques leves e faixa de contexto |
-| Petróleo noite | `#071A1F` | `#FFFFFF` | `#A9D3DD` | `#FB923C` | A barra lateral |
+| Fundo            | Cor       | Texto     | Texto suave | Acento    | Onde                                       |
+| ---------------- | --------- | --------- | ----------- | --------- | ------------------------------------------ |
+| Concreto noturno | `#0A1417` | `#E6EEF0` | `#93A6AB`   | `#F97316` | O fundo de todas as páginas                |
+| Laje noturna     | `#101D21` | `#E6EEF0` | `#93A6AB`   | `#F97316` | Cartões, colunas, tabelas, formulários     |
+| Degrau           | `#15262B` | `#E6EEF0` | `#93A6AB`   | `#4FB3C9` | Hover, linha selecionada, painéis internos |
+| Névoa petróleo   | `#12313A` | `#E6EEF0` | `#A9C1C7`   | `#4FB3C9` | Destaques leves e faixa de contexto        |
+| Petróleo noite   | `#071A1F` | `#FFFFFF` | `#A9D3DD`   | `#FB923C` | A barra lateral                            |
 
 Fios: `#22363C` (normal) e `#2E464D` (campos). Estados no escuro: em dia `#86EFAC` sobre `#0F2A1A`; atenção `#FCD34D` sobre `#2B2107`; crítico `#FCA5A5` sobre `#2E1212`; neutro `#A9C1C7` sobre `#18292E`.
 
@@ -37,22 +37,22 @@ O tema segue o sistema operacional por padrão e pode ser fixado pelo usuário (
 
 ## Tokens (`src/main.css`, classes `mg-*` no Tailwind)
 
-| Token | Claro | Escuro | Uso |
-|---|---|---|---|
-| `canvas` | `#F3F6F6` | `#0A1417` | fundo da página |
-| `surface` | `#FFFFFF` | `#101D21` | cartões e formulários |
-| `surface-2` | `#F7F9FA` | `#15262B` | hover, faixas, cabeçalho de tabela |
-| `ink` | `#0E1E22` | `#E6EEF0` | texto principal |
-| `muted` | `#546368` | `#93A6AB` | texto de apoio |
-| `line` / `line-strong` | `#DCE4E6` / `#C6D1D4` | `#22363C` / `#2E464D` | fios e campos |
-| `brand` | `#17677A` | `#4FB3C9` | links, abas, ícones, etapa atual |
-| `brand-strong` | `#0B3540` | `#7FCCDC` | títulos de destaque, hover de link |
-| `brand-fill` | `#17677A` | `#17677A` | fundo cheio com texto branco |
-| `brand-soft` / `brand-soft-2` | `#EEF7F9` / `#D6EDF2` | `#12313A` / `#17414C` | destaques leves |
-| `action` / `action-hover` | `#C2410C` / `#9A3412` | `#C2410C` / `#9A3412` | botão principal |
-| `accent` | `#F97316` | `#FB923C` | marcadores não textuais |
-| `sidebar` | `#0B3540` | `#071A1F` | barra lateral |
-| `ok`, `warn`, `crit`, `neutral` (+ `-bg`, `-line`) | ver estados | ver estados | pílulas e alertas |
+| Token                                              | Claro                 | Escuro                | Uso                                |
+| -------------------------------------------------- | --------------------- | --------------------- | ---------------------------------- |
+| `canvas`                                           | `#F3F6F6`             | `#0A1417`             | fundo da página                    |
+| `surface`                                          | `#FFFFFF`             | `#101D21`             | cartões e formulários              |
+| `surface-2`                                        | `#F7F9FA`             | `#15262B`             | hover, faixas, cabeçalho de tabela |
+| `ink`                                              | `#0E1E22`             | `#E6EEF0`             | texto principal                    |
+| `muted`                                            | `#546368`             | `#93A6AB`             | texto de apoio                     |
+| `line` / `line-strong`                             | `#DCE4E6` / `#C6D1D4` | `#22363C` / `#2E464D` | fios e campos                      |
+| `brand`                                            | `#17677A`             | `#4FB3C9`             | links, abas, ícones, etapa atual   |
+| `brand-strong`                                     | `#0B3540`             | `#7FCCDC`             | títulos de destaque, hover de link |
+| `brand-fill`                                       | `#17677A`             | `#17677A`             | fundo cheio com texto branco       |
+| `brand-soft` / `brand-soft-2`                      | `#EEF7F9` / `#D6EDF2` | `#12313A` / `#17414C` | destaques leves                    |
+| `action` / `action-hover`                          | `#C2410C` / `#9A3412` | `#C2410C` / `#9A3412` | botão principal                    |
+| `accent`                                           | `#F97316`             | `#FB923C`             | marcadores não textuais            |
+| `sidebar`                                          | `#0B3540`             | `#071A1F`             | barra lateral                      |
+| `ok`, `warn`, `crit`, `neutral` (+ `-bg`, `-line`) | ver estados           | ver estados           | pílulas e alertas                  |
 
 ## Acentos e detalhes
 
@@ -74,15 +74,15 @@ Fontes (Google Fonts): Manrope, IBM Plex Mono.
 
 Manrope é geométrica e técnica sem ser fria — combina com engenharia e já é a fonte do sistema. IBM Plex Mono foi desenhada para engenharia (IBM) e carrega **todo número com unidade, código, prazo e data**: `10,25 m²`, `0,20 kg/m²`, `COMP-GEO-01 v3`, `vence 12/11`.
 
-| Uso | Fonte | Peso | Tamanho |
-|---|---|---|---|
-| Título da página | Manrope | 700 | 24 px, letras −0,01em |
-| Título de seção / coluna | Manrope | 700 | 15 px |
-| Rótulo pequeno (sobrelinha) | Manrope | 700 | 11 px, caixa alta, +0,06em |
-| Corpo | Manrope | 500 | 14 px |
-| Apoio / legenda | Manrope | 500 | 12–13 px |
-| Número grande (KPI) | IBM Plex Mono | 600 | 28–32 px |
-| Número, unidade, código, data | IBM Plex Mono | 500 | 12–13 px |
+| Uso                           | Fonte         | Peso | Tamanho                    |
+| ----------------------------- | ------------- | ---- | -------------------------- |
+| Título da página              | Manrope       | 700  | 24 px, letras −0,01em      |
+| Título de seção / coluna      | Manrope       | 700  | 15 px                      |
+| Rótulo pequeno (sobrelinha)   | Manrope       | 700  | 11 px, caixa alta, +0,06em |
+| Corpo                         | Manrope       | 500  | 14 px                      |
+| Apoio / legenda               | Manrope       | 500  | 12–13 px                   |
+| Número grande (KPI)           | IBM Plex Mono | 600  | 28–32 px                   |
+| Número, unidade, código, data | IBM Plex Mono | 500  | 12–13 px                   |
 
 Números sempre no formato brasileiro (`1.234,56`, `3,4 dias`, `12/11/2026`) e com unidade ao lado, separada por espaço fino.
 

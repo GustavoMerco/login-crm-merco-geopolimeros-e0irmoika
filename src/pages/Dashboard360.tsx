@@ -15,7 +15,11 @@ export default function Dashboard360() {
   const maxStage = Math.max(1, ...Object.values(metrics.byStage))
   const families = useMemo(() => {
     const map = new Map<string, number>()
-    for (const card of cards) map.set(card.opportunity.service_family || 'Sem família', (map.get(card.opportunity.service_family || 'Sem família') ?? 0) + 1)
+    for (const card of cards)
+      map.set(
+        card.opportunity.service_family || 'Sem família',
+        (map.get(card.opportunity.service_family || 'Sem família') ?? 0) + 1,
+      )
     return [...map.entries()].sort((a, b) => b[1] - a[1])
   }, [cards])
 
@@ -34,24 +38,44 @@ export default function Dashboard360() {
         </p>
       ) : (
         <div className="grid gap-3 lg:grid-cols-4">
-          <Kpi label="Oportunidades" value={String(metrics.total)} hint={`${metrics.open} em andamento, ${metrics.byStage.enviada} aguardando resposta.`} />
-          <Kpi label="Prazo vencido" value={String(metrics.overdue)} hint="Em andamento e já fora do prazo do cliente." />
+          <Kpi
+            label="Oportunidades"
+            value={String(metrics.total)}
+            hint={`${metrics.open} em andamento, ${metrics.byStage.enviada} aguardando resposta.`}
+          />
+          <Kpi
+            label="Prazo vencido"
+            value={String(metrics.overdue)}
+            hint="Em andamento e já fora do prazo do cliente."
+          />
           <Kpi
             label="Tempo até o envio"
             value={metrics.avgDaysToSend === null ? '—' : number.format(metrics.avgDaysToSend)}
             unit={metrics.avgDaysToSend === null ? undefined : 'dias'}
-            hint={metrics.sentCount > 0 ? `Média de ${metrics.sentCount} proposta(s) enviada(s), da demanda ao envio.` : 'Aparece quando houver propostas enviadas.'}
+            hint={
+              metrics.sentCount > 0
+                ? `Média de ${metrics.sentCount} proposta(s) enviada(s), da demanda ao envio.`
+                : 'Aparece quando houver propostas enviadas.'
+            }
           />
           <Kpi
             label="Enviadas no prazo"
             value={metrics.onTimeRate === null ? '—' : percent.format(metrics.onTimeRate)}
-            hint={metrics.sentWithDeadline > 0 ? `${metrics.sentOnTime} de ${metrics.sentWithDeadline} com prazo informado.` : 'Aparece quando houver envios com prazo informado.'}
+            hint={
+              metrics.sentWithDeadline > 0
+                ? `${metrics.sentOnTime} de ${metrics.sentWithDeadline} com prazo informado.`
+                : 'Aparece quando houver envios com prazo informado.'
+            }
           />
 
           <Kpi
             label="Taxa de ganho"
             value={metrics.winRate === null ? '—' : percent.format(metrics.winRate)}
-            hint={metrics.won + metrics.lost > 0 ? `${metrics.won} ganha(s) e ${metrics.lost} perdida(s).` : 'Aparece quando houver desfechos registrados.'}
+            hint={
+              metrics.won + metrics.lost > 0
+                ? `${metrics.won} ganha(s) e ${metrics.lost} perdida(s).`
+                : 'Aparece quando houver desfechos registrados.'
+            }
           />
           <Panel title="Motivos de perda" className="lg:col-span-3">
             {metrics.lossReasons.length === 0 ? (
@@ -59,7 +83,10 @@ export default function Dashboard360() {
             ) : (
               <ul className="space-y-2">
                 {metrics.lossReasons.map((item) => (
-                  <li key={item.reason} className="flex items-center justify-between gap-3 text-[13px]">
+                  <li
+                    key={item.reason}
+                    className="flex items-center justify-between gap-3 text-[13px]"
+                  >
                     <span className="text-mg-ink">{item.reason}</span>
                     <span className="mg-num text-mg-muted">{item.count}</span>
                   </li>
@@ -79,7 +106,9 @@ export default function Dashboard360() {
                       style={{ width: `${(metrics.byStage[stage.id] / maxStage) * 100}%` }}
                     />
                   </span>
-                  <span className="mg-num text-right text-[13px] text-mg-ink">{metrics.byStage[stage.id]}</span>
+                  <span className="mg-num text-right text-[13px] text-mg-ink">
+                    {metrics.byStage[stage.id]}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -102,8 +131,9 @@ export default function Dashboard360() {
 
           <Panel title="Indicadores do contrato" eyebrow="K1 · K2 · K3" className="lg:col-span-4">
             <p className="text-sm text-mg-muted">
-              Tempo da demanda ao envio (K1), horas por proposta (K2) e propostas dentro do SLA (K3) são calculados contra o baseline congelado
-              e a família-piloto homologada. Enquanto o gate de prontidão estiver fechado, este painel mostra só a amostra acima.
+              Tempo da demanda ao envio (K1), horas por proposta (K2) e propostas dentro do SLA (K3)
+              são calculados contra o baseline congelado e a família-piloto homologada. Enquanto o
+              gate de prontidão estiver fechado, este painel mostra só a amostra acima.
             </p>
           </Panel>
         </div>

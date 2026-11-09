@@ -43,7 +43,9 @@ describe('etapa derivada só de dados do servidor', () => {
     expect(deriveStage(opp({}), new Set(), false)).toBe('recebida')
     expect(deriveStage(opp({ aptitude_status: 'blocked' }), new Set(), false)).toBe('qualificacao')
     expect(deriveStage(opp({ aptitude_status: 'apt' }), new Set(), false)).toBe('apta')
-    expect(deriveStage(opp({ aptitude_status: 'exception_approved' }), new Set(), false)).toBe('apta')
+    expect(deriveStage(opp({ aptitude_status: 'exception_approved' }), new Set(), false)).toBe(
+      'apta',
+    )
     expect(deriveStage(opp({ aptitude_status: 'apt' }), new Set(), true)).toBe('engenharia')
     expect(deriveStage(opp({}), new Set(['apt']), false)).toBe('apta')
     expect(deriveStage(opp({ aptitude_status: 'apt' }), new Set(['ready']), true)).toBe('pronta')
@@ -51,7 +53,16 @@ describe('etapa derivada só de dados do servidor', () => {
   })
 
   it('o funil tem exatamente as 8 etapas implementadas, na ordem da jornada', () => {
-    expect(STAGES.map((s) => s.id)).toEqual(['recebida', 'qualificacao', 'apta', 'engenharia', 'pronta', 'enviada', 'ganha', 'perdida'])
+    expect(STAGES.map((s) => s.id)).toEqual([
+      'recebida',
+      'qualificacao',
+      'apta',
+      'engenharia',
+      'pronta',
+      'enviada',
+      'ganha',
+      'perdida',
+    ])
   })
 
   it('desfecho vence o envio: ganha e perdida', () => {
@@ -77,20 +88,48 @@ describe('prazo no fuso de São Paulo', () => {
 
   it('enviada no prazo ou com atraso', () => {
     expect(deadlineInfo('2026-11-10', '2026-11-20', '2026-11-10').state).toBe('cumprido')
-    expect(deadlineInfo('2026-11-10', '2026-11-20', '2026-11-12')).toMatchObject({ state: 'atrasado', days: 2 })
+    expect(deadlineInfo('2026-11-10', '2026-11-20', '2026-11-12')).toMatchObject({
+      state: 'atrasado',
+      days: 2,
+    })
   })
 })
 
 describe('cards, fila e indicadores', () => {
   const opportunities = [
     opp({ id: 'a00000000000001', customer_name: 'Ambev Jacareí', deadline_date: '2026-11-08' }),
-    opp({ id: 'a00000000000002', customer_name: 'AMBEV  jacarei', aptitude_status: 'blocked', pending_items: ['Planta', 'Área'], deadline_date: '2026-11-11' }),
-    opp({ id: 'a00000000000003', customer_name: 'Heineken', aptitude_status: 'apt', service_family: 'Estabilização de solo' }),
-    opp({ id: 'a00000000000004', customer_name: 'Cargill', aptitude_status: 'apt', deadline_date: '2026-11-05', received_at: '2026-11-01 13:00:00.000Z' }),
+    opp({
+      id: 'a00000000000002',
+      customer_name: 'AMBEV  jacarei',
+      aptitude_status: 'blocked',
+      pending_items: ['Planta', 'Área'],
+      deadline_date: '2026-11-11',
+    }),
+    opp({
+      id: 'a00000000000003',
+      customer_name: 'Heineken',
+      aptitude_status: 'apt',
+      service_family: 'Estabilização de solo',
+    }),
+    opp({
+      id: 'a00000000000004',
+      customer_name: 'Cargill',
+      aptitude_status: 'apt',
+      deadline_date: '2026-11-05',
+      received_at: '2026-11-01 13:00:00.000Z',
+    }),
   ]
   const events: PipelineEvent[] = [
-    { opportunity_id: 'a00000000000004', milestone: 'ready', occurred_at: '2026-11-03 12:00:00.000Z' },
-    { opportunity_id: 'a00000000000004', milestone: 'sent', occurred_at: '2026-11-04 12:00:00.000Z' },
+    {
+      opportunity_id: 'a00000000000004',
+      milestone: 'ready',
+      occurred_at: '2026-11-03 12:00:00.000Z',
+    },
+    {
+      opportunity_id: 'a00000000000004',
+      milestone: 'sent',
+      occurred_at: '2026-11-04 12:00:00.000Z',
+    },
   ]
   const cards = buildCards(opportunities, events, new Set(['a00000000000003']), NOW)
 
@@ -108,13 +147,17 @@ describe('cards, fila e indicadores', () => {
   })
 
   it('fila do dia: vencidos, vencendo, qualificar e avaliar; enviada vai para "aguardando resposta"', () => {
-    const queue = Object.fromEntries(buildQueue(cards).map((g) => [g.id, g.cards.map((c) => c.opportunity.id)]))
+    const queue = Object.fromEntries(
+      buildQueue(cards).map((g) => [g.id, g.cards.map((c) => c.opportunity.id)]),
+    )
     expect(queue.vencidos).toEqual(['a00000000000001'])
     expect(queue.proximos).toEqual(['a00000000000002'])
     expect(queue.qualificar).toEqual(['a00000000000002'])
     expect(queue.avaliar).toEqual(['a00000000000001'])
     expect(queue.retorno).toEqual(['a00000000000004'])
-    const work = ['vencidos', 'proximos', 'enviar', 'qualificar', 'avaliar'].flatMap((id) => queue[id])
+    const work = ['vencidos', 'proximos', 'enviar', 'qualificar', 'avaliar'].flatMap(
+      (id) => queue[id],
+    )
     expect(work).not.toContain('a00000000000004')
   })
 
@@ -138,9 +181,16 @@ describe('cards, fila e indicadores', () => {
   it('conversão e motivos de perda', () => {
     const extra: PipelineEvent[] = [
       ...events,
-      { opportunity_id: 'a00000000000004', milestone: 'lost', occurred_at: '2026-11-06 12:00:00.000Z', note: 'Preço' },
+      {
+        opportunity_id: 'a00000000000004',
+        milestone: 'lost',
+        occurred_at: '2026-11-06 12:00:00.000Z',
+        note: 'Preço',
+      },
     ]
-    const metrics = computeMetrics(buildCards(opportunities, extra, new Set(['a00000000000003']), NOW))
+    const metrics = computeMetrics(
+      buildCards(opportunities, extra, new Set(['a00000000000003']), NOW),
+    )
     expect(metrics.lost).toBe(1)
     expect(metrics.winRate).toBe(0)
     expect(metrics.lossReasons).toEqual([{ reason: 'Preço', count: 1 }])
@@ -155,8 +205,12 @@ describe('cards, fila e indicadores', () => {
 
   it('filtro por busca, família e cliente', () => {
     expect(filterCards(cards, { query: 'heinek', family: '', customerKey: '' })).toHaveLength(1)
-    expect(filterCards(cards, { query: '', family: 'Estabilização de solo', customerKey: '' })).toHaveLength(1)
-    expect(filterCards(cards, { query: '', family: '', customerKey: 'ambev jacarei' })).toHaveLength(2)
+    expect(
+      filterCards(cards, { query: '', family: 'Estabilização de solo', customerKey: '' }),
+    ).toHaveLength(1)
+    expect(
+      filterCards(cards, { query: '', family: '', customerKey: 'ambev jacarei' }),
+    ).toHaveLength(2)
   })
 })
 

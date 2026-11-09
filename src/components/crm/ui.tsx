@@ -22,7 +22,9 @@ export function PageHeader({
       <div className="min-w-0">
         {eyebrow && <p className="mg-eyebrow text-mg-brand">{eyebrow}</p>}
         <h2 className="mt-1 text-2xl font-bold tracking-[-0.01em] text-mg-ink">{title}</h2>
-        {description && <p className="mt-1 max-w-2xl text-sm leading-relaxed text-mg-muted">{description}</p>}
+        {description && (
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-mg-muted">{description}</p>
+        )}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
@@ -42,7 +44,10 @@ export function PrimaryLink({ to, children }: { to: string; children: React.Reac
 
 export function SecondaryLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
-    <Link to={to} className={`${buttonBase} border border-mg-brand bg-mg-surface text-mg-brand hover:bg-mg-brand-soft`}>
+    <Link
+      to={to}
+      className={`${buttonBase} border border-mg-brand bg-mg-surface text-mg-brand hover:bg-mg-brand-soft`}
+    >
       {children}
     </Link>
   )
@@ -52,7 +57,9 @@ export function Button({
   variant = 'secondary',
   className = '',
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'quiet' }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'primary' | 'secondary' | 'quiet'
+}) {
   const styles = {
     primary: 'bg-mg-action text-white hover:bg-mg-action-hover',
     secondary: 'border border-mg-brand bg-mg-surface text-mg-brand hover:bg-mg-brand-soft',
@@ -75,7 +82,10 @@ export function Panel({
   actions?: React.ReactNode
 }) {
   return (
-    <section className={`rounded-xl border border-mg-line bg-mg-surface p-5 ${className}`} aria-label={title}>
+    <section
+      className={`rounded-xl border border-mg-line bg-mg-surface p-5 ${className}`}
+      aria-label={title}
+    >
       {(title || actions) && (
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -96,11 +106,23 @@ const TONE: Record<Tone, { pill: string; dot: string; bar: string }> = {
   ok: { pill: 'bg-mg-ok-bg text-mg-ok', dot: 'bg-mg-ok', bar: 'bg-mg-ok' },
   warn: { pill: 'bg-mg-warn-bg text-mg-warn', dot: 'bg-mg-warn', bar: 'bg-mg-accent' },
   crit: { pill: 'bg-mg-crit-bg text-mg-crit', dot: 'bg-mg-crit', bar: 'bg-mg-crit' },
-  neutral: { pill: 'bg-mg-neutral-bg text-mg-neutral', dot: 'bg-mg-neutral', bar: 'bg-mg-line-strong' },
+  neutral: {
+    pill: 'bg-mg-neutral-bg text-mg-neutral',
+    dot: 'bg-mg-neutral',
+    bar: 'bg-mg-line-strong',
+  },
   brand: { pill: 'bg-mg-brand-soft text-mg-brand', dot: 'bg-mg-brand', bar: 'bg-mg-brand' },
 }
 
-export function Pill({ tone, children, mono = false }: { tone: Tone; children: React.ReactNode; mono?: boolean }) {
+export function Pill({
+  tone,
+  children,
+  mono = false,
+}: {
+  tone: Tone
+  children: React.ReactNode
+  mono?: boolean
+}) {
   return (
     <span
       className={`inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-bold leading-snug ${TONE[tone].pill} ${mono ? 'mg-num font-medium' : ''}`}
@@ -155,7 +177,17 @@ export function StagePill({ stage }: { stage: StageId }) {
   return <Pill tone={STAGE_TONE[stage]}>{stageLabel(stage)}</Pill>
 }
 
-export function Kpi({ label, value, hint, unit }: { label: string; value: string; hint: string; unit?: string }) {
+export function Kpi({
+  label,
+  value,
+  hint,
+  unit,
+}: {
+  label: string
+  value: string
+  hint: string
+  unit?: string
+}) {
   return (
     <div className="rounded-xl border border-mg-line bg-mg-surface p-5">
       <p className="mg-eyebrow text-mg-muted">{label}</p>
@@ -179,8 +211,20 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center rounded-xl border border-dashed border-mg-line-strong bg-mg-surface px-6 py-10 text-center">
-      <svg aria-hidden="true" width="40" height="40" viewBox="0 0 40 40" fill="none" className="text-mg-brand">
-        <path d="M4 28h32M8 28l6-10 6 6 8-14 6 18" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <svg
+        aria-hidden="true"
+        width="40"
+        height="40"
+        viewBox="0 0 40 40"
+        fill="none"
+        className="text-mg-brand"
+      >
+        <path
+          d="M4 28h32M8 28l6-10 6 6 8-14 6 18"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
         <path d="M20 4l3 5h-6z" fill="rgb(var(--mg-accent))" />
       </svg>
       <p className="mt-3 font-bold text-mg-ink">{title}</p>
@@ -190,9 +234,18 @@ export function EmptyState({
   )
 }
 
-export function Notice({ tone, children }: { tone: 'warn' | 'crit' | 'neutral'; children: React.ReactNode }) {
+export function Notice({
+  tone,
+  children,
+}: {
+  tone: 'warn' | 'crit' | 'neutral'
+  children: React.ReactNode
+}) {
   return (
-    <div role={tone === 'crit' ? 'alert' : 'status'} className={`rounded-lg px-4 py-3 text-sm ${TONE[tone].pill}`}>
+    <div
+      role={tone === 'crit' ? 'alert' : 'status'}
+      className={`rounded-lg px-4 py-3 text-sm ${TONE[tone].pill}`}
+    >
       {children}
     </div>
   )
@@ -205,7 +258,8 @@ export function JourneyRuler({ currentIndex }: { currentIndex: number }) {
       {JOURNEY.map((step, index) => {
         const done = step.available && index < currentIndex
         const current = index === currentIndex
-        const base = 'flex items-center gap-2 rounded-full border px-3 py-1 text-[12px] font-semibold'
+        const base =
+          'flex items-center gap-2 rounded-full border px-3 py-1 text-[12px] font-semibold'
         const style = !step.available
           ? 'border-dashed border-mg-line-strong text-mg-muted'
           : current
@@ -214,12 +268,20 @@ export function JourneyRuler({ currentIndex }: { currentIndex: number }) {
               ? 'border-mg-brand-fill bg-mg-brand-fill text-white'
               : 'border-mg-line text-mg-muted'
         return (
-          <li key={step.id} className="flex items-center gap-1" aria-current={current ? 'step' : undefined}>
+          <li
+            key={step.id}
+            className="flex items-center gap-1"
+            aria-current={current ? 'step' : undefined}
+          >
             <span className={`${base} ${style}`}>
               {step.label}
-              {!step.available && <span className="mg-num text-[10px] font-medium">{step.phase}</span>}
+              {!step.available && (
+                <span className="mg-num text-[10px] font-medium">{step.phase}</span>
+              )}
             </span>
-            {index < JOURNEY.length - 1 && <span aria-hidden="true" className="h-px w-3 bg-mg-line-strong" />}
+            {index < JOURNEY.length - 1 && (
+              <span aria-hidden="true" className="h-px w-3 bg-mg-line-strong" />
+            )}
           </li>
         )
       })}

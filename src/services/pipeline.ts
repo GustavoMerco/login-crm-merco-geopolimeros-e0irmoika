@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
-import { buildCards, type PipelineCard, type PipelineEvent, type PipelineOpportunity } from '@/lib/pipeline'
+import {
+  buildCards,
+  type PipelineCard,
+  type PipelineEvent,
+  type PipelineOpportunity,
+} from '@/lib/pipeline'
 
 // Carrega o funil a partir das coleções existentes. O servidor devolve as
 // oportunidades em que o usuário é o responsável; Gestão, Aprovador e Admin
@@ -27,7 +32,10 @@ export function usePipeline(): PipelineState {
     try {
       const opportunities = await pb
         .collection('opportunities')
-        .getFullList<PipelineOpportunity>({ sort: '-received_at', requestKey: 'pipeline-opportunities' })
+        .getFullList<PipelineOpportunity>({
+          sort: '-received_at',
+          requestKey: 'pipeline-opportunities',
+        })
       const [eventsResult, sheetsResult] = await Promise.allSettled([
         pb.collection('opportunity_events').getFullList<PipelineEvent>({
           sort: 'occurred_at',
@@ -41,11 +49,17 @@ export function usePipeline(): PipelineState {
       ])
       const events = eventsResult.status === 'fulfilled' ? eventsResult.value : []
       if (eventsResult.status === 'rejected') {
-        warnings.push('Não foi possível ler os marcos (pronta/enviada); as etapas finais podem estar desatualizadas.')
+        warnings.push(
+          'Não foi possível ler os marcos (pronta/enviada); as etapas finais podem estar desatualizadas.',
+        )
       }
-      const sheetIds = new Set(sheetsResult.status === 'fulfilled' ? sheetsResult.value.map((s) => s.opportunity_id) : [])
+      const sheetIds = new Set(
+        sheetsResult.status === 'fulfilled' ? sheetsResult.value.map((s) => s.opportunity_id) : [],
+      )
       if (sheetsResult.status === 'rejected') {
-        warnings.push('Não foi possível ler as fichas técnicas; "Em engenharia" pode aparecer como "Apta".')
+        warnings.push(
+          'Não foi possível ler as fichas técnicas; "Em engenharia" pode aparecer como "Apta".',
+        )
       }
       setCards(buildCards(opportunities, events, sheetIds))
       setPartialWarnings(warnings)

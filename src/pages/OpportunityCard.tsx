@@ -3,7 +3,12 @@ import { Link, useSearchParams } from 'react-router-dom'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { evaluateOpportunityAptitude } from '@/services/opportunities'
-import { getOpportunityEvents, recordMilestone, recordOutcome, type OpportunityEventRecord } from '@/services/tracking'
+import {
+  getOpportunityEvents,
+  recordMilestone,
+  recordOutcome,
+  type OpportunityEventRecord,
+} from '@/services/tracking'
 import { useAuth } from '@/contexts/AuthContext'
 import { sectionUrl } from '@/lib/navigation'
 import {
@@ -58,7 +63,11 @@ function formatInstant(value: string): string {
   if (!value) return '—'
   const date = new Date(value.replace(' ', 'T'))
   if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' })
+  return date.toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    dateStyle: 'short',
+    timeStyle: 'short',
+  })
 }
 
 function Field({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
@@ -95,10 +104,17 @@ export default function OpportunityCard() {
     }
     setIsLoading(true)
     try {
-      const opportunity = await pb.collection('opportunities').getOne<PipelineOpportunity>(opportunityId)
+      const opportunity = await pb
+        .collection('opportunities')
+        .getOne<PipelineOpportunity>(opportunityId)
       const [eventsResult, sheetsResult] = await Promise.allSettled([
         getOpportunityEvents(opportunityId),
-        pb.collection('tech_sheets').getList(1, 1, { filter: pb.filter('opportunity_id = {:id}', { id: opportunityId }), fields: 'id' }),
+        pb
+          .collection('tech_sheets')
+          .getList(1, 1, {
+            filter: pb.filter('opportunity_id = {:id}', { id: opportunityId }),
+            fields: 'id',
+          }),
       ])
       const loadedEvents = eventsResult.status === 'fulfilled' ? eventsResult.value : []
       const hasSheet = sheetsResult.status === 'fulfilled' && sheetsResult.value.totalItems > 0
@@ -149,7 +165,9 @@ export default function OpportunityCard() {
   if (error || !card) {
     return (
       <div className="mx-auto max-w-3xl space-y-4">
-        <Notice tone="crit">Não foi possível abrir a oportunidade: {error ?? 'não encontrada.'}</Notice>
+        <Notice tone="crit">
+          Não foi possível abrir a oportunidade: {error ?? 'não encontrada.'}
+        </Notice>
         <Link to="/funil" className="text-sm font-semibold text-mg-brand underline">
           Voltar ao funil
         </Link>
@@ -170,11 +188,20 @@ export default function OpportunityCard() {
           <Button
             variant="primary"
             disabled={isActing}
-            onClick={() => void runAction(() => recordOutcome(opportunity.id, 'won', ''), 'Proposta registrada como ganha.')}
+            onClick={() =>
+              void runAction(
+                () => recordOutcome(opportunity.id, 'won', ''),
+                'Proposta registrada como ganha.',
+              )
+            }
           >
             Registrar ganho
           </Button>
-          <Button disabled={isActing} onClick={() => setIsLossOpen((open) => !open)} aria-expanded={isLossOpen}>
+          <Button
+            disabled={isActing}
+            onClick={() => setIsLossOpen((open) => !open)}
+            aria-expanded={isLossOpen}
+          >
             Registrar perda
           </Button>
         </div>
@@ -189,7 +216,10 @@ export default function OpportunityCard() {
             variant="primary"
             disabled={isActing}
             onClick={() =>
-              void runAction(() => evaluateOpportunityAptitude(opportunity.id), 'Aptidão avaliada. Veja o resultado no resumo.')
+              void runAction(
+                () => evaluateOpportunityAptitude(opportunity.id),
+                'Aptidão avaliada. Veja o resultado no resumo.',
+              )
             }
           >
             Avaliar aptidão
@@ -206,7 +236,12 @@ export default function OpportunityCard() {
           <Button
             variant="primary"
             disabled={isActing}
-            onClick={() => void runAction(() => recordMilestone(opportunity.id, 'ready'), 'Proposta marcada como pronta para envio.')}
+            onClick={() =>
+              void runAction(
+                () => recordMilestone(opportunity.id, 'ready'),
+                'Proposta marcada como pronta para envio.',
+              )
+            }
           >
             Marcar como pronta
           </Button>
@@ -216,7 +251,9 @@ export default function OpportunityCard() {
           <Button
             variant="primary"
             disabled={isActing}
-            onClick={() => void runAction(() => recordMilestone(opportunity.id, 'sent'), 'Envio registrado.')}
+            onClick={() =>
+              void runAction(() => recordMilestone(opportunity.id, 'sent'), 'Envio registrado.')
+            }
           >
             Registrar envio ao cliente
           </Button>
@@ -242,7 +279,9 @@ export default function OpportunityCard() {
               <StagePill stage={stage} />
               <DeadlinePill deadline={card.deadline} />
             </div>
-            <h2 className="mt-2 text-2xl font-bold tracking-[-0.01em] text-mg-ink">{opportunity.customer_name}</h2>
+            <h2 className="mt-2 text-2xl font-bold tracking-[-0.01em] text-mg-ink">
+              {opportunity.customer_name}
+            </h2>
             <p className="mt-1 text-sm text-mg-muted">
               {opportunity.service_family}
               {opportunity.location ? ` · ${opportunity.location}` : ''}
@@ -255,14 +294,20 @@ export default function OpportunityCard() {
           <JourneyRuler currentIndex={JOURNEY_INDEX[stage]} />
         </div>
         {!isOwner && !['ganha', 'perdida'].includes(stage) && (
-          <p className="mt-4 text-[13px] text-mg-muted">Só o responsável por esta oportunidade avança as etapas; você está vendo em modo leitura.</p>
+          <p className="mt-4 text-[13px] text-mg-muted">
+            Só o responsável por esta oportunidade avança as etapas; você está vendo em modo
+            leitura.
+          </p>
         )}
         {isLossOpen && stage === 'enviada' && (
           <form
             className="mt-4 flex flex-wrap items-end gap-2 rounded-lg border border-mg-line bg-mg-surface-2 p-4"
             onSubmit={(event) => {
               event.preventDefault()
-              void runAction(() => recordOutcome(opportunity.id, 'lost', lossReason), 'Perda registrada com o motivo.').then(() => {
+              void runAction(
+                () => recordOutcome(opportunity.id, 'lost', lossReason),
+                'Perda registrada com o motivo.',
+              ).then(() => {
                 setIsLossOpen(false)
                 setLossReason('')
               })
@@ -278,7 +323,11 @@ export default function OpportunityCard() {
                 className="mt-1.5 min-h-[40px] w-full rounded-lg border border-mg-line-strong bg-mg-surface px-3 text-sm font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/20"
               />
             </label>
-            <Button type="submit" variant="primary" disabled={isActing || lossReason.trim().length < 3}>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isActing || lossReason.trim().length < 3}
+            >
               Confirmar perda
             </Button>
           </form>
@@ -300,7 +349,11 @@ export default function OpportunityCard() {
         )}
       </div>
 
-      <div role="tablist" aria-label="Seções da oportunidade" className="mt-6 flex gap-1 overflow-x-auto border-b border-mg-line">
+      <div
+        role="tablist"
+        aria-label="Seções da oportunidade"
+        className="mt-6 flex gap-1 overflow-x-auto border-b border-mg-line"
+      >
         {CARD_TABS.map((item) => (
           <button
             key={item}
@@ -313,7 +366,12 @@ export default function OpportunityCard() {
             }`}
           >
             {TAB_LABELS[item]}
-            {tab === item && <span aria-hidden="true" className="absolute inset-x-3 bottom-0 h-[2px] rounded-full bg-mg-accent" />}
+            {tab === item && (
+              <span
+                aria-hidden="true"
+                className="absolute inset-x-3 bottom-0 h-[2px] rounded-full bg-mg-accent"
+              />
+            )}
           </button>
         ))}
       </div>
@@ -329,27 +387,46 @@ export default function OpportunityCard() {
                 <Field label="Origem" value={opportunity.origin} />
                 <Field label="Família de serviço" value={opportunity.service_family} />
                 <Field label="Local" value={opportunity.location} />
-                <Field label="Data da demanda" value={formatCivil(dateOnly(opportunity.demand_date))} mono />
-                <Field label="Prazo do cliente" value={formatCivil(dateOnly(opportunity.deadline_date))} mono />
-                <Field label="Recebida em" value={formatCivil(civilDate(opportunity.received_at))} mono />
+                <Field
+                  label="Data da demanda"
+                  value={formatCivil(dateOnly(opportunity.demand_date))}
+                  mono
+                />
+                <Field
+                  label="Prazo do cliente"
+                  value={formatCivil(dateOnly(opportunity.deadline_date))}
+                  mono
+                />
+                <Field
+                  label="Recebida em"
+                  value={formatCivil(civilDate(opportunity.received_at))}
+                  mono
+                />
               </dl>
             </Panel>
             <Panel title="Qualificação">
-              <p className="text-sm font-semibold text-mg-ink">{aptitudeLabel(opportunity.aptitude_status)}</p>
+              <p className="text-sm font-semibold text-mg-ink">
+                {aptitudeLabel(opportunity.aptitude_status)}
+              </p>
               {(opportunity.pending_items?.length ?? 0) > 0 ? (
                 <>
                   <p className="mt-3 text-[13px] text-mg-muted">Falta para iniciar o orçamento:</p>
                   <ul className="mt-2 space-y-1.5">
                     {opportunity.pending_items?.map((item) => (
                       <li key={item} className="flex gap-2 text-sm text-mg-ink">
-                        <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mg-accent" />
+                        <span
+                          aria-hidden="true"
+                          className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-mg-accent"
+                        />
                         {item}
                       </li>
                     ))}
                   </ul>
                 </>
               ) : (
-                <p className="mt-2 text-[13px] text-mg-muted">Nenhuma pendência registrada no checklist.</p>
+                <p className="mt-2 text-[13px] text-mg-muted">
+                  Nenhuma pendência registrada no checklist.
+                </p>
               )}
             </Panel>
           </div>
@@ -363,15 +440,20 @@ export default function OpportunityCard() {
           <div className="grid gap-4 md:grid-cols-2">
             <Panel title="Prévia da proposta (sem preço)" eyebrow="Disponível hoje">
               <p className="text-sm text-mg-muted">
-                Gera a prévia a partir de um modelo aprovado, com cliente, obra e escopo. Preço, aprovação e PDF final chegam nas Fases 3 e 4.
+                Gera a prévia a partir de um modelo aprovado, com cliente, obra e escopo. Preço,
+                aprovação e PDF final chegam nas Fases 3 e 4.
               </p>
-              <Link to={sectionUrl('previa')} className="mt-4 inline-block text-sm font-semibold text-mg-brand underline">
+              <Link
+                to={sectionUrl('previa')}
+                className="mt-4 inline-block text-sm font-semibold text-mg-brand underline"
+              >
                 Abrir a prévia
               </Link>
             </Panel>
             <Panel title="Custos, preço e aprovação" eyebrow="Fases 3 e 4">
               <p className="text-sm text-mg-muted">
-                Composição de custo, BDI, cenários de preço e alçadas de aprovação vão aparecer aqui, ligados a esta oportunidade.
+                Composição de custo, BDI, cenários de preço e alçadas de aprovação vão aparecer
+                aqui, ligados a esta oportunidade.
               </p>
             </Panel>
           </div>
@@ -385,15 +467,25 @@ export default function OpportunityCard() {
               <ol className="relative space-y-4 border-l border-mg-line pl-5">
                 {events.map((event) => (
                   <li key={event.id}>
-                    <span aria-hidden="true" className="absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full border-2 border-mg-surface bg-mg-brand" />
-                    <p className="text-sm font-semibold text-mg-ink">{MILESTONE_LABELS[event.milestone] ?? event.milestone}</p>
-                    <p className="mg-num text-[12px] text-mg-muted">{formatInstant(event.occurred_at)}</p>
+                    <span
+                      aria-hidden="true"
+                      className="absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full border-2 border-mg-surface bg-mg-brand"
+                    />
+                    <p className="text-sm font-semibold text-mg-ink">
+                      {MILESTONE_LABELS[event.milestone] ?? event.milestone}
+                    </p>
+                    <p className="mg-num text-[12px] text-mg-muted">
+                      {formatInstant(event.occurred_at)}
+                    </p>
                     {event.note && <p className="mt-1 text-[13px] text-mg-muted">{event.note}</p>}
                   </li>
                 ))}
               </ol>
             )}
-            <Link to={sectionUrl('tempo')} className="mt-5 inline-block text-sm font-semibold text-mg-brand underline">
+            <Link
+              to={sectionUrl('tempo')}
+              className="mt-5 inline-block text-sm font-semibold text-mg-brand underline"
+            >
               Ver apontamentos de tempo
             </Link>
           </Panel>

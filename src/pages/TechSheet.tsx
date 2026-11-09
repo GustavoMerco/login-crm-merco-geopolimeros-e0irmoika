@@ -308,9 +308,7 @@ export default function TechSheet({ embedded = false }: { embedded?: boolean } =
           <p className="text-[11px] font-bold uppercase tracking-wide text-mg-muted">
             Demanda em contexto
           </p>
-          <p className="truncate text-[15px] font-bold text-mg-ink">
-            {opportunity.customer_name}
-          </p>
+          <p className="truncate text-[15px] font-bold text-mg-ink">{opportunity.customer_name}</p>
           <p className="mt-1 grid gap-x-4 gap-y-0.5 text-[12px] text-mg-muted sm:grid-cols-2">
             <span>Família: {opportunity.service_family}</span>
             <span>Local: {opportunity.location}</span>
@@ -470,7 +468,10 @@ export default function TechSheet({ embedded = false }: { embedded?: boolean } =
 
       <div className="space-y-3">
         {parameters.map((parameter, index) => (
-          <fieldset key={index} className="rounded-[12px] border border-mg-line bg-mg-surface-2 p-4">
+          <fieldset
+            key={index}
+            className="rounded-[12px] border border-mg-line bg-mg-surface-2 p-4"
+          >
             <legend className="px-1 text-[11px] font-bold uppercase tracking-wider text-mg-muted">
               Parâmetro {index + 1}
             </legend>
@@ -791,10 +792,17 @@ export default function TechSheet({ embedded = false }: { embedded?: boolean } =
   const opportunityErrorMessage = techSheetAccessMessage(opportunityError ?? 'other')
 
   return (
-    <section className={embedded ? 'w-full rounded-xl border border-mg-line bg-mg-surface p-5 sm:p-6' : 'mx-auto mt-0 w-full max-w-5xl rounded-xl border border-mg-line bg-mg-surface p-6 sm:p-8'}>
+    <section
+      className={
+        embedded
+          ? 'w-full rounded-xl border border-mg-line bg-mg-surface p-5 sm:p-6'
+          : 'mx-auto mt-0 w-full max-w-5xl rounded-xl border border-mg-line bg-mg-surface p-6 sm:p-8'
+      }
+    >
       {embedded ? (
         <p className="mb-5 text-[13px] text-mg-muted">
-          Cada salvamento cria uma nova versão da ficha; as anteriores ficam preservadas no histórico abaixo.
+          Cada salvamento cria uma nova versão da ficha; as anteriores ficam preservadas no
+          histórico abaixo.
         </p>
       ) : (
         header

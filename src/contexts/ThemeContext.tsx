@@ -25,7 +25,10 @@ function readStored(): ThemePreference {
 }
 
 function systemPrefersDark(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches === true
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-color-scheme: dark)').matches === true
+  )
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -40,7 +43,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => media.removeEventListener('change', onChange)
   }, [])
 
-  const resolved: 'light' | 'dark' = preference === 'system' ? (systemDark ? 'dark' : 'light') : preference
+  const resolved: 'light' | 'dark' =
+    preference === 'system' ? (systemDark ? 'dark' : 'light') : preference
 
   useEffect(() => {
     const root = document.documentElement
@@ -57,7 +61,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const value = useMemo(() => ({ preference, resolved, setPreference }), [preference, resolved, setPreference])
+  const value = useMemo(
+    () => ({ preference, resolved, setPreference }),
+    [preference, resolved, setPreference],
+  )
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 

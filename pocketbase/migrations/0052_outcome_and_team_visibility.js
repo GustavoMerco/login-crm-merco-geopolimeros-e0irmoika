@@ -8,13 +8,15 @@
 //    Usuário desativado (users.disabled, migration 0051) não lê nada.
 migrate(
   (app) => {
-    const TEAM = '(@request.auth.role = "gestao" || @request.auth.role = "aprovador" || @request.auth.role = "admin")'
+    const TEAM =
+      '(@request.auth.role = "gestao" || @request.auth.role = "aprovador" || @request.auth.role = "admin")'
     const ACTIVE = '@request.auth.id != "" && @request.auth.disabled != true'
 
     const events = app.findCollectionByNameOrId('opportunity_events')
     const milestone = events.fields.getByName('milestone')
     milestone.values = ['received', 'apt', 'ready', 'sent', 'won', 'lost']
-    events.listRule = ACTIVE + ' && (opportunity_id.responsible_user_id = @request.auth.id || ' + TEAM + ')'
+    events.listRule =
+      ACTIVE + ' && (opportunity_id.responsible_user_id = @request.auth.id || ' + TEAM + ')'
     events.viewRule = events.listRule
     app.save(events)
 
@@ -24,14 +26,16 @@ migrate(
     app.save(opportunities)
 
     const sheets = app.findCollectionByNameOrId('tech_sheets')
-    sheets.listRule = ACTIVE + ' && (opportunity_id.responsible_user_id = @request.auth.id || ' + TEAM + ')'
+    sheets.listRule =
+      ACTIVE + ' && (opportunity_id.responsible_user_id = @request.auth.id || ' + TEAM + ')'
     sheets.viewRule = sheets.listRule
     app.save(sheets)
   },
   (app) => {
     const events = app.findCollectionByNameOrId('opportunity_events')
     events.fields.getByName('milestone').values = ['received', 'apt', 'ready', 'sent']
-    events.listRule = "@request.auth.id != '' && opportunity_id.responsible_user_id = @request.auth.id"
+    events.listRule =
+      "@request.auth.id != '' && opportunity_id.responsible_user_id = @request.auth.id"
     events.viewRule = events.listRule
     app.save(events)
 
@@ -41,7 +45,8 @@ migrate(
     app.save(opportunities)
 
     const sheets = app.findCollectionByNameOrId('tech_sheets')
-    sheets.listRule = "@request.auth.id != '' && opportunity_id.responsible_user_id = @request.auth.id"
+    sheets.listRule =
+      "@request.auth.id != '' && opportunity_id.responsible_user_id = @request.auth.id"
     sheets.viewRule = sheets.listRule
     app.save(sheets)
   },

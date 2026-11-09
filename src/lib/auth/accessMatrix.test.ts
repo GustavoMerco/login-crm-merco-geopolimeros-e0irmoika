@@ -15,8 +15,12 @@ import {
 import { navForRole } from '@/lib/navigation'
 
 // Lê a matriz semeada pela migration 0051 (mesmo texto que o servidor executa).
-const MIGRATION = readFileSync(path.resolve(__dirname, '../../../pocketbase/migrations/0051_create_role_permissions.js'), 'utf8')
-const seedBlock = /(const MODULES = \[[\s\S]*?const DEFAULTS = \{[\s\S]*?\n {4}\})/.exec(MIGRATION)?.[1] ?? ''
+const MIGRATION = readFileSync(
+  path.resolve(__dirname, '../../../pocketbase/migrations/0051_create_role_permissions.js'),
+  'utf8',
+)
+const seedBlock =
+  /(const MODULES = \[[\s\S]*?const DEFAULTS = \{[\s\S]*?\n {4}\})/.exec(MIGRATION)?.[1] ?? ''
 const seed = new Function(`${seedBlock}; return { MODULES, DEFAULTS };`)() as {
   MODULES: string[]
   DEFAULTS: Record<string, Record<string, boolean[]>>
@@ -31,7 +35,11 @@ describe('matriz padrão = matriz semeada no servidor', () => {
     for (const role of ROLES) {
       for (const { id } of ACCESS_MODULES) {
         const [view, create, edit, del] = seed.DEFAULTS[role][id]
-        expect({ role, id, flags: DEFAULT_MATRIX[role][id] }).toEqual({ role, id, flags: { view, create, edit, delete: del } })
+        expect({ role, id, flags: DEFAULT_MATRIX[role][id] }).toEqual({
+          role,
+          id,
+          flags: { view, create, edit, delete: del },
+        })
       }
     }
   })
@@ -51,14 +59,33 @@ describe('regras da matriz', () => {
 
   it('criar/editar/apagar implica ver; tirar ver tira tudo', () => {
     const base = { view: false, create: false, edit: false, delete: false }
-    expect(toggleFlag('comercial', 'clientes', base, 'edit')).toEqual({ view: true, create: false, edit: true, delete: false })
-    expect(toggleFlag('comercial', 'clientes', { view: true, create: true, edit: true, delete: false }, 'view')).toEqual(base)
+    expect(toggleFlag('comercial', 'clientes', base, 'edit')).toEqual({
+      view: true,
+      create: false,
+      edit: true,
+      delete: false,
+    })
+    expect(
+      toggleFlag(
+        'comercial',
+        'clientes',
+        { view: true, create: true, edit: true, delete: false },
+        'view',
+      ),
+    ).toEqual(base)
   })
 
   it('admin × usuários é fixo e sempre total', () => {
     expect(isLocked('admin', 'usuarios')).toBe(true)
     expect(isLocked('engenharia', 'usuarios')).toBe(false)
-    expect(normalizeFlags('admin', 'usuarios', { view: false, create: false, edit: false, delete: false })).toEqual({
+    expect(
+      normalizeFlags('admin', 'usuarios', {
+        view: false,
+        create: false,
+        edit: false,
+        delete: false,
+      }),
+    ).toEqual({
       view: true,
       create: true,
       edit: true,
@@ -81,21 +108,29 @@ describe('regras da matriz', () => {
 })
 
 describe('menu segue a matriz', () => {
-  const ids = (role: (typeof ROLES)[number], can: (m: string) => boolean) => navForRole(role, can).flatMap((g) => g.items.map((i) => i.id))
+  const ids = (role: (typeof ROLES)[number], can: (m: string) => boolean) =>
+    navForRole(role, can).flatMap((g) => g.items.map((i) => i.id))
 
   it('admin vê "Usuários e permissões"; comercial não', () => {
     expect(ids('admin', (m) => DEFAULT_MATRIX.admin[m as 'demandas'].view)).toContain('usuarios')
-    expect(ids('comercial', (m) => DEFAULT_MATRIX.comercial[m as 'demandas'].view)).not.toContain('usuarios')
+    expect(ids('comercial', (m) => DEFAULT_MATRIX.comercial[m as 'demandas'].view)).not.toContain(
+      'usuarios',
+    )
   })
 
   it('tirar "ver" de demandas some com Hoje, Funil e Demandas', () => {
-    const list = ids('comercial', (m) => m !== 'demandas' && DEFAULT_MATRIX.comercial[m as 'demandas'].view)
+    const list = ids(
+      'comercial',
+      (m) => m !== 'demandas' && DEFAULT_MATRIX.comercial[m as 'demandas'].view,
+    )
     expect(list).not.toContain('hoje')
     expect(list).not.toContain('funil')
     expect(list).toContain('clientes')
   })
 
   it('dar "usuarios" a um perfil faz o item aparecer para ele', () => {
-    expect(ids('gestao', (m) => m === 'usuarios' || DEFAULT_MATRIX.gestao[m as 'demandas'].view)).toContain('usuarios')
+    expect(
+      ids('gestao', (m) => m === 'usuarios' || DEFAULT_MATRIX.gestao[m as 'demandas'].view),
+    ).toContain('usuarios')
   })
 })

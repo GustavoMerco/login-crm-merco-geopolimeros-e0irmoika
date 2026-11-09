@@ -8,10 +8,10 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-[#022C22] flex flex-col items-center justify-center text-white z-50">
+      <div className="fixed inset-0 bg-mg-sidebar flex flex-col items-center justify-center text-white z-50">
         <MercoLogo size={56} showWordmark={true} className="animate-fade-in mb-6" />
-        <div className="flex items-center gap-3 text-[#34D399] text-sm font-medium">
-          <HexagonSpinner size={22} className="text-[#34D399]" />
+        <div className="flex items-center gap-3 text-mg-brand text-sm font-medium">
+          <HexagonSpinner size={22} className="text-mg-brand" />
           <span>Verificando credenciais...</span>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { aptitudeLabel, statusLabel, cardUrl } from '@/lib/pipeline'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import {
@@ -18,8 +19,8 @@ import { techSheetUrl } from '@/lib/techSheetForm'
 import { AlertTriangle, CheckCircle2, ClipboardList, Search } from 'lucide-react'
 
 const inputClass =
-  'mt-1.5 min-h-[44px] w-full rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15 disabled:bg-[#F1F5F4]'
-const labelClass = 'block text-[13px] font-semibold text-[#0F1F1C]'
+  'mt-1.5 min-h-[44px] w-full rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15 disabled:bg-mg-surface-2'
+const labelClass = 'block text-[13px] font-semibold text-mg-ink'
 
 const emptyForm: CreateOpportunityInput = {
   customer_name: '',
@@ -61,7 +62,8 @@ export default function Opportunities() {
   const [query, setQuery] = useState('')
   const [selectedId, setSelectedId] = useState('')
 
-  const [isFormOpen, setIsFormOpen] = useState(false)
+  // ?nova=1 (vindo do funil, de Hoje ou de Clientes) já abre o cadastro.
+  const [isFormOpen, setIsFormOpen] = useState(() => new URLSearchParams(location.search).get('nova') === '1')
   const [form, setForm] = useState<CreateOpportunityInput>(emptyForm)
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -159,9 +161,9 @@ export default function Opportunities() {
   }
 
   return (
-    <section className="mx-auto mt-0 w-full max-w-6xl rounded-[16px] border border-[#E1E8E5] bg-white p-6 shadow-[0_12px_40px_rgba(2,44,34,0.06)] sm:p-8">
+    <section className="mx-auto mt-0 w-full max-w-6xl rounded-[16px] border border-mg-line bg-mg-surface p-6 shadow-[0_12px_40px_rgba(2,44,34,0.06)] sm:p-8">
       <div className="mb-6 flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#ECFDF5] text-[#047857]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-mg-brand-soft text-mg-brand">
           <ClipboardList className="h-5 w-5" />
         </div>
         <div>
@@ -170,11 +172,11 @@ export default function Opportunities() {
             ref={headingRef}
             tabIndex={-1}
             style={{ scrollMarginTop: '5rem' }}
-            className="text-xl font-extrabold text-[#0F1F1C] outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#064E3B]"
+            className="text-xl font-extrabold text-mg-ink outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand-strong"
           >
             Demandas
           </h2>
-          <p className="mt-1 text-[13px] text-[#5B6B66]">
+          <p className="mt-1 text-[13px] text-mg-muted">
             Crie uma demanda ou retome uma já registrada. A lista mostra apenas os registros que o
             servidor autoriza ao seu usuário.
           </p>
@@ -183,7 +185,7 @@ export default function Opportunities() {
 
       {createdId && (
         <div
-          className="mb-5 flex items-start gap-2.5 rounded-[12px] border-l-4 border-[#10B981] bg-[#ECFDF5] p-3.5 text-[13px] font-medium text-[#047857]"
+          className="mb-5 flex items-start gap-2.5 rounded-[12px] border-l-4 border-mg-brand bg-mg-brand-soft p-3.5 text-[13px] font-medium text-mg-brand"
           role="status"
           aria-live="polite"
         >
@@ -195,12 +197,12 @@ export default function Opportunities() {
       {detail || isLoadingDetail || detailError ? (
         <div>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-[15px] font-bold text-[#0F1F1C]">Detalhe da demanda</h3>
+            <h3 className="text-[15px] font-bold text-mg-ink">Detalhe da demanda</h3>
             <div className="flex flex-wrap gap-2">
               {detail && (
                 <Link
                   to={techSheetUrl(detail.id)}
-                  className="min-h-[44px] rounded-lg bg-[#064E3B] px-4 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 inline-flex items-center"
+                  className="min-h-[44px] rounded-lg bg-mg-sidebar px-4 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand inline-flex items-center"
                 >
                   Abrir ficha técnica
                 </Link>
@@ -208,7 +210,7 @@ export default function Opportunities() {
               <button
                 type="button"
                 onClick={backToList}
-                className="min-h-[44px] rounded-lg border border-[#CBD5D1] bg-white px-4 text-sm font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+                className="min-h-[44px] rounded-lg border border-mg-line-strong bg-mg-surface px-4 text-sm font-semibold text-mg-brand-strong hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
               >
                 Voltar para a lista
               </button>
@@ -216,14 +218,14 @@ export default function Opportunities() {
           </div>
 
           {isLoadingDetail && (
-            <p className="text-[13px] text-[#5B6B66]" role="status" aria-live="polite">
+            <p className="text-[13px] text-mg-muted" role="status" aria-live="polite">
               Carregando o registro salvo…
             </p>
           )}
 
           {detailError && (
             <div
-              className="rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#991B1B]"
+              className="rounded-[12px] border border-mg-crit-line bg-mg-crit-bg p-4 text-sm text-mg-crit"
               role="alert"
               aria-live="assertive"
             >
@@ -233,7 +235,7 @@ export default function Opportunities() {
                 <button
                   type="button"
                   onClick={() => void openDetail(selectedInList)}
-                  className="mt-3 min-h-[44px] rounded-lg border border-[#B91C1C] px-4 font-semibold"
+                  className="mt-3 min-h-[44px] rounded-lg border border-mg-crit px-4 font-semibold"
                 >
                   Tentar novamente
                 </button>
@@ -242,52 +244,60 @@ export default function Opportunities() {
           )}
 
           {detail && (
-            <dl className="grid gap-x-6 gap-y-3 rounded-[12px] border border-[#E1E8E5] bg-[#F8FAF9] p-4 sm:grid-cols-2">
+            <dl className="grid gap-x-6 gap-y-3 rounded-[12px] border border-mg-line bg-mg-surface-2 p-4 sm:grid-cols-2">
               <div>
-                <dt className="text-[11px] font-bold uppercase text-[#5B6B66]">Cliente</dt>
-                <dd className="text-[14px] text-[#0F1F1C]">{detail.customer_name}</dd>
+                <dt className="text-[11px] font-bold uppercase text-mg-muted">Cliente</dt>
+                <dd className="text-[14px] text-mg-ink">{detail.customer_name}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-bold uppercase text-[#5B6B66]">Contato</dt>
-                <dd className="text-[14px] text-[#0F1F1C]">{detail.contact_name}</dd>
+                <dt className="text-[11px] font-bold uppercase text-mg-muted">Contato</dt>
+                <dd className="text-[14px] text-mg-ink">{detail.contact_name}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-bold uppercase text-[#5B6B66]">E-mail</dt>
-                <dd className="text-[14px] text-[#0F1F1C]">{detail.contact_email || '—'}</dd>
+                <dt className="text-[11px] font-bold uppercase text-mg-muted">E-mail</dt>
+                <dd className="text-[14px] text-mg-ink">{detail.contact_email || '—'}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-bold uppercase text-[#5B6B66]">Origem</dt>
-                <dd className="text-[14px] text-[#0F1F1C]">{detail.origin}</dd>
+                <dt className="text-[11px] font-bold uppercase text-mg-muted">Origem</dt>
+                <dd className="text-[14px] text-mg-ink">{detail.origin}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-bold uppercase text-[#5B6B66]">Família</dt>
-                <dd className="text-[14px] text-[#0F1F1C]">{detail.service_family}</dd>
+                <dt className="text-[11px] font-bold uppercase text-mg-muted">Família</dt>
+                <dd className="text-[14px] text-mg-ink">{detail.service_family}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-bold uppercase text-[#5B6B66]">Local</dt>
-                <dd className="text-[14px] text-[#0F1F1C]">{detail.location}</dd>
+                <dt className="text-[11px] font-bold uppercase text-mg-muted">Local</dt>
+                <dd className="text-[14px] text-mg-ink">{detail.location}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-bold uppercase text-[#5B6B66]">Data da demanda</dt>
-                <dd className="text-[14px] text-[#0F1F1C]">{detail.demand_date}</dd>
+                <dt className="text-[11px] font-bold uppercase text-mg-muted">Data da demanda</dt>
+                <dd className="text-[14px] text-mg-ink">{detail.demand_date}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-bold uppercase text-[#5B6B66]">Prazo</dt>
-                <dd className="text-[14px] text-[#0F1F1C]">{detail.deadline_date || '—'}</dd>
+                <dt className="text-[11px] font-bold uppercase text-mg-muted">Prazo</dt>
+                <dd className="text-[14px] text-mg-ink">{detail.deadline_date || '—'}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-bold uppercase text-[#5B6B66]">Recebida em</dt>
-                <dd className="text-[14px] text-[#0F1F1C]">{detail.received_at}</dd>
+                <dt className="text-[11px] font-bold uppercase text-mg-muted">Recebida em</dt>
+                <dd className="text-[14px] text-mg-ink">{detail.received_at}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-bold uppercase text-[#5B6B66]">Situação</dt>
-                <dd className="text-[14px] text-[#0F1F1C]">
+                <dt className="text-[11px] font-bold uppercase text-mg-muted">Situação</dt>
+                <dd className="text-[14px] text-mg-ink">
                   {detail.aptitude_status && detail.aptitude_status !== 'pending'
-                    ? `Aptidão: ${detail.aptitude_status}`
-                    : detail.status}
+                    ? aptitudeLabel(detail.aptitude_status)
+                    : statusLabel(detail.status)}
                 </dd>
               </div>
             </dl>
+          )}
+          {detail && (
+            <Link
+              to={cardUrl(detail.id)}
+              className="mt-5 inline-flex min-h-[40px] items-center rounded-lg bg-mg-action px-4 text-sm font-semibold text-white hover:bg-mg-action-hover"
+            >
+              Abrir oportunidade completa
+            </Link>
           )}
         </div>
       ) : (
@@ -298,7 +308,7 @@ export default function Opportunities() {
               <span className="relative mt-1.5 block">
                 <Search
                   aria-hidden="true"
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5B6B66]"
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mg-muted"
                 />
                 <input
                   ref={searchRef}
@@ -318,7 +328,7 @@ export default function Opportunities() {
                 setIsFormOpen((open) => !open)
               }}
               aria-expanded={isFormOpen}
-              className="min-h-[44px] rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] px-5 text-[13px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+              className="min-h-[44px] rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 px-5 text-[13px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
             >
               {isFormOpen ? 'Fechar formulário' : 'Nova demanda'}
             </button>
@@ -327,12 +337,12 @@ export default function Opportunities() {
           {isFormOpen && (
             <form
               onSubmit={handleSubmit}
-              className="mb-6 space-y-4 rounded-[12px] border border-[#E1E8E5] bg-[#F8FAF9] p-4"
+              className="mb-6 space-y-4 rounded-[12px] border border-mg-line bg-mg-surface-2 p-4"
               noValidate
             >
               {formError && (
                 <div
-                  className="flex items-start gap-2.5 rounded-[10px] border-l-4 border-[#DC2626] bg-[#FEF2F2] p-3 text-[13px] font-medium text-[#B91C1C]"
+                  className="flex items-start gap-2.5 rounded-[10px] border-l-4 border-mg-crit bg-mg-crit-bg p-3 text-[13px] font-medium text-mg-crit"
                   role="alert"
                   aria-live="assertive"
                 >
@@ -443,7 +453,7 @@ export default function Opportunities() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="min-h-[44px] rounded-[10px] bg-[#064E3B] px-5 text-[13px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:pointer-events-none disabled:opacity-60"
+                className="min-h-[44px] rounded-[10px] bg-mg-sidebar px-5 text-[13px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:pointer-events-none disabled:opacity-60"
               >
                 {isSubmitting ? 'Salvando…' : 'Salvar demanda'}
               </button>
@@ -451,10 +461,10 @@ export default function Opportunities() {
           )}
 
           <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-[15px] font-bold text-[#0F1F1C]">
+            <h3 className="text-[15px] font-bold text-mg-ink">
               Demandas carregadas
               {listState === 'ready' && (
-                <span className="ml-2 text-[12px] font-normal text-[#5B6B66]">
+                <span className="ml-2 text-[12px] font-normal text-mg-muted">
                   {filtered.length} de {items.length}
                 </span>
               )}
@@ -463,21 +473,21 @@ export default function Opportunities() {
               type="button"
               onClick={() => void loadOpportunities()}
               disabled={isLoading}
-              className="min-h-[44px] rounded-lg border border-[#CBD5D1] bg-white px-4 text-sm font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:opacity-60"
+              className="min-h-[44px] rounded-lg border border-mg-line-strong bg-mg-surface px-4 text-sm font-semibold text-mg-brand-strong hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
             >
               {isLoading ? 'Atualizando…' : 'Atualizar lista'}
             </button>
           </div>
 
           {listState === 'loading' && (
-            <p className="text-[13px] text-[#5B6B66]" role="status" aria-live="polite">
+            <p className="text-[13px] text-mg-muted" role="status" aria-live="polite">
               Carregando demandas…
             </p>
           )}
 
           {listState === 'error' && (
             <div
-              className="rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#991B1B]"
+              className="rounded-[12px] border border-mg-crit-line bg-mg-crit-bg p-4 text-sm text-mg-crit"
               role="alert"
               aria-live="assertive"
             >
@@ -486,7 +496,7 @@ export default function Opportunities() {
               <button
                 type="button"
                 onClick={() => void loadOpportunities()}
-                className="mt-3 min-h-[44px] rounded-lg border border-[#B91C1C] px-4 font-semibold"
+                className="mt-3 min-h-[44px] rounded-lg border border-mg-crit px-4 font-semibold"
               >
                 Tentar novamente
               </button>
@@ -494,14 +504,14 @@ export default function Opportunities() {
           )}
 
           {listState === 'empty' && (
-            <p className="text-[13px] text-[#5B6B66]" role="status">
+            <p className="text-[13px] text-mg-muted" role="status">
               Nenhuma demanda registrada para o seu usuário. Use “Nova demanda” para criar a
               primeira.
             </p>
           )}
 
           {listState === 'no-results' && (
-            <p className="text-[13px] text-[#5B6B66]" role="status">
+            <p className="text-[13px] text-mg-muted" role="status">
               Nenhuma demanda carregada corresponde a “{query}”. A busca considera apenas os
               registros já carregados e autorizados.
             </p>
@@ -514,19 +524,19 @@ export default function Opportunities() {
                   <button
                     type="button"
                     onClick={() => void openDetail(item.id)}
-                    className="w-full rounded-[12px] border border-[#E1E8E5] bg-white p-3.5 text-left transition-colors hover:border-[#A7F3D0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+                    className="w-full rounded-[12px] border border-mg-line bg-mg-surface p-3.5 text-left transition-colors hover:border-mg-brand-soft-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
                   >
                     <span className="flex items-center justify-between gap-2">
-                      <span className="truncate text-[13px] font-semibold text-[#0F1F1C]">
+                      <span className="truncate text-[13px] font-semibold text-mg-ink">
                         {item.customer_name}
                       </span>
-                      <span className="shrink-0 text-[10px] font-bold uppercase text-[#047857]">
+                      <span className="shrink-0 text-[10px] font-bold uppercase text-mg-brand">
                         {item.aptitude_status && item.aptitude_status !== 'pending'
                           ? item.aptitude_status
                           : item.status}
                       </span>
                     </span>
-                    <span className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                    <span className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-mg-muted sm:grid-cols-2">
                       <span>Contato: {item.contact_name}</span>
                       <span>Origem: {item.origin}</span>
                       <span>Família: {item.service_family}</span>

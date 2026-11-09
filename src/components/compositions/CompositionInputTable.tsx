@@ -23,9 +23,9 @@ type Props = {
 }
 
 const cellBase =
-  'min-h-[40px] w-full rounded-[8px] border bg-white px-2 text-[13px] font-normal outline-none focus:ring-4 disabled:bg-[#F1F5F4]'
-const cellOk = 'border-[#E1E8E5] focus:border-[#10B981] focus:ring-[#10B981]/15'
-const cellBad = 'border-[#DC2626] focus:border-[#DC2626] focus:ring-[#DC2626]/15'
+  'min-h-[40px] w-full rounded-[8px] border bg-mg-surface px-2 text-[13px] font-normal outline-none focus:ring-4 disabled:bg-mg-surface-2'
+const cellOk = 'border-mg-line focus:border-mg-brand focus:ring-mg-brand/15'
+const cellBad = 'border-mg-crit focus:border-mg-crit focus:ring-mg-crit/15'
 
 function cellClass(hasError: boolean): string {
   return `${cellBase} ${hasError ? cellBad : cellOk}`
@@ -66,18 +66,18 @@ export default function CompositionInputTable({
     : null
 
   return (
-    <fieldset className="rounded-[12px] border border-[#E1E8E5] p-4">
-      <legend className="px-1 text-[13px] font-bold text-[#0F1F1C]">
+    <fieldset className="rounded-[12px] border border-mg-line p-4">
+      <legend className="px-1 text-[13px] font-bold text-mg-ink">
         Insumos * ({rows.length}/{MAX_COMPOSITION_ROWS})
       </legend>
-      <p className="mb-3 text-[12px] text-[#5B6B66]">
+      <p className="mb-3 text-[12px] text-mg-muted">
         Cada insumo é uma linha. Uma linha totalmente vazia é ignorada ao salvar. O vínculo com o
         parâmetro da ficha é opcional e identifica de onde vem o valor do insumo.
       </p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[880px] border-separate border-spacing-y-2 text-left">
           <thead>
-            <tr className="text-[11px] font-bold uppercase tracking-wide text-[#5B6B66]">
+            <tr className="text-[11px] font-bold uppercase tracking-wide text-mg-muted">
               <th scope="col" className="px-1">
                 Insumo
               </th>
@@ -133,7 +133,7 @@ export default function CompositionInputTable({
                       placeholder="Ex.: Área de aplicação"
                     />
                     {nameError && (
-                      <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                      <p className="mt-1 text-[11px] font-medium text-mg-crit" role="alert">
                         {nameError}
                       </p>
                     )}
@@ -156,24 +156,24 @@ export default function CompositionInputTable({
                       placeholder="m2"
                     />
                     {unitError && (
-                      <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                      <p className="mt-1 text-[11px] font-medium text-mg-crit" role="alert">
                         {unitError}
                       </p>
                     )}
                     {sheetParameters.length === 0 && (
-                      <p className="mt-1 text-[10px] text-[#5B6B66]">
+                      <p className="mt-1 text-[10px] text-mg-muted">
                         Use um código homologado (ex.: m2, kg).
                       </p>
                     )}
                   </td>
                   <td className="px-1 align-top">
-                    <label className="flex min-h-[40px] items-center gap-2 text-[12px] text-[#2C3B36]">
+                    <label className="flex min-h-[40px] items-center gap-2 text-[12px] text-mg-ink">
                       <input
                         type="checkbox"
                         disabled={disabled}
                         checked={row.required}
                         onChange={(event) => onChange(index, { required: event.target.checked })}
-                        className="h-4 w-4 rounded border-[#CBD5D1] text-[#10B981] focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+                        className="h-4 w-4 rounded border-mg-line-strong text-mg-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
                       />
                       Exigido
                     </label>
@@ -194,7 +194,7 @@ export default function CompositionInputTable({
                       placeholder="0"
                     />
                     {minError && (
-                      <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                      <p className="mt-1 text-[11px] font-medium text-mg-crit" role="alert">
                         {minError}
                       </p>
                     )}
@@ -215,7 +215,7 @@ export default function CompositionInputTable({
                       placeholder="Sem limite"
                     />
                     {maxError && (
-                      <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                      <p className="mt-1 text-[11px] font-medium text-mg-crit" role="alert">
                         {maxError}
                       </p>
                     )}
@@ -290,7 +290,7 @@ export default function CompositionInputTable({
                             placeholder="Nome do parâmetro"
                           />
                           {linkNameError && (
-                            <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                            <p className="mt-1 text-[11px] font-medium text-mg-crit" role="alert">
                               {linkNameError}
                             </p>
                           )}
@@ -323,7 +323,7 @@ export default function CompositionInputTable({
                             placeholder="Unidade (ex.: m2)"
                           />
                           {linkUnitError && (
-                            <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                            <p className="mt-1 text-[11px] font-medium text-mg-crit" role="alert">
                               {linkUnitError}
                             </p>
                           )}
@@ -351,7 +351,7 @@ export default function CompositionInputTable({
                             placeholder="Origem"
                           />
                           {linkOriginError && (
-                            <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                            <p className="mt-1 text-[11px] font-medium text-mg-crit" role="alert">
                               {linkOriginError}
                             </p>
                           )}
@@ -376,7 +376,7 @@ export default function CompositionInputTable({
                             placeholder="Mín. vínculo"
                           />
                           {linkMinError && (
-                            <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                            <p className="mt-1 text-[11px] font-medium text-mg-crit" role="alert">
                               {linkMinError}
                             </p>
                           )}
@@ -401,12 +401,12 @@ export default function CompositionInputTable({
                             placeholder="Máx. vínculo"
                           />
                           {linkMaxError && (
-                            <p className="mt-1 text-[11px] font-medium text-[#B91C1C]" role="alert">
+                            <p className="mt-1 text-[11px] font-medium text-mg-crit" role="alert">
                               {linkMaxError}
                             </p>
                           )}
                         </div>
-                        <p className="self-center text-[11px] text-[#5B6B66]">
+                        <p className="self-center text-[11px] text-mg-muted">
                           Unidade do vínculo: {link.unit || '—'}
                         </p>
                       </div>
@@ -418,7 +418,7 @@ export default function CompositionInputTable({
                       onClick={() => onRemove(index)}
                       disabled={disabled}
                       aria-label={`Remover insumo ${index + 1}`}
-                      className="inline-flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg border border-[#CBD5D1] text-[#5B6B66] hover:bg-[#FEF2F2] hover:text-[#B91C1C] focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:opacity-60"
+                      className="inline-flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg border border-mg-line-strong text-mg-muted hover:bg-mg-crit-bg hover:text-mg-crit focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -433,12 +433,12 @@ export default function CompositionInputTable({
         type="button"
         onClick={onAdd}
         disabled={disabled || rows.length >= MAX_COMPOSITION_ROWS}
-        className="mt-2 inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#CBD5D1] bg-white px-4 text-[13px] font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:opacity-60"
+        className="mt-2 inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-mg-line-strong bg-mg-surface px-4 text-[13px] font-semibold text-mg-brand-strong hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
       >
         <Plus className="h-4 w-4" /> Adicionar insumo
       </button>
       {emptyTableError && (
-        <p className="mt-2 text-[12px] font-medium text-[#B91C1C]" role="alert">
+        <p className="mt-2 text-[12px] font-medium text-mg-crit" role="alert">
           {emptyTableError}
         </p>
       )}

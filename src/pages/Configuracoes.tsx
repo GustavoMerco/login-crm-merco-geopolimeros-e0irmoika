@@ -1,86 +1,62 @@
-import React from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { ROLE_LABELS } from '@/lib/auth/permissions'
-import { Settings, Shield, Sliders, Database, Building, Sparkles } from 'lucide-react'
+import type { UserRole } from '@/lib/auth/permissions'
+import { sectionUrl } from '@/lib/navigation'
+import { PageHeader } from '@/components/crm/ui'
 
-export const Configuracoes: React.FC = () => {
+// Configurações: os cadastros que alimentam o trabalho (catálogo, composições,
+// unidades, parâmetros e modelos), separados do dia a dia. Cada entrada abre a
+// seção real; permissões continuam no servidor.
+type Entry = { title: string; description: string; to: string; roles: readonly UserRole[] }
+
+const ENTRIES: Array<{ group: string; items: Entry[] }> = [
+  {
+    group: 'Engenharia',
+    items: [
+      { title: 'Biblioteca técnica', description: 'Composições versionadas com insumos, recursos e coeficientes.', to: '/biblioteca', roles: ['engenharia', 'admin'] },
+      { title: 'Catálogo', description: 'Itens de serviço, materiais e equipamentos com vigência e homologação.', to: sectionUrl('catalogo'), roles: ['engenharia', 'admin'] },
+      { title: 'Unidades e dimensões', description: 'Unidades homologadas usadas nas fichas e composições.', to: '/unidades', roles: ['engenharia', 'admin'] },
+    ],
+  },
+  {
+    group: 'Comercial e financeiro',
+    items: [
+      { title: 'Regras e SLA do piloto', description: 'BDI, ISS, margem, SLA e alçadas, com homologação.', to: sectionUrl('sla'), roles: ['engenharia', 'financeiro', 'admin'] },
+      { title: 'Modelos de proposta', description: 'Modelos aprovados usados para gerar a proposta.', to: sectionUrl('modelos'), roles: ['engenharia', 'financeiro', 'admin'] },
+    ],
+  },
+]
+
+export default function Configuracoes() {
   const { user } = useAuth()
   const role = user?.role
-  const roleLabel = role ? ROLE_LABELS[role] : 'Usuário'
-
+  const groups = ENTRIES.map((group) => ({ ...group, items: group.items.filter((item) => role && item.roles.includes(role)) })).filter(
+    (group) => group.items.length > 0,
+  )
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-[#0F1F1C] tracking-tight">
-            Configurações do CRM
-          </h2>
-          <p className="text-[13px] text-[#5B6B66] mt-1">
-            Preferências da organização, controle de acesso e parâmetros do sistema.
-          </p>
-        </div>
-
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-[#E1E8E5] text-[12px] font-semibold text-[#0F1F1C]">
-          <Shield className="w-4 h-4 text-[#10B981]" />
-          <span>Perfil atual: {roleLabel}</span>
-        </div>
-      </div>
-
-      {/* Main card */}
-      <div className="bg-white rounded-2xl border border-[#E1E8E5] p-8 sm:p-12 shadow-xs text-center">
-        <div className="max-w-md mx-auto">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#D1FAE5] border border-[#10B981]/30 flex items-center justify-center text-[#047857] shadow-inner">
-            <Settings className="w-8 h-8" />
-          </div>
-
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF7ED] text-[#EA580C] text-[11px] font-bold uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-[#FB923C]" />
-            <span>Módulo em breve</span>
-          </div>
-
-          <h3 className="text-xl font-extrabold text-[#0F1F1C]">
-            Painel de administração e preferências
-          </h3>
-
-          <p className="mt-2 text-[14px] text-[#5B6B66] leading-relaxed">
-            Personalize informações corporativas da Merco Geopolímeros, regras de SLA, integrações
-            fiscais e permissões por grupo de usuários.
-          </p>
-
-          <div className="mt-6 pt-6 border-t border-[#E1E8E5] grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
-            <div className="p-3 rounded-xl bg-[#F6F8F7] border border-[#E1E8E5]">
-              <div className="flex items-center gap-2 text-[#047857]">
-                <Building className="w-4 h-4" />
-                <span className="text-[12px] font-bold">Organização</span>
-              </div>
-              <p className="text-[11px] text-[#5B6B66] mt-1">
-                Razão social, logotipos e cabeçalhos oficiais.
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-[#F6F8F7] border border-[#E1E8E5]">
-              <div className="flex items-center gap-2 text-[#FB923C]">
-                <Sliders className="w-4 h-4" />
-                <span className="text-[12px] font-bold">Parâmetros</span>
-              </div>
-              <p className="text-[11px] text-[#5B6B66] mt-1">
-                Tabelas de BDI, alíquotas de ISS e margens de corte.
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-[#F6F8F7] border border-[#E1E8E5]">
-              <div className="flex items-center gap-2 text-[#059669]">
-                <Database className="w-4 h-4" />
-                <span className="text-[12px] font-bold">Segurança</span>
-              </div>
-              <p className="text-[11px] text-[#5B6B66] mt-1">
-                Histórico de acessos, tokens e backups periódicos.
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="mx-auto max-w-5xl">
+      <PageHeader eyebrow="Sistema" title="Configurações" description="Os cadastros que alimentam fichas, composições e propostas." />
+      {groups.length === 0 && <p className="text-sm text-mg-muted">Nenhuma configuração disponível para o seu perfil.</p>}
+      <div className="space-y-8">
+        {groups.map((group) => (
+          <section key={group.group} aria-label={group.group}>
+            <h3 className="mg-eyebrow mb-3 text-mg-muted">{group.group}</h3>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {group.items.map((item) => (
+                <li key={item.title}>
+                  <Link
+                    to={item.to}
+                    className="block h-full rounded-xl border border-mg-line bg-mg-surface p-5 transition-[border-color,box-shadow] duration-150 hover:border-mg-brand/50 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
+                  >
+                    <span className="font-bold text-mg-ink">{item.title}</span>
+                    <span className="mt-1 block text-[13px] leading-snug text-mg-muted">{item.description}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </div>
     </div>
   )
 }
-
-export default Configuracoes

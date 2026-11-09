@@ -27,10 +27,10 @@ import { AlertTriangle, Ruler } from 'lucide-react'
 type ServerPermissionState = 'loading' | 'allowed' | 'denied' | 'unavailable'
 
 const inputBase =
-  'mt-1.5 min-h-[44px] w-full rounded-[10px] border bg-white px-3 text-[14px] font-normal outline-none focus:ring-4 disabled:bg-[#F1F5F4]'
-const inputOk = 'border-[#E1E8E5] focus:border-[#10B981] focus:ring-[#10B981]/15'
-const inputBad = 'border-[#DC2626] focus:border-[#DC2626] focus:ring-[#DC2626]/15'
-const labelClass = 'block text-[13px] font-semibold text-[#0F1F1C]'
+  'mt-1.5 min-h-[44px] w-full rounded-[10px] border bg-mg-surface px-3 text-[14px] font-normal outline-none focus:ring-4 disabled:bg-mg-surface-2'
+const inputOk = 'border-mg-line focus:border-mg-brand focus:ring-mg-brand/15'
+const inputBad = 'border-mg-crit focus:border-mg-crit focus:ring-mg-crit/15'
+const labelClass = 'block text-[13px] font-semibold text-mg-ink'
 
 function fieldClass(hasError: boolean): string {
   return `${inputBase} ${hasError ? inputBad : inputOk}`
@@ -39,16 +39,16 @@ function fieldClass(hasError: boolean): string {
 function FieldMessage({ message }: { message: string | null }) {
   if (!message) return null
   return (
-    <p className="mt-1 text-[12px] font-medium text-[#B91C1C]" role="alert">
+    <p className="mt-1 text-[12px] font-medium text-mg-crit" role="alert">
       {message}
     </p>
   )
 }
 
 const STATUS_TONE: Record<string, string> = {
-  ok: 'bg-[#ECFDF5] text-[#047857]',
-  off: 'bg-[#F1F5F4] text-[#5B6B66]',
-  draft: 'bg-[#FFF7ED] text-[#C2410C]',
+  ok: 'bg-mg-brand-soft text-mg-brand',
+  off: 'bg-mg-surface-2 text-mg-muted',
+  draft: 'bg-mg-warn-bg text-mg-warn',
 }
 
 export default function Units() {
@@ -205,9 +205,9 @@ export default function Units() {
         : 'Somente Engenharia/Admin podem cadastrar, homologar ou inativar unidades; seu papel tem acesso de visualização.'
 
   return (
-    <section className="mx-auto mt-0 w-full max-w-5xl rounded-[16px] border border-[#E1E8E5] bg-white p-6 shadow-[0_12px_40px_rgba(2,44,34,0.06)] sm:p-8">
+    <section className="mx-auto mt-0 w-full max-w-5xl rounded-[16px] border border-mg-line bg-mg-surface p-6 shadow-[0_12px_40px_rgba(2,44,34,0.06)] sm:p-8">
       <div className="mb-6 flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#ECFDF5] text-[#047857]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-mg-brand-soft text-mg-brand">
           <Ruler className="h-5 w-5" />
         </div>
         <div>
@@ -216,11 +216,11 @@ export default function Units() {
             ref={headingRef}
             tabIndex={-1}
             style={{ scrollMarginTop: '5rem' }}
-            className="text-xl font-extrabold text-[#0F1F1C] outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#064E3B]"
+            className="text-xl font-extrabold text-mg-ink outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand-strong"
           >
             Unidades e dimensões
           </h2>
-          <p className="mt-1 text-[13px] text-[#5B6B66]">
+          <p className="mt-1 text-[13px] text-mg-muted">
             Catálogo de unidades da Engenharia. Cada unidade declara sua dimensão física; somente
             unidade homologada pode ser usada em composição. Não há conversão automática entre
             unidades.
@@ -230,7 +230,7 @@ export default function Units() {
 
       {formError && (
         <div
-          className="mb-5 flex items-start gap-2.5 rounded-[12px] border-l-4 border-[#DC2626] bg-[#FEF2F2] p-3.5 text-[13px] font-medium text-[#B91C1C]"
+          className="mb-5 flex items-start gap-2.5 rounded-[12px] border-l-4 border-mg-crit bg-mg-crit-bg p-3.5 text-[13px] font-medium text-mg-crit"
           role="alert"
           aria-live="assertive"
         >
@@ -241,7 +241,7 @@ export default function Units() {
 
       {actionError && (
         <div
-          className="mb-5 flex items-start gap-2.5 rounded-[12px] border-l-4 border-[#DC2626] bg-[#FEF2F2] p-3.5 text-[13px] font-medium text-[#B91C1C]"
+          className="mb-5 flex items-start gap-2.5 rounded-[12px] border-l-4 border-mg-crit bg-mg-crit-bg p-3.5 text-[13px] font-medium text-mg-crit"
           role="alert"
           aria-live="assertive"
         >
@@ -252,7 +252,7 @@ export default function Units() {
 
       {formInfo && (
         <div
-          className="mb-5 rounded-[12px] border-l-4 border-[#10B981] bg-[#ECFDF5] p-3.5 text-[13px] font-medium text-[#047857]"
+          className="mb-5 rounded-[12px] border-l-4 border-mg-brand bg-mg-brand-soft p-3.5 text-[13px] font-medium text-mg-brand"
           role="status"
           aria-live="polite"
         >
@@ -262,23 +262,23 @@ export default function Units() {
 
       <div className="mb-8">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-[15px] font-bold text-[#0F1F1C]">Unidades cadastradas</h3>
+          <h3 className="text-[15px] font-bold text-mg-ink">Unidades cadastradas</h3>
           <button
             type="button"
             onClick={() => void loadUnits()}
             disabled={isLoadingUnits}
-            className="min-h-[44px] rounded-lg border border-[#CBD5D1] bg-white px-4 text-sm font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:opacity-60"
+            className="min-h-[44px] rounded-lg border border-mg-line-strong bg-mg-surface px-4 text-sm font-semibold text-mg-brand-strong hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
           >
             {isLoadingUnits ? 'Atualizando…' : 'Atualizar lista'}
           </button>
         </div>
         {isLoadingUnits ? (
-          <p className="text-[13px] text-[#5B6B66]" role="status" aria-live="polite">
+          <p className="text-[13px] text-mg-muted" role="status" aria-live="polite">
             Carregando unidades…
           </p>
         ) : loadError ? (
           <div
-            className="rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#991B1B]"
+            className="rounded-[12px] border border-mg-crit-line bg-mg-crit-bg p-4 text-sm text-mg-crit"
             role="alert"
             aria-live="assertive"
           >
@@ -287,13 +287,13 @@ export default function Units() {
             <button
               type="button"
               onClick={() => void loadUnits()}
-              className="mt-3 min-h-[44px] rounded-lg border border-[#B91C1C] px-4 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#991B1B]"
+              className="mt-3 min-h-[44px] rounded-lg border border-mg-crit px-4 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-crit"
             >
               Tentar novamente
             </button>
           </div>
         ) : units.length === 0 ? (
-          <p className="text-[13px] text-[#5B6B66]" role="status">
+          <p className="text-[13px] text-mg-muted" role="status">
             Nenhuma unidade cadastrada ainda. A primeira unidade nasce como rascunho.
           </p>
         ) : (
@@ -304,21 +304,21 @@ export default function Units() {
               return (
                 <div
                   key={unit.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#E1E8E5] bg-[#F8FAF9] p-3.5"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-mg-line bg-mg-surface-2 p-3.5"
                 >
                   <div className="min-w-0">
-                    <p className="text-[13px] font-semibold text-[#0F1F1C]">
+                    <p className="text-[13px] font-semibold text-mg-ink">
                       {unit.code} · {unit.name} ·{' '}
-                      <span className="font-normal text-[#5B6B66]">
+                      <span className="font-normal text-mg-muted">
                         {DIMENSION_LABELS[unit.dimension as keyof typeof DIMENSION_LABELS] ??
                           unit.dimension}
                       </span>
                     </p>
                     {unit.status === 'inativo' && unit.inactiveReason && (
-                      <p className="text-[12px] text-[#5B6B66]">Motivo: {unit.inactiveReason}</p>
+                      <p className="text-[12px] text-mg-muted">Motivo: {unit.inactiveReason}</p>
                     )}
                     {unit.status === 'homologado' && unit.homologatedAt && (
-                      <p className="text-[12px] text-[#5B6B66]">
+                      <p className="text-[12px] text-mg-muted">
                         Homologada em {unit.homologatedAt.slice(0, 10)}
                       </p>
                     )}
@@ -334,7 +334,7 @@ export default function Units() {
                         type="button"
                         onClick={() => void handleHomologate(unit)}
                         disabled={busy}
-                        className="min-h-[40px] rounded-lg border border-[#10B981] bg-white px-3 text-[12px] font-semibold text-[#047857] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:opacity-60"
+                        className="min-h-[40px] rounded-lg border border-mg-brand bg-mg-surface px-3 text-[12px] font-semibold text-mg-brand hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
                       >
                         {busy ? 'Homologando…' : 'Homologar'}
                       </button>
@@ -344,7 +344,7 @@ export default function Units() {
                         type="button"
                         onClick={() => openDeactivate(unit)}
                         disabled={busy}
-                        className="min-h-[40px] rounded-lg border border-[#CBD5D1] bg-white px-3 text-[12px] font-semibold text-[#5B6B66] hover:bg-[#FEF2F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:opacity-60"
+                        className="min-h-[40px] rounded-lg border border-mg-line-strong bg-mg-surface px-3 text-[12px] font-semibold text-mg-muted hover:bg-mg-crit-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
                       >
                         Inativar
                       </button>
@@ -359,7 +359,7 @@ export default function Units() {
 
       {canManageUnits ? (
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" noValidate>
-          <h3 className="text-[15px] font-bold text-[#0F1F1C]">Nova unidade</h3>
+          <h3 className="text-[15px] font-bold text-mg-ink">Nova unidade</h3>
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label className={labelClass} htmlFor={UNIT_FIELD_IDS.code}>
@@ -421,7 +421,7 @@ export default function Units() {
 
           {showErrors && validation.errors.length > 0 && (
             <div
-              className="rounded-[10px] border-l-4 border-[#DC2626] bg-[#FEF2F2] p-3.5 text-[13px] text-[#B91C1C]"
+              className="rounded-[10px] border-l-4 border-mg-crit bg-mg-crit-bg p-3.5 text-[13px] text-mg-crit"
               role="alert"
               aria-live="assertive"
             >
@@ -437,13 +437,13 @@ export default function Units() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="min-h-[44px] rounded-[10px] bg-[#10B981] px-5 text-[13px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:pointer-events-none disabled:opacity-60"
+            className="min-h-[44px] rounded-[10px] bg-mg-brand-fill px-5 text-[13px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:pointer-events-none disabled:opacity-60"
           >
             {isSubmitting ? 'Salvando...' : 'Cadastrar unidade (rascunho)'}
           </button>
         </form>
       ) : (
-        <p className="text-[13px] text-[#5B6B66]" role="status">
+        <p className="text-[13px] text-mg-muted" role="status">
           {readOnlyMessage}
         </p>
       )}
@@ -455,15 +455,15 @@ export default function Units() {
           aria-modal="true"
           aria-labelledby="inativar-titulo"
         >
-          <div className="w-full max-w-md rounded-[16px] bg-white p-6">
-            <h3 id="inativar-titulo" className="text-[15px] font-bold text-[#0F1F1C]">
+          <div className="w-full max-w-md rounded-[16px] bg-mg-surface p-6">
+            <h3 id="inativar-titulo" className="text-[15px] font-bold text-mg-ink">
               Inativar unidade {deactivating.code}
             </h3>
-            <p className="mt-1 text-[13px] text-[#5B6B66]">
+            <p className="mt-1 text-[13px] text-mg-muted">
               A unidade não é apagada; o motivo fica registrado e visível.
             </p>
             {deactivateError && (
-              <p className="mt-3 text-[12px] font-medium text-[#B91C1C]" role="alert">
+              <p className="mt-3 text-[12px] font-medium text-mg-crit" role="alert">
                 {deactivateError}
               </p>
             )}
@@ -476,14 +476,14 @@ export default function Units() {
               maxLength={1000}
               value={deactivateReason}
               onChange={(event) => setDeactivateReason(event.target.value)}
-              className="mt-1.5 w-full rounded-[10px] border border-[#E1E8E5] bg-white px-3 py-2.5 text-[14px] outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+              className="mt-1.5 w-full rounded-[10px] border border-mg-line bg-mg-surface px-3 py-2.5 text-[14px] outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
               placeholder="Explique por que esta unidade não deve mais ser usada."
             />
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setDeactivating(null)}
-                className="min-h-[44px] rounded-lg border border-[#CBD5D1] px-4 text-sm font-semibold text-[#064E3B] focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+                className="min-h-[44px] rounded-lg border border-mg-line-strong px-4 text-sm font-semibold text-mg-brand-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
               >
                 Cancelar
               </button>
@@ -491,7 +491,7 @@ export default function Units() {
                 type="button"
                 onClick={() => void confirmDeactivate()}
                 disabled={busyUnitId === deactivating.id}
-                className="min-h-[44px] rounded-lg bg-[#DC2626] px-4 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-700 disabled:opacity-60"
+                className="min-h-[44px] rounded-lg bg-mg-crit px-4 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-700 disabled:opacity-60"
               >
                 {busyUnitId === deactivating.id ? 'Inativando…' : 'Confirmar inativação'}
               </button>

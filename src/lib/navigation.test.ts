@@ -82,7 +82,8 @@ describe('T2.36 — índice administrativo', () => {
     const sectionLabels = new Map(SECTIONS)
     for (const entry of ADMIN_INDEX) {
       if (entry.id === 'unidades') continue
-      expect(sectionLabels.get(entry.id)).toBe(entry.label)
+      const sectionId = entry.id as (typeof SECTIONS)[number][0]
+      expect(sectionLabels.get(sectionId)).toBe(entry.label)
     }
   })
 

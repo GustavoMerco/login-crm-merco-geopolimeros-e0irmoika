@@ -1,116 +1,153 @@
 import React from 'react'
 
-interface MercoLogoProps {
-  className?: string
+export interface MercoLogoProps {
+  /** Altura do símbolo em px. O conjunto escala proporcionalmente a partir do viewBox. */
   size?: number
+  className?: string
   showWordmark?: boolean
+  /** false = fundo escuro (teal claro + texto branco). true = fundo claro (teal escuro original). */
   lightTheme?: boolean
 }
 
-export const MercoLogo: React.FC<MercoLogoProps> = ({
-  className = '',
-  size = 40,
-  showWordmark = true,
-  lightTheme = false,
-}) => {
+/**
+ * Cores oficiais da marca Merco Geopolímeros.
+ * Teal escuro para fundos claros; teal claro para manter contraste sobre fundo escuro.
+ */
+export const MERCO_TEAL_DARK = '#17677A'
+export const MERCO_TEAL_LIGHT = '#4FB3C9'
+export const MERCO_ORANGE = '#F97316'
+export const MERCO_ORANGE_LIGHT = '#FB923C'
+
+/**
+ * Símbolo vetorial da marca: duas formas angulares inclinadas formando um "M"
+ * estilizado, com um triângulo laranja sólido apontando para baixo entre elas.
+ * Desenhado à mão em viewBox 0 0 100 100 (proporções fiéis à arte original).
+ */
+export const MercoMark: React.FC<{
+  size?: number
+  className?: string
+  lightTheme?: boolean
+  title?: string
+}> = ({ size = 40, className = '', lightTheme = false, title }) => {
+  const teal = lightTheme ? MERCO_TEAL_DARK : MERCO_TEAL_LIGHT
+  const orange = lightTheme ? MERCO_ORANGE : MERCO_ORANGE_LIGHT
+  const gradientSuffix = lightTheme ? 'light' : 'dark'
   return (
-    <div className={`inline-flex items-center gap-3 select-none ${className}`}>
-      {/* Molecular cluster mark with 3 interlocking hexagons and center orange bond */}
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 64 64"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="flex-shrink-0"
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient id="merco-hex-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#34D399" />
-            <stop offset="100%" stopColor="#10B981" />
-          </linearGradient>
-          <filter id="merco-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow
-              dx="0"
-              dy="0"
-              stdDeviation="1.5"
-              floodColor="#F97316"
-              floodOpacity="0.4"
-            />
-          </filter>
-        </defs>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`flex-shrink-0 ${className}`}
+      role={title ? 'img' : undefined}
+      aria-hidden={title ? undefined : true}
+    >
+      {title ? <title>{title}</title> : null}
+      <defs>
+        <linearGradient id={`merco-mark-sheen-${gradientSuffix}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={teal} />
+          <stop offset="100%" stopColor={teal} stopOpacity="0.82" />
+        </linearGradient>
+      </defs>
 
-        {/* Central orange bond connecting the three molecular nodes */}
-        <path
-          d="M32 20 L22 38 M32 20 L42 38 M22 38 L42 38"
-          stroke="#FB923C"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          filter="url(#merco-glow)"
-        />
+      {/* Vértice angular esquerdo (metade externa do "M") */}
+      <path d="M4 92 L25 8 L38 8 L17 92 Z" fill={`url(#merco-mark-sheen-${gradientSuffix})`} />
 
-        {/* Central orange core atom */}
-        <circle cx="32" cy="32" r="3.2" fill="#F97316" />
+      {/* Vértice angular direito (metade externa do "M") */}
+      <path d="M96 92 L75 8 L62 8 L83 92 Z" fill={`url(#merco-mark-sheen-${gradientSuffix})`} />
 
-        {/* Top Hexagon */}
-        <polygon
-          points="32,7 41,12.2 41,22.6 32,27.8 23,22.6 23,12.2"
-          fill="none"
-          stroke="url(#merco-hex-grad)"
-          strokeWidth="2.4"
-          strokeLinejoin="round"
-        />
-        <circle cx="32" cy="17.4" r="1.8" fill="#34D399" />
-
-        {/* Bottom Left Hexagon */}
-        <polygon
-          points="21,26 30,31.2 30,41.6 21,46.8 12,41.6 12,31.2"
-          fill="none"
-          stroke="url(#merco-hex-grad)"
-          strokeWidth="2.4"
-          strokeLinejoin="round"
-        />
-        <circle cx="21" cy="36.4" r="1.8" fill="#10B981" />
-
-        {/* Bottom Right Hexagon */}
-        <polygon
-          points="43,26 52,31.2 52,41.6 43,46.8 34,41.6 34,31.2"
-          fill="none"
-          stroke="url(#merco-hex-grad)"
-          strokeWidth="2.4"
-          strokeLinejoin="round"
-        />
-        <circle cx="43" cy="36.4" r="1.8" fill="#10B981" />
-
-        {/* Secondary node highlights */}
-        <circle cx="32" cy="7" r="1.5" fill="#FB923C" />
-        <circle cx="12" cy="41.6" r="1.5" fill="#34D399" />
-        <circle cx="52" cy="41.6" r="1.5" fill="#34D399" />
-      </svg>
-
-      {showWordmark && (
-        <div className="flex flex-col justify-center text-left">
-          <span
-            className={`font-extrabold tracking-tight text-xl leading-none ${
-              lightTheme ? 'text-[#0F1F1C]' : 'text-white'
-            }`}
-          >
-            Merco
-          </span>
-          <span
-            className="text-[10px] font-bold tracking-[0.24em] uppercase text-[#FB923C] leading-tight mt-1"
-            style={{ fontFamily: 'Manrope, sans-serif' }}
-          >
-            GEOPOLÍMEROS
-          </span>
-        </div>
-      )}
-    </div>
+      {/* Triângulo laranja sólido apontando para baixo, entre as duas formas */}
+      <path d="M32 26 L68 26 L50 78 Z" fill={orange} />
+    </svg>
   )
 }
 
+/**
+ * Logo completa: símbolo angular + wordmark "MERCO" com "GEOPOLÍMEROS" espaçado
+ * abaixo, reproduzindo a arte oficial em SVG (viewBox 0 0 360 92).
+ */
+export const MercoLogo: React.FC<MercoLogoProps> = ({
+  size = 40,
+  className = '',
+  showWordmark = true,
+  lightTheme = false,
+}) => {
+  const height = size
+  const width = showWordmark ? Math.round(size * 3.9) : size
+  const teal = lightTheme ? MERCO_TEAL_DARK : MERCO_TEAL_LIGHT
+  const orange = lightTheme ? MERCO_ORANGE : MERCO_ORANGE_LIGHT
+  const wordColor = lightTheme ? MERCO_TEAL_DARK : '#FFFFFF'
+  const gradientSuffix = lightTheme ? 'light' : 'dark'
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={showWordmark ? '0 0 360 92' : '0 0 100 100'}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`select-none ${className}`}
+      role="img"
+      aria-label="Merco Geopolímeros"
+    >
+      <defs>
+        <linearGradient id={`merco-logo-sheen-${gradientSuffix}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={teal} />
+          <stop offset="100%" stopColor={teal} stopOpacity="0.82" />
+        </linearGradient>
+      </defs>
+
+      <g transform={showWordmark ? undefined : 'translate(0,0) scale(1)'}>
+        {/* Símbolo: duas formas angulares + triângulo laranja */}
+        <g transform={showWordmark ? 'translate(0,0) scale(0.92)' : undefined}>
+          <path d="M4 92 L25 8 L38 8 L17 92 Z" fill={`url(#merco-logo-sheen-${gradientSuffix})`} />
+          <path d="M96 92 L75 8 L62 8 L83 92 Z" fill={`url(#merco-logo-sheen-${gradientSuffix})`} />
+          <path d="M32 26 L68 26 L50 78 Z" fill={orange} />
+        </g>
+
+        {showWordmark && (
+          <g transform="translate(96 0)">
+            {/* Wordmark "MERCO" — desenho vetorial próprio (bold condensado) */}
+            <g fill={wordColor}>
+              {/* M */}
+              <path d="M0 66 V10 H13 L22 33 L31 10 H44 V66 H34 V27 L25 50 H19 L10 27 V66 Z" />
+              {/* E */}
+              <path d="M52 66 V10 H80 V19 H62 V32 H77 V41 H62 V57 H80 V66 Z" />
+              {/* R */}
+              <path d="M88 66 V10 H107 C116 10 121 15 121 24 C121 30 118 34 113 36 L122 66 H111 L104 39 H98 V66 Z M98 19 V31 H105 C109 31 111 29 111 25 C111 21 109 19 105 19 Z" />
+              {/* C */}
+              <path d="M155 67 C144 67 138 60 138 48 V28 C138 16 144 9 155 9 C165 9 171 15 172 25 H162 C161 20 159 18 155 18 C151 18 148 21 148 27 V49 C148 55 151 58 155 58 C159 58 161 56 162 51 H172 C171 61 165 67 155 67 Z" />
+              {/* O */}
+              <path d="M197 67 C186 67 180 60 180 48 V28 C180 16 186 9 197 9 C208 9 214 16 214 28 V48 C214 60 208 67 197 67 Z M197 58 C202 58 204 55 204 49 V27 C204 21 202 18 197 18 C192 18 190 21 190 27 V49 C190 55 192 58 197 58 Z" />
+            </g>
+
+            {/* "GEOPOLÍMEROS" — espaçado, menor, alinhado sob "MERCO" */}
+            <text
+              x="0"
+              y="88"
+              fill={wordColor}
+              fontSize="16"
+              fontWeight="600"
+              letterSpacing="5.2"
+              style={{ fontFamily: 'Manrope, Arial, sans-serif' }}
+            >
+              GEOPOLÍMEROS
+            </text>
+
+            {/* Acento laranja discreto abaixo do wordmark, remete ao triângulo */}
+            <rect x="0" y="76" width="34" height="3" fill={orange} opacity="0.9" />
+          </g>
+        )}
+      </g>
+    </svg>
+  )
+}
+
+/**
+ * Spinner de carregamento em formato hexagonal (usado nos estados de loading).
+ * Herda a cor do contexto via `currentColor`.
+ */
 export const HexagonSpinner: React.FC<{ size?: number; className?: string }> = ({
   size = 20,
   className = '',
@@ -136,3 +173,5 @@ export const HexagonSpinner: React.FC<{ size?: number; className?: string }> = (
     </svg>
   )
 }
+
+export default MercoLogo

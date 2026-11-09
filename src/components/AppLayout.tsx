@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { ROLE_LABELS } from '@/lib/auth/permissions'
 import { sectionsForRole, sectionUrl } from '@/lib/navigation'
 import { useCompositionDraft } from '@/contexts/CompositionDraftContext'
+import { MercoLogo } from '@/components/MercoLogo'
 import * as Dialog from '@radix-ui/react-dialog'
 
 export default function AppLayout() {
@@ -96,7 +97,11 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-[#F6F8F7] text-[#0F1F1C]">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-[#064E3B] text-white lg:flex">
-        <p className="border-b border-emerald-700 p-5 font-bold">Merco Geopolímeros</p>
+        <div className="border-b border-emerald-700 p-5">
+          <Link to="/dashboard" aria-label="Merco Geopolímeros — início" className="block">
+            <MercoLogo size={32} />
+          </Link>
+        </div>
         {nav}
         {footer}
       </aside>

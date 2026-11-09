@@ -116,9 +116,7 @@ export function createInputRow(
   }
 }
 
-export function createSheetParamLink(
-  values: Partial<Omit<SheetParamLink, 'min' | 'max'>> = {},
-): SheetParamLink {
+export function createSheetParamLink(values: Partial<SheetParamLink> = {}): SheetParamLink {
   return {
     name: values.name ?? '',
     unit: values.unit ?? '',

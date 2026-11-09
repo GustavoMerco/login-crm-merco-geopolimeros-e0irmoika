@@ -94,7 +94,7 @@ import { approveReadiness, getReadiness, type ReadinessStatus } from '@/services
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { hasPermission, ROLE_LABELS } from '@/lib/auth/permissions'
 import { buildSlaOptions } from '@/lib/readinessOptions'
-import { MercoLogo } from '@/components/MercoLogo'
+import { MercoLogo, MercoMark } from '@/components/MercoLogo'
 import {
   AlertTriangle,
   Boxes,
@@ -1641,7 +1641,7 @@ export const Dashboard: React.FC = () => {
             className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]"
           >
             <div className="w-16 h-16 mb-5 rounded-2xl bg-gradient-to-b from-[#064E3B] to-[#022C22] p-3 flex items-center justify-center shadow-[0_8px_20px_rgba(2,44,34,0.18)]">
-              <MercoLogo size={40} showWordmark={false} />
+              <MercoMark size={40} lightTheme={false} />
             </div>
 
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10B981]/12 text-[#047857] text-[12px] font-bold uppercase tracking-wider mb-4">

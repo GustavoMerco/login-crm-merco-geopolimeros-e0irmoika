@@ -44,10 +44,15 @@ export function CompositionDraftProvider({ children }: { children: ReactNode }) 
         event.altKey
       )
         return
-      if (!(event.target instanceof Element)) return
-      const link = event.target.closest('a[href]')
-      if (!link || link.hasAttribute('download') || link.target === '_blank') return
-      const destination = new URL(link.href, window.location.href)
+      const target = event.target
+      if (!(target instanceof Element)) return
+      const link = target.closest('a')
+      if (!link) return
+      const anchor = link as HTMLAnchorElement
+      if (anchor.hasAttribute('download') || anchor.target === '_blank') return
+      const href = anchor.getAttribute('href')
+      if (!href) return
+      const destination = new URL(href, window.location.href)
       const current = new URL(window.location.href)
       if (destination.origin !== current.origin) return
       if (

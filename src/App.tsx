@@ -9,6 +9,13 @@ import AppLayout from './components/AppLayout'
 import Index from './pages/Index'
 import DashboardHome from './pages/DashboardHome'
 import CompositionLibrary from './pages/CompositionLibrary'
+import Clientes from './pages/Clientes'
+import Propostas from './pages/Propostas'
+import Projetos from './pages/Projetos'
+import Configuracoes from './pages/Configuracoes'
+import Today from './pages/Today'
+import Funnel from './pages/Funnel'
+import Dashboard360 from './pages/Dashboard360'
 import Opportunities from './pages/Opportunities'
 import TechSheet from './pages/TechSheet'
 import Units from './pages/Units'
@@ -42,16 +49,19 @@ const App = () => (
             }
           >
             <Route path="/dashboard" element={<DashboardHome />} />
+            <Route path="/hoje" element={<Today />} />
+            <Route path="/funil" element={<Funnel />} />
+            <Route path="/painel" element={<Dashboard360 />} />
             <Route path="/demandas" element={<Opportunities />} />
             <Route path="/ficha" element={<TechSheet />} />
             <Route path="/biblioteca" element={<CompositionLibrary />} />
             <Route path="/unidades" element={<Units />} />
             <Route path="/administracao" element={<AdminIndex />} />
             <Route path="/administracao/prova-calculo" element={<CalculationProof />} />
-            <Route path="/clientes" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/propostas" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/projetos" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/configuracoes" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/clientes" element={<Clientes />} />
+            <Route path="/propostas" element={<Propostas />} />
+            <Route path="/projetos" element={<Projetos />} />
+            <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/painel-tecnico" element={<LegacyTechnicalPanel />} />
           </Route>
           <Route path="/404" element={<NotFound />} />

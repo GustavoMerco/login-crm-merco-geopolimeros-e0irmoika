@@ -30,12 +30,10 @@ export function usePipeline(): PipelineState {
     setIsLoading(true)
     const warnings: string[] = []
     try {
-      const opportunities = await pb
-        .collection('opportunities')
-        .getFullList<PipelineOpportunity>({
-          sort: '-received_at',
-          requestKey: 'pipeline-opportunities',
-        })
+      const opportunities = await pb.collection('opportunities').getFullList<PipelineOpportunity>({
+        sort: '-received_at',
+        requestKey: 'pipeline-opportunities',
+      })
       const [eventsResult, sheetsResult] = await Promise.allSettled([
         pb.collection('opportunity_events').getFullList<PipelineEvent>({
           sort: 'occurred_at',

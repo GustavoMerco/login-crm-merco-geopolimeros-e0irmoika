@@ -109,12 +109,10 @@ export default function OpportunityCard() {
         .getOne<PipelineOpportunity>(opportunityId)
       const [eventsResult, sheetsResult] = await Promise.allSettled([
         getOpportunityEvents(opportunityId),
-        pb
-          .collection('tech_sheets')
-          .getList(1, 1, {
-            filter: pb.filter('opportunity_id = {:id}', { id: opportunityId }),
-            fields: 'id',
-          }),
+        pb.collection('tech_sheets').getList(1, 1, {
+          filter: pb.filter('opportunity_id = {:id}', { id: opportunityId }),
+          fields: 'id',
+        }),
       ])
       const loadedEvents = eventsResult.status === 'fulfilled' ? eventsResult.value : []
       const hasSheet = sheetsResult.status === 'fulfilled' && sheetsResult.value.totalItems > 0

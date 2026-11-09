@@ -1,10 +1,10 @@
 // Funil de propostas (reestruturação de UX — CRM de propostas). Lógica pura:
 // deriva a etapa de cada oportunidade SOMENTE de dados que o servidor já
-// registra (aptidão, ficha técnica e marcos received/apt/ready/sent). Nenhuma
-// etapa é inventada: precificação, aprovação e desfecho (ganha/perdida) entram
-// quando as fases correspondentes existirem no backend.
+// registra (aptidão, ficha técnica e marcos received/apt/ready/sent/won/lost).
+// Nenhuma etapa é inventada: precificação e aprovação entram quando as Fases 3
+// e 4 existirem no backend. Desfecho (ganha/perdida): emenda D-UX-01.
 
-export type StageId = 'recebida' | 'qualificacao' | 'apta' | 'engenharia' | 'pronta' | 'enviada'
+export type StageId = 'recebida' | 'qualificacao' | 'apta' | 'engenharia' | 'pronta' | 'enviada' | 'ganha' | 'perdida'
 
 export type Stage = {
   id: StageId
@@ -18,7 +18,9 @@ export const STAGES: Stage[] = [
   { id: 'apta', label: 'Apta', description: 'Pronta para a engenharia abrir a ficha técnica.' },
   { id: 'engenharia', label: 'Em engenharia', description: 'Ficha técnica aberta; composição e dimensionamento em andamento.' },
   { id: 'pronta', label: 'Pronta para envio', description: 'Proposta pronta; falta enviar ao cliente.' },
-  { id: 'enviada', label: 'Enviada', description: 'Proposta enviada ao cliente.' },
+  { id: 'enviada', label: 'Enviada', description: 'Aguardando a resposta do cliente.' },
+  { id: 'ganha', label: 'Ganha', description: 'Cliente aprovou a proposta.' },
+  { id: 'perdida', label: 'Perdida', description: 'Cliente recusou; motivo registrado.' },
 ]
 
 // Etapas da jornada completa do PRD; as não implementadas aparecem como
@@ -34,6 +36,7 @@ export const JOURNEY: JourneyStep[] = [
   { id: 'aprovacao', label: 'Aprovação', available: false, phase: 'Fase 4' },
   { id: 'proposta', label: 'Proposta', available: true },
   { id: 'enviada', label: 'Envio', available: true },
+  { id: 'desfecho', label: 'Desfecho', available: true },
 ]
 
 export type AptitudeStatus = 'pending' | 'blocked' | 'apt' | 'exception_approved'
@@ -57,9 +60,13 @@ export type PipelineOpportunity = {
 
 export type PipelineEvent = {
   opportunity_id: string
-  milestone: 'received' | 'apt' | 'ready' | 'sent'
+  milestone: 'received' | 'apt' | 'ready' | 'sent' | 'won' | 'lost'
   occurred_at: string
+  note?: string
 }
+
+export const CLOSED_STAGES: ReadonlySet<StageId> = new Set(['enviada', 'ganha', 'perdida'])
+export const FINAL_STAGES: ReadonlySet<StageId> = new Set(['ganha', 'perdida'])
 
 export type DeadlineState =
   | 'sem_prazo'
@@ -84,6 +91,7 @@ export type PipelineCard = {
   readyAt: string
   deadline: DeadlineInfo
   pendingCount: number
+  outcomeNote: string
 }
 
 export const NEAR_DEADLINE_DAYS = 2
@@ -151,6 +159,8 @@ export function deriveStage(
   milestones: ReadonlySet<string>,
   hasTechSheet: boolean,
 ): StageId {
+  if (milestones.has('won')) return 'ganha'
+  if (milestones.has('lost')) return 'perdida'
   if (milestones.has('sent')) return 'enviada'
   if (milestones.has('ready')) return 'pronta'
   const aptitude = opportunity.aptitude_status
@@ -208,6 +218,7 @@ export function buildCards(
       readyAt,
       deadline: deadlineInfo(opportunity.deadline_date, today, sentAt ? civilDate(sentAt) : undefined),
       pendingCount: opportunity.pending_items?.length ?? 0,
+      outcomeNote: own.find((event) => event.milestone === 'won' || event.milestone === 'lost')?.note ?? '',
     }
   })
 }
@@ -252,12 +263,12 @@ export function familiesOf(cards: PipelineCard[]): string[] {
 }
 
 // ---------- fila do dia ----------
-export type QueueGroupId = 'vencidos' | 'proximos' | 'enviar' | 'qualificar' | 'avaliar'
+export type QueueGroupId = 'vencidos' | 'proximos' | 'enviar' | 'qualificar' | 'avaliar' | 'retorno'
 
 export type QueueGroup = { id: QueueGroupId; title: string; hint: string; cards: PipelineCard[] }
 
 export function buildQueue(cards: PipelineCard[]): QueueGroup[] {
-  const open = cards.filter((card) => card.stage !== 'enviada')
+  const open = cards.filter((card) => !CLOSED_STAGES.has(card.stage))
   const byDeadline = (a: PipelineCard, b: PipelineCard) => (a.deadline.days ?? 9_999) - (b.deadline.days ?? 9_999)
   const groups: QueueGroup[] = [
     {
@@ -289,6 +300,12 @@ export function buildQueue(cards: PipelineCard[]): QueueGroup[] {
       title: 'Aptidão a avaliar',
       hint: 'Demandas novas que ainda não passaram pelo checklist.',
       cards: open.filter((card) => card.stage === 'recebida'),
+    },
+    {
+      id: 'retorno',
+      title: 'Aguardando resposta do cliente',
+      hint: 'Enviadas sem desfecho: faça o follow-up e registre ganha ou perdida.',
+      cards: cards.filter((card) => card.stage === 'enviada'),
     },
   ]
   return groups
@@ -327,8 +344,8 @@ export function summarizeCustomers(cards: PipelineCard[]): CustomerSummary[] {
       key,
       name: sorted[0].opportunity.customer_name.trim(),
       total: list.length,
-      open: list.filter((card) => card.stage !== 'enviada').length,
-      sent: list.filter((card) => card.stage === 'enviada').length,
+      open: list.filter((card) => !CLOSED_STAGES.has(card.stage)).length,
+      sent: list.filter((card) => CLOSED_STAGES.has(card.stage)).length,
       overdue: list.filter((card) => card.deadline.state === 'vencido').length,
       families: [...new Set(list.map((card) => card.opportunity.service_family).filter(Boolean))].sort(),
       contacts: [...contacts.values()],
@@ -349,20 +366,31 @@ export type PipelineMetrics = {
   sentWithDeadline: number
   sentOnTime: number
   onTimeRate: number | null
+  won: number
+  lost: number
+  winRate: number | null
+  lossReasons: Array<{ reason: string; count: number }>
 }
 
 export function computeMetrics(cards: PipelineCard[]): PipelineMetrics {
   const byStage = Object.fromEntries(STAGES.map((stage) => [stage.id, 0])) as Record<StageId, number>
   for (const card of cards) byStage[card.stage] += 1
-  const sent = cards.filter((card) => card.stage === 'enviada' && card.sentAt)
+  const sent = cards.filter((card) => CLOSED_STAGES.has(card.stage) && card.sentAt)
   const durations = sent
     .map((card) => daysBetween(civilDate(card.opportunity.received_at), civilDate(card.sentAt)))
     .filter((days) => Number.isFinite(days) && days >= 0)
   const withDeadline = sent.filter((card) => card.deadline.state === 'cumprido' || card.deadline.state === 'atrasado')
   const onTime = withDeadline.filter((card) => card.deadline.state === 'cumprido').length
+  const reasons = new Map<string, number>()
+  for (const card of cards) {
+    if (card.stage !== 'perdida') continue
+    const reason = card.outcomeNote.trim() || 'Sem motivo'
+    reasons.set(reason, (reasons.get(reason) ?? 0) + 1)
+  }
+  const decided = byStage.ganha + byStage.perdida
   return {
     total: cards.length,
-    open: cards.length - byStage.enviada,
+    open: cards.filter((card) => !CLOSED_STAGES.has(card.stage)).length,
     overdue: cards.filter((card) => card.deadline.state === 'vencido').length,
     byStage,
     sentCount: sent.length,
@@ -370,6 +398,10 @@ export function computeMetrics(cards: PipelineCard[]): PipelineMetrics {
     sentWithDeadline: withDeadline.length,
     sentOnTime: onTime,
     onTimeRate: withDeadline.length > 0 ? onTime / withDeadline.length : null,
+    won: byStage.ganha,
+    lost: byStage.perdida,
+    winRate: decided > 0 ? byStage.ganha / decided : null,
+    lossReasons: [...reasons.entries()].map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count),
   }
 }
 

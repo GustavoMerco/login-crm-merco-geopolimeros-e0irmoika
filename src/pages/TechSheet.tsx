@@ -47,7 +47,9 @@ function statusLabel(record: OpportunityRecord): string {
   return record.status
 }
 
-export default function TechSheet() {
+// embedded: aberta como aba do card da oportunidade (o card já mostra o
+// cabeçalho e o contexto da demanda).
+export default function TechSheet({ embedded = false }: { embedded?: boolean } = {}) {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
   const headingRef = useRef<HTMLHeadingElement>(null)
@@ -789,8 +791,14 @@ export default function TechSheet() {
   const opportunityErrorMessage = techSheetAccessMessage(opportunityError ?? 'other')
 
   return (
-    <section className="mx-auto mt-0 w-full max-w-5xl rounded-[16px] border border-mg-line bg-mg-surface p-6 shadow-[0_12px_40px_rgba(2,44,34,0.06)] sm:p-8">
-      {header}
+    <section className={embedded ? 'w-full rounded-xl border border-mg-line bg-mg-surface p-5 sm:p-6' : 'mx-auto mt-0 w-full max-w-5xl rounded-xl border border-mg-line bg-mg-surface p-6 sm:p-8'}>
+      {embedded ? (
+        <p className="mb-5 text-[13px] text-mg-muted">
+          Cada salvamento cria uma nova versão da ficha; as anteriores ficam preservadas no histórico abaixo.
+        </p>
+      ) : (
+        header
+      )}
 
       {screenState === 'loading' && (
         <p className="text-[13px] text-mg-muted" role="status" aria-live="polite">
@@ -847,7 +855,7 @@ export default function TechSheet() {
         </div>
       )}
 
-      {contextBar}
+      {!embedded && contextBar}
 
       {screenState === 'no-context' && selection}
 

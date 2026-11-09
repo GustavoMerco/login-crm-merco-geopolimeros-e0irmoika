@@ -146,7 +146,9 @@ const STAGE_TONE: Record<StageId, Tone> = {
   apta: 'brand',
   engenharia: 'brand',
   pronta: 'brand',
-  enviada: 'ok',
+  enviada: 'brand',
+  ganha: 'ok',
+  perdida: 'crit',
 }
 
 export function StagePill({ stage }: { stage: StageId }) {

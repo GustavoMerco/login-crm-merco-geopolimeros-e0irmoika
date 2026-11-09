@@ -29,6 +29,7 @@ const other = {
   contact_email: 'joao@exemplo.com',
   service_family: 'Poliureia',
   location: 'São Paulo',
+  origin: 'Site',
 } as OpportunityListItem
 
 const items = [base, other]

@@ -3,9 +3,9 @@ import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { buildCards, type PipelineCard, type PipelineEvent, type PipelineOpportunity } from '@/lib/pipeline'
 
-// Carrega o funil a partir das coleções existentes. O servidor só devolve as
-// oportunidades em que o usuário é o responsável (listRule), então este é o
-// funil "meu". Marcos e fichas são fontes complementares: se falharem, o funil
+// Carrega o funil a partir das coleções existentes. O servidor devolve as
+// oportunidades em que o usuário é o responsável; Gestão, Aprovador e Admin
+// leem todas (migration 0052). Marcos e fichas são fontes complementares: se falharem, o funil
 // aparece mesmo assim, com aviso, e a etapa é derivada só da aptidão.
 export type PipelineState = {
   cards: PipelineCard[]
@@ -31,7 +31,7 @@ export function usePipeline(): PipelineState {
       const [eventsResult, sheetsResult] = await Promise.allSettled([
         pb.collection('opportunity_events').getFullList<PipelineEvent>({
           sort: 'occurred_at',
-          fields: 'opportunity_id,milestone,occurred_at',
+          fields: 'opportunity_id,milestone,occurred_at,note',
           requestKey: 'pipeline-events',
         }),
         pb.collection('tech_sheets').getFullList<{ opportunity_id: string }>({

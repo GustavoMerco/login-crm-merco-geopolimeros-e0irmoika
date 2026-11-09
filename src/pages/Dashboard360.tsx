@@ -34,7 +34,7 @@ export default function Dashboard360() {
         </p>
       ) : (
         <div className="grid gap-3 lg:grid-cols-4">
-          <Kpi label="Oportunidades" value={String(metrics.total)} hint={`${metrics.open} em andamento, ${metrics.byStage.enviada} enviadas.`} />
+          <Kpi label="Oportunidades" value={String(metrics.total)} hint={`${metrics.open} em andamento, ${metrics.byStage.enviada} aguardando resposta.`} />
           <Kpi label="Prazo vencido" value={String(metrics.overdue)} hint="Em andamento e já fora do prazo do cliente." />
           <Kpi
             label="Tempo até o envio"
@@ -48,6 +48,26 @@ export default function Dashboard360() {
             hint={metrics.sentWithDeadline > 0 ? `${metrics.sentOnTime} de ${metrics.sentWithDeadline} com prazo informado.` : 'Aparece quando houver envios com prazo informado.'}
           />
 
+          <Kpi
+            label="Taxa de ganho"
+            value={metrics.winRate === null ? '—' : percent.format(metrics.winRate)}
+            hint={metrics.won + metrics.lost > 0 ? `${metrics.won} ganha(s) e ${metrics.lost} perdida(s).` : 'Aparece quando houver desfechos registrados.'}
+          />
+          <Panel title="Motivos de perda" className="lg:col-span-3">
+            {metrics.lossReasons.length === 0 ? (
+              <p className="text-sm text-mg-muted">Nenhuma perda registrada.</p>
+            ) : (
+              <ul className="space-y-2">
+                {metrics.lossReasons.map((item) => (
+                  <li key={item.reason} className="flex items-center justify-between gap-3 text-[13px]">
+                    <span className="text-mg-ink">{item.reason}</span>
+                    <span className="mg-num text-mg-muted">{item.count}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
           <Panel title="Oportunidades por etapa" className="lg:col-span-3">
             <ul className="space-y-2.5">
               {STAGES.map((stage) => (
@@ -55,7 +75,7 @@ export default function Dashboard360() {
                   <span className="text-[13px] text-mg-ink">{stage.label}</span>
                   <span className="h-2.5 overflow-hidden rounded-full bg-mg-surface-2">
                     <span
-                      className={`block h-full rounded-full ${stage.id === 'enviada' ? 'bg-mg-ok' : stage.id === 'qualificacao' ? 'bg-mg-accent' : 'bg-mg-brand'}`}
+                      className={`block h-full rounded-full ${stage.id === 'ganha' ? 'bg-mg-ok' : stage.id === 'perdida' ? 'bg-mg-crit' : stage.id === 'qualificacao' ? 'bg-mg-accent' : 'bg-mg-brand'}`}
                       style={{ width: `${(metrics.byStage[stage.id] / maxStage) * 100}%` }}
                     />
                   </span>

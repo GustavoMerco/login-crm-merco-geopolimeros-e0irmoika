@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import pb from '@/lib/pocketbase/client'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { evaluateOpportunityAptitude } from '@/services/opportunities'
-import { getOpportunityEvents, recordMilestone, type OpportunityEventRecord } from '@/services/tracking'
+import { getOpportunityEvents, recordMilestone, recordOutcome, type OpportunityEventRecord } from '@/services/tracking'
+import { useAuth } from '@/contexts/AuthContext'
 import { sectionUrl } from '@/lib/navigation'
 import {
   CARD_TABS,
@@ -40,6 +41,8 @@ const JOURNEY_INDEX: Record<StageId, number> = {
   engenharia: 2,
   pronta: 7,
   enviada: 8,
+  ganha: 9,
+  perdida: 9,
 }
 
 const MILESTONE_LABELS: Record<string, string> = {
@@ -47,6 +50,8 @@ const MILESTONE_LABELS: Record<string, string> = {
   apt: 'Apta para orçamento',
   ready: 'Proposta pronta para envio',
   sent: 'Proposta enviada ao cliente',
+  won: 'Proposta ganha',
+  lost: 'Proposta perdida',
 }
 
 function formatInstant(value: string): string {
@@ -78,6 +83,9 @@ export default function OpportunityCard() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [actionInfo, setActionInfo] = useState<string | null>(null)
   const [isActing, setIsActing] = useState(false)
+  const [lossReason, setLossReason] = useState('')
+  const [isLossOpen, setIsLossOpen] = useState(false)
+  const { user } = useAuth()
 
   const load = useCallback(async () => {
     if (!opportunityId) {
@@ -150,8 +158,29 @@ export default function OpportunityCard() {
   }
 
   const { opportunity, stage } = card
+  // Mutações são do responsável (o servidor confere); o Administrador também registra desfecho.
+  const isOwner = opportunity.responsible_user_id === user?.id
+  const canOutcome = isOwner || user?.role === 'admin'
 
   const nextAction = (() => {
+    if (stage === 'enviada') {
+      if (!canOutcome) return null
+      return (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="primary"
+            disabled={isActing}
+            onClick={() => void runAction(() => recordOutcome(opportunity.id, 'won', ''), 'Proposta registrada como ganha.')}
+          >
+            Registrar ganho
+          </Button>
+          <Button disabled={isActing} onClick={() => setIsLossOpen((open) => !open)} aria-expanded={isLossOpen}>
+            Registrar perda
+          </Button>
+        </div>
+      )
+    }
+    if (!isOwner) return null
     switch (stage) {
       case 'recebida':
       case 'qualificacao':
@@ -225,6 +254,40 @@ export default function OpportunityCard() {
         <div className="mt-5 border-t border-mg-line pt-4">
           <JourneyRuler currentIndex={JOURNEY_INDEX[stage]} />
         </div>
+        {!isOwner && !['ganha', 'perdida'].includes(stage) && (
+          <p className="mt-4 text-[13px] text-mg-muted">Só o responsável por esta oportunidade avança as etapas; você está vendo em modo leitura.</p>
+        )}
+        {isLossOpen && stage === 'enviada' && (
+          <form
+            className="mt-4 flex flex-wrap items-end gap-2 rounded-lg border border-mg-line bg-mg-surface-2 p-4"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void runAction(() => recordOutcome(opportunity.id, 'lost', lossReason), 'Perda registrada com o motivo.').then(() => {
+                setIsLossOpen(false)
+                setLossReason('')
+              })
+            }}
+          >
+            <label className="min-w-[240px] flex-1 text-[13px] font-semibold text-mg-ink">
+              Motivo da perda (obrigatório)
+              <input
+                value={lossReason}
+                onChange={(event) => setLossReason(event.target.value)}
+                maxLength={500}
+                placeholder="Ex.: preço acima do concorrente, prazo, escopo mudou…"
+                className="mt-1.5 min-h-[40px] w-full rounded-lg border border-mg-line-strong bg-mg-surface px-3 text-sm font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/20"
+              />
+            </label>
+            <Button type="submit" variant="primary" disabled={isActing || lossReason.trim().length < 3}>
+              Confirmar perda
+            </Button>
+          </form>
+        )}
+        {card.outcomeNote && stage === 'perdida' && (
+          <div className="mt-4">
+            <Notice tone="neutral">Motivo da perda: {card.outcomeNote}</Notice>
+          </div>
+        )}
         {actionError && (
           <div className="mt-4">
             <Notice tone="crit">{actionError}</Notice>
@@ -292,7 +355,7 @@ export default function OpportunityCard() {
           </div>
         )}
 
-        {tab === 'ficha' && <TechSheet />}
+        {tab === 'ficha' && <TechSheet embedded />}
 
         {tab === 'composicoes' && <CompositionLibrary />}
 

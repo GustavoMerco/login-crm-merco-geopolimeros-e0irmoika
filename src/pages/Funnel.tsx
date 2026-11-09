@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { usePipeline } from '@/services/pipeline'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   STAGES,
   cardUrl,
@@ -44,6 +45,8 @@ function FunnelCard({ card }: { card: PipelineCard }) {
 
 export default function Funnel() {
   const { cards, isLoading, error, partialWarnings } = usePipeline()
+  const { user } = useAuth()
+  const teamView = user?.role === 'gestao' || user?.role === 'aprovador' || user?.role === 'admin'
   const [searchParams, setSearchParams] = useSearchParams()
   const [query, setQuery] = useState('')
   const family = searchParams.get('familia') ?? ''
@@ -107,7 +110,7 @@ export default function Funnel() {
             Cliente: {customerName || customerKey} ✕
           </button>
         )}
-        <p className="ml-auto text-[12px] text-mg-muted">Mostrando as oportunidades em que você é o responsável.</p>
+        <p className="ml-auto text-[12px] text-mg-muted">{teamView ? 'Mostrando as oportunidades de todo o time.' : 'Mostrando as oportunidades em que você é o responsável.'}</p>
       </div>
 
       {partialWarnings.map((warning) => (
@@ -129,7 +132,7 @@ export default function Funnel() {
         />
       ) : (
         <div className="-mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-          <div className="grid min-w-[1080px] grid-cols-6 gap-3">
+          <div className="grid min-w-[1360px] grid-cols-8 gap-3">
             {STAGES.map((stage) => (
               <section key={stage.id} aria-label={stage.label} className="flex min-h-[320px] flex-col rounded-xl border border-mg-line bg-mg-surface-2">
                 <header className="border-b border-mg-line px-3 py-3">
@@ -151,7 +154,7 @@ export default function Funnel() {
         </div>
       )}
       <p className="mt-2 text-[12px] text-mg-muted">
-        Custos e preço, aprovação e desfecho (ganha/perdida) entram no funil quando as Fases 3 e 4 forem implementadas.
+        Custos e preço e aprovação entram no funil quando as Fases 3 e 4 forem implementadas.
       </p>
     </div>
   )

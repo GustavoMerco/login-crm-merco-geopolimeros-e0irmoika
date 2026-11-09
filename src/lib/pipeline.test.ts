@@ -50,8 +50,13 @@ describe('etapa derivada só de dados do servidor', () => {
     expect(deriveStage(opp({}), new Set(['ready', 'sent']), true)).toBe('enviada')
   })
 
-  it('o funil tem exatamente as 6 etapas implementadas, na ordem da jornada', () => {
-    expect(STAGES.map((s) => s.id)).toEqual(['recebida', 'qualificacao', 'apta', 'engenharia', 'pronta', 'enviada'])
+  it('o funil tem exatamente as 8 etapas implementadas, na ordem da jornada', () => {
+    expect(STAGES.map((s) => s.id)).toEqual(['recebida', 'qualificacao', 'apta', 'engenharia', 'pronta', 'enviada', 'ganha', 'perdida'])
+  })
+
+  it('desfecho vence o envio: ganha e perdida', () => {
+    expect(deriveStage(opp({}), new Set(['sent', 'won']), true)).toBe('ganha')
+    expect(deriveStage(opp({}), new Set(['sent', 'lost']), true)).toBe('perdida')
   })
 })
 
@@ -102,13 +107,15 @@ describe('cards, fila e indicadores', () => {
     expect(groups.enviada).toHaveLength(1)
   })
 
-  it('fila do dia: vencidos, vencendo, qualificar e avaliar; enviada não entra', () => {
+  it('fila do dia: vencidos, vencendo, qualificar e avaliar; enviada vai para "aguardando resposta"', () => {
     const queue = Object.fromEntries(buildQueue(cards).map((g) => [g.id, g.cards.map((c) => c.opportunity.id)]))
     expect(queue.vencidos).toEqual(['a00000000000001'])
     expect(queue.proximos).toEqual(['a00000000000002'])
     expect(queue.qualificar).toEqual(['a00000000000002'])
     expect(queue.avaliar).toEqual(['a00000000000001'])
-    expect(Object.values(queue).flat()).not.toContain('a00000000000004')
+    expect(queue.retorno).toEqual(['a00000000000004'])
+    const work = ['vencidos', 'proximos', 'enviar', 'qualificar', 'avaliar'].flatMap((id) => queue[id])
+    expect(work).not.toContain('a00000000000004')
   })
 
   it('clientes agrupam por nome normalizado (acento, caixa e espaços)', () => {
@@ -126,6 +133,18 @@ describe('cards, fila e indicadores', () => {
     expect(metrics.overdue).toBe(1)
     expect(metrics.avgDaysToSend).toBe(3)
     expect(metrics.onTimeRate).toBe(1)
+  })
+
+  it('conversão e motivos de perda', () => {
+    const extra: PipelineEvent[] = [
+      ...events,
+      { opportunity_id: 'a00000000000004', milestone: 'lost', occurred_at: '2026-11-06 12:00:00.000Z', note: 'Preço' },
+    ]
+    const metrics = computeMetrics(buildCards(opportunities, extra, new Set(['a00000000000003']), NOW))
+    expect(metrics.lost).toBe(1)
+    expect(metrics.winRate).toBe(0)
+    expect(metrics.lossReasons).toEqual([{ reason: 'Preço', count: 1 }])
+    expect(metrics.avgDaysToSend).toBe(3)
   })
 
   it('sem envios, indicadores de tempo ficam nulos (nada inventado)', () => {

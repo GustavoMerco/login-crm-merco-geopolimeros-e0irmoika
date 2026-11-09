@@ -1553,12 +1553,20 @@ export const Dashboard: React.FC = () => {
           ? 'Seu papel permite homologar o catálogo.'
           : 'Acesso negado: somente Engenharia ou Administrador podem homologar.'
 
+  // Cada seção abre como página própria: as outras ficam ocultas (antes todas
+  // eram empilhadas numa tela só). O id vem de uma lista fechada, sem injeção.
+  const KNOWN_SECTIONS = ['demanda', 'ficha', 'biblioteca', 'prontidao', 'catalogo', 'backup', 'modelos', 'previa', 'fontes', 'gates', 'sla', 'baseline', 'qualidade', 'tempo']
+  const focusedSection = sectionKey && KNOWN_SECTIONS.includes(sectionKey) ? sectionKey : ''
+
   return (
-    <div className="min-h-screen w-full bg-[#F6F8F7] flex flex-col font-sans antialiased text-[#0F1F1C]">
+    <div className="mg-legacy min-h-screen w-full bg-mg-canvas flex flex-col font-sans antialiased text-mg-ink">
+      {focusedSection && (
+        <style>{`.mg-legacy section:has(h2[id^="secao-"]):not(:has(#secao-${focusedSection})) { display: none; }`}</style>
+      )}
       <header
         hidden
         style={{ display: 'none' }}
-        className="w-full h-16 bg-white border-b border-[#E1E8E5] px-4 sm:px-8 flex items-center justify-between shadow-xs sticky top-0 z-20"
+        className="w-full h-16 bg-mg-surface border-b border-mg-line px-4 sm:px-8 flex items-center justify-between shadow-xs sticky top-0 z-20"
       >
         <div className="flex items-center">
           <MercoLogo size={36} showWordmark={true} lightTheme={true} />
@@ -1566,20 +1574,20 @@ export const Dashboard: React.FC = () => {
 
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#10B981] text-white flex items-center justify-center font-bold text-sm shadow-xs select-none">
+            <div className="w-9 h-9 rounded-full bg-mg-brand-fill text-white flex items-center justify-center font-bold text-sm shadow-xs select-none">
               {initial}
             </div>
-            <span className="hidden sm:inline-block text-[14px] font-semibold text-[#0F1F1C]">
+            <span className="hidden sm:inline-block text-[14px] font-semibold text-mg-ink">
               Olá, {firstName}
             </span>
           </div>
 
-          <div className="h-5 w-[1px] bg-[#E1E8E5] hidden sm:block" />
+          <div className="h-5 w-[1px] bg-mg-line hidden sm:block" />
 
           <button
             type="button"
             onClick={() => void handleLogout()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[13px] font-semibold text-[#EA580C] hover:bg-[#EA580C]/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[13px] font-semibold text-mg-warn hover:bg-mg-action/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-mg-warn"
           >
             <LogOut className="w-4 h-4" />
             <span>Sair</span>
@@ -1613,7 +1621,7 @@ export const Dashboard: React.FC = () => {
             </p>
           )}
         {!createdOpportunity && (sectionKey === 'ficha' || sectionKey === 'tempo') && (
-          <section className="mb-6 rounded border bg-white p-4">
+          <section className="mb-6 rounded border bg-mg-surface p-4">
             <h2
               id={`secao-${sectionKey}`}
               tabIndex={-1}
@@ -1627,7 +1635,7 @@ export const Dashboard: React.FC = () => {
               selecione uma demanda existente ou registre uma demanda autorizada.
             </p>
             <Link
-              className="inline-flex min-h-[44px] items-center underline text-emerald-800"
+              className="inline-flex min-h-[44px] items-center underline text-mg-brand-strong"
               to="/painel-tecnico?secao=demanda"
             >
               Abrir Oportunidades
@@ -1638,43 +1646,43 @@ export const Dashboard: React.FC = () => {
           <section
             hidden
             style={{ display: 'none' }}
-            className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]"
+            className="bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]"
           >
-            <div className="w-16 h-16 mb-5 rounded-2xl bg-gradient-to-b from-[#064E3B] to-[#022C22] p-3 flex items-center justify-center shadow-[0_8px_20px_rgba(2,44,34,0.18)]">
+            <div className="w-16 h-16 mb-5 rounded-2xl bg-mg-sidebar p-3 flex items-center justify-center shadow-[0_8px_20px_rgba(2,44,34,0.18)]">
               <MercoMark size={40} lightTheme={false} />
             </div>
 
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10B981]/12 text-[#047857] text-[12px] font-bold uppercase tracking-wider mb-4">
-              <ShieldCheck className="w-4 h-4 text-[#10B981]" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-mg-brand-fill/12 text-mg-brand text-[12px] font-bold uppercase tracking-wider mb-4">
+              <ShieldCheck className="w-4 h-4 text-mg-brand" />
               <span>Acesso Autorizado</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F1F1C] tracking-tight mb-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-mg-ink tracking-tight mb-3">
               Olá, {user?.name || firstName}!
             </h1>
 
-            <p className="text-[16px] font-semibold text-[#10B981] mb-4">
+            <p className="text-[16px] font-semibold text-mg-brand mb-4">
               Seu acesso foi validado com sucesso.
             </p>
 
-            <p className="text-[14px] sm:text-[15px] text-[#5B6B66] leading-relaxed mb-6 max-w-md">
+            <p className="text-[14px] sm:text-[15px] text-mg-muted leading-relaxed mb-6 max-w-md">
               Registre uma nova demanda técnico-comercial. O recebimento e o responsável serão
               definidos pelo servidor para manter a rastreabilidade.
             </p>
 
-            <div className="bg-[#F6F8F7] rounded-[12px] p-4 border border-[#E1E8E5] mb-4 text-left flex items-center justify-between gap-3">
+            <div className="bg-mg-canvas rounded-[12px] p-4 border border-mg-line mb-4 text-left flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-white border border-[#E1E8E5] flex items-center justify-center text-[#5B6B66] shrink-0">
+                <div className="w-10 h-10 rounded-full bg-mg-surface border border-mg-line flex items-center justify-center text-mg-muted shrink-0">
                   <UserIcon className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[14px] font-bold text-[#0F1F1C] truncate">
+                  <p className="text-[14px] font-bold text-mg-ink truncate">
                     {user?.name || 'Usuário'}
                   </p>
-                  <p className="text-[12px] text-[#5B6B66] truncate">{user?.email}</p>
+                  <p className="text-[12px] text-mg-muted truncate">{user?.email}</p>
                 </div>
               </div>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#10B981] bg-[#10B981]/10 px-2.5 py-1 rounded-full shrink-0">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-mg-brand bg-mg-brand-fill/10 px-2.5 py-1 rounded-full shrink-0">
                 {role ? ROLE_LABELS[role] : 'Papel não definido'}
               </span>
             </div>
@@ -1682,27 +1690,27 @@ export const Dashboard: React.FC = () => {
             <div
               className={`rounded-[12px] p-4 border text-left ${
                 canHomologateCatalog
-                  ? 'border-[#A7F3D0] bg-[#ECFDF5]'
-                  : 'border-[#FED7AA] bg-[#FFF7ED]'
+                  ? 'border-mg-brand-soft-2 bg-mg-brand-soft'
+                  : 'border-mg-warn-line bg-mg-warn-bg'
               }`}
             >
               <div className="flex items-start gap-3">
                 {canHomologateCatalog ? (
-                  <ShieldCheck className="w-5 h-5 text-[#059669] mt-0.5 shrink-0" />
+                  <ShieldCheck className="w-5 h-5 text-mg-brand-strong mt-0.5 shrink-0" />
                 ) : (
-                  <LockKeyhole className="w-5 h-5 text-[#EA580C] mt-0.5 shrink-0" />
+                  <LockKeyhole className="w-5 h-5 text-mg-warn mt-0.5 shrink-0" />
                 )}
                 <div>
-                  <p className="text-[14px] font-bold text-[#0F1F1C]">Homologação de catálogo</p>
-                  <p className="text-[13px] text-[#5B6B66] mt-1">{permissionMessage}</p>
+                  <p className="text-[14px] font-bold text-mg-ink">Homologação de catálogo</p>
+                  <p className="text-[13px] text-mg-muted mt-1">{permissionMessage}</p>
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <section className="bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
             <div className="flex items-start gap-3 mb-6">
-              <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
                 <ClipboardPlus className="w-5 h-5" />
               </div>
               <div>
@@ -1710,11 +1718,11 @@ export const Dashboard: React.FC = () => {
                   id="secao-demanda"
                   tabIndex={-1}
                   style={{ scrollMarginTop: '5rem' }}
-                  className="text-xl font-extrabold text-[#0F1F1C]"
+                  className="text-xl font-extrabold text-mg-ink"
                 >
                   Nova demanda
                 </h2>
-                <p className="text-[13px] text-[#5B6B66] mt-1">
+                <p className="text-[13px] text-mg-muted mt-1">
                   Campos com * são necessários para registrar o recebimento.
                 </p>
               </div>
@@ -1722,7 +1730,7 @@ export const Dashboard: React.FC = () => {
 
             {opportunityError && (
               <div
-                className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+                className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
                 role="alert"
                 aria-live="assertive"
               >
@@ -1733,7 +1741,7 @@ export const Dashboard: React.FC = () => {
 
             {createdOpportunity && (
               <div
-                className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium flex items-start gap-2.5"
+                className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium flex items-start gap-2.5"
                 role="status"
                 aria-live="polite"
               >
@@ -1746,11 +1754,11 @@ export const Dashboard: React.FC = () => {
             )}
 
             {createdOpportunity && (
-              <div className="mb-5 rounded-[12px] border border-[#D1FAE5] bg-[#F0FDF4] p-4 text-left">
+              <div className="mb-5 rounded-[12px] border border-mg-brand-soft-2 bg-mg-ok-bg p-4 text-left">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-[14px] font-bold text-[#0F1F1C]">Checklist de aptidão</h3>
-                    <p className="text-[12px] text-[#5B6B66] mt-1">
+                    <h3 className="text-[14px] font-bold text-mg-ink">Checklist de aptidão</h3>
+                    <p className="text-[12px] text-mg-muted mt-1">
                       A avaliação é feita pelo servidor e não escolhe a solução técnica.
                     </p>
                   </div>
@@ -1758,7 +1766,7 @@ export const Dashboard: React.FC = () => {
                     type="button"
                     onClick={() => void handleAptitudeEvaluation()}
                     disabled={isEvaluatingAptitude}
-                    className="h-[38px] px-3 rounded-[9px] bg-[#064E3B] text-white text-[12px] font-semibold disabled:opacity-70 disabled:pointer-events-none"
+                    className="h-[38px] px-3 rounded-[9px] bg-mg-sidebar text-white text-[12px] font-semibold disabled:opacity-70 disabled:pointer-events-none"
                   >
                     {isEvaluatingAptitude ? 'Avaliando...' : 'Avaliar aptidão'}
                   </button>
@@ -1766,7 +1774,7 @@ export const Dashboard: React.FC = () => {
 
                 {aptitudeError && (
                   <div
-                    className="mt-3 rounded-[9px] bg-[#FEF2F2] border-l-4 border-[#DC2626] p-3 text-[12px] text-[#B91C1C]"
+                    className="mt-3 rounded-[9px] bg-mg-crit-bg border-l-4 border-mg-crit p-3 text-[12px] text-mg-crit"
                     role="alert"
                   >
                     {aptitudeError}
@@ -1778,8 +1786,8 @@ export const Dashboard: React.FC = () => {
                     <div
                       className={`rounded-[9px] p-3 text-[13px] font-semibold ${
                         aptitudeResult.aptitudeStatus === 'blocked'
-                          ? 'bg-[#FFF7ED] text-[#C2410C]'
-                          : 'bg-[#ECFDF5] text-[#047857]'
+                          ? 'bg-mg-warn-bg text-mg-warn'
+                          : 'bg-mg-brand-soft text-mg-brand'
                       }`}
                     >
                       Estado:{' '}
@@ -1790,13 +1798,13 @@ export const Dashboard: React.FC = () => {
                           : 'exceção autorizada'}
                     </div>
 
-                    <div className="text-[12px] text-[#5B6B66]">
-                      <p className="font-semibold text-[#0F1F1C]">Checklist</p>
+                    <div className="text-[12px] text-mg-muted">
+                      <p className="font-semibold text-mg-ink">Checklist</p>
                       <ul className="mt-1 space-y-0.5">
                         {Object.entries(aptitudeResult.checklist).map(([field, complete]) => (
                           <li
                             key={field}
-                            className={complete ? 'text-[#047857]' : 'text-[#C2410C]'}
+                            className={complete ? 'text-mg-brand' : 'text-mg-warn'}
                           >
                             {complete ? '✓' : '•'} {field}: {complete ? 'preenchido' : 'pendente'}
                           </li>
@@ -1804,7 +1812,7 @@ export const Dashboard: React.FC = () => {
                       </ul>
                       {aptitudeResult.pendingItems.length > 0 ? (
                         <div className="mt-2">
-                          <p className="font-semibold text-[#C2410C]">Pendências</p>
+                          <p className="font-semibold text-mg-warn">Pendências</p>
                           <ul className="list-disc pl-5 mt-1 space-y-0.5">
                             {aptitudeResult.pendingItems.map((item) => (
                               <li key={item}>{item}</li>
@@ -1812,21 +1820,21 @@ export const Dashboard: React.FC = () => {
                           </ul>
                         </div>
                       ) : (
-                        <p className="mt-2 text-[#047857]">Nenhuma pendência encontrada.</p>
+                        <p className="mt-2 text-mg-brand">Nenhuma pendência encontrada.</p>
                       )}
                     </div>
 
                     {aptitudeResult.aptitudeStatus === 'blocked' &&
                       (role === 'engenharia' || role === 'admin') && (
-                        <div className="space-y-2 pt-2 border-t border-[#D1FAE5]">
-                          <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                        <div className="space-y-2 pt-2 border-t border-mg-brand-soft-2">
+                          <label className="block text-[12px] font-semibold text-mg-ink">
                             Justificativa da exceção
                             <textarea
                               minLength={10}
                               maxLength={1000}
                               value={exceptionJustification}
                               onChange={(event) => setExceptionJustification(event.target.value)}
-                              className="mt-1.5 w-full min-h-[76px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                              className="mt-1.5 w-full min-h-[76px] rounded-[9px] border border-mg-line bg-mg-surface p-2.5 text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                               placeholder="Explique por que a oportunidade pode avançar apesar das pendências."
                             />
                           </label>
@@ -1836,7 +1844,7 @@ export const Dashboard: React.FC = () => {
                             disabled={
                               isEvaluatingAptitude || exceptionJustification.trim().length < 10
                             }
-                            className="h-[36px] px-3 rounded-[9px] bg-[#EA580C] text-white text-[12px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                            className="h-[36px] px-3 rounded-[9px] bg-mg-action text-white text-[12px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                           >
                             Autorizar exceção e liberar
                           </button>
@@ -1847,31 +1855,31 @@ export const Dashboard: React.FC = () => {
               </div>
             )}
 
-            <div className="mb-5 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+            <div className="mb-5 rounded-[12px] border border-mg-line bg-mg-canvas p-4 text-left">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div>
-                  <h3 className="text-[14px] font-bold text-[#0F1F1C]">Demandas criadas</h3>
-                  <p className="text-[12px] text-[#5B6B66] mt-1">
+                  <h3 className="text-[14px] font-bold text-mg-ink">Demandas criadas</h3>
+                  <p className="text-[12px] text-mg-muted mt-1">
                     Registros vinculados ao seu usuário.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => void loadOpportunities()}
-                  className="text-[12px] font-semibold text-[#047857] hover:underline"
+                  className="text-[12px] font-semibold text-mg-brand hover:underline"
                 >
                   Atualizar
                 </button>
               </div>
               {opportunitiesError && (
-                <p className="text-[12px] text-[#B91C1C] mb-2" role="alert">
+                <p className="text-[12px] text-mg-crit mb-2" role="alert">
                   {opportunitiesError}
                 </p>
               )}
               {isLoadingOpportunities ? (
-                <p className="text-[12px] text-[#5B6B66]">Carregando demandas...</p>
+                <p className="text-[12px] text-mg-muted">Carregando demandas...</p>
               ) : opportunities.length === 0 ? (
-                <p className="text-[12px] text-[#5B6B66]">
+                <p className="text-[12px] text-mg-muted">
                   Nenhuma demanda encontrada para este usuário.
                 </p>
               ) : (
@@ -1906,19 +1914,19 @@ export const Dashboard: React.FC = () => {
                       }}
                       className={`w-full rounded-[9px] border p-3 text-left transition-colors ${
                         selectedOpportunityId === item.id
-                          ? 'border-[#10B981] bg-[#ECFDF5]'
-                          : 'border-[#E1E8E5] bg-white hover:border-[#A7F3D0]'
+                          ? 'border-mg-brand bg-mg-brand-soft'
+                          : 'border-mg-line bg-mg-surface hover:border-mg-brand-soft-2'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[13px] font-semibold text-[#0F1F1C] truncate">
+                        <span className="text-[13px] font-semibold text-mg-ink truncate">
                           {item.customer_name}
                         </span>
-                        <span className="text-[10px] font-bold uppercase text-[#047857]">
+                        <span className="text-[10px] font-bold uppercase text-mg-brand">
                           {item.aptitude_status || item.status}
                         </span>
                       </div>
-                      <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                      <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-mg-muted sm:grid-cols-2">
                         <span>Contato: {item.contact_name}</span>
                         <span>Origem: {item.origin}</span>
                         <span>Família: {item.service_family}</span>
@@ -1935,7 +1943,7 @@ export const Dashboard: React.FC = () => {
 
             <form onSubmit={handleOpportunitySubmit} className="space-y-4" noValidate>
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Cliente *
                   <input
                     required
@@ -1944,11 +1952,11 @@ export const Dashboard: React.FC = () => {
                     onChange={(event) =>
                       handleOpportunityChange('customer_name', event.target.value)
                     }
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="Nome da empresa ou cliente"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Contato *
                   <input
                     required
@@ -1957,14 +1965,14 @@ export const Dashboard: React.FC = () => {
                     onChange={(event) =>
                       handleOpportunityChange('contact_name', event.target.value)
                     }
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="Nome do contato"
                   />
                 </label>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   E-mail do contato
                   <input
                     type="email"
@@ -1973,25 +1981,25 @@ export const Dashboard: React.FC = () => {
                     onChange={(event) =>
                       handleOpportunityChange('contact_email', event.target.value)
                     }
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="contato@empresa.com"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Origem da demanda *
                   <input
                     required
                     maxLength={120}
                     value={opportunity.origin}
                     onChange={(event) => handleOpportunityChange('origin', event.target.value)}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="Indicação, portal, recorrência..."
                   />
                 </label>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Família de serviço *
                   <input
                     required
@@ -2000,15 +2008,15 @@ export const Dashboard: React.FC = () => {
                     onChange={(event) =>
                       handleOpportunityChange('service_family', event.target.value)
                     }
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="Informe, sem presumir o piloto"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Local do serviço *
                   <span className="relative block">
                     <MapPin
-                      className="absolute left-3 top-3 w-4 h-4 text-[#5B6B66]"
+                      className="absolute left-3 top-3 w-4 h-4 text-mg-muted"
                       aria-hidden="true"
                     />
                     <input
@@ -2016,7 +2024,7 @@ export const Dashboard: React.FC = () => {
                       maxLength={300}
                       value={opportunity.location}
                       onChange={(event) => handleOpportunityChange('location', event.target.value)}
-                      className="mt-1.5 w-full h-[44px] pl-9 pr-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                      className="mt-1.5 w-full h-[44px] pl-9 pr-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                       placeholder="Cidade, obra ou endereço"
                     />
                   </span>
@@ -2024,17 +2032,17 @@ export const Dashboard: React.FC = () => {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Data da demanda *
                   <input
                     required
                     type="date"
                     value={opportunity.demand_date}
                     onChange={(event) => handleOpportunityChange('demand_date', event.target.value)}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Prazo informado
                   <input
                     type="date"
@@ -2042,19 +2050,19 @@ export const Dashboard: React.FC = () => {
                     onChange={(event) =>
                       handleOpportunityChange('deadline_date', event.target.value)
                     }
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   />
                 </label>
               </div>
 
               <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <p className="text-[12px] text-[#5B6B66]">
+                <p className="text-[12px] text-mg-muted">
                   O recebimento será marcado pelo servidor no instante do cadastro.
                 </p>
                 <button
                   type="submit"
                   disabled={isSubmittingOpportunity}
-                  className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                  className="h-[46px] px-5 rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
                 >
                   <ClipboardPlus className="w-4 h-4" />
                   {isSubmittingOpportunity ? 'Registrando...' : 'Registrar demanda'}
@@ -2064,9 +2072,9 @@ export const Dashboard: React.FC = () => {
           </section>
         </div>
 
-        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -2074,11 +2082,11 @@ export const Dashboard: React.FC = () => {
                 id="secao-prontidao"
                 tabIndex={-1}
                 style={{ scrollMarginTop: '5rem' }}
-                className="text-xl font-extrabold text-[#0F1F1C]"
+                className="text-xl font-extrabold text-mg-ink"
               >
                 Prontidão da Fase 2
               </h2>
-              <p className="text-[13px] text-[#5B6B66] mt-1">
+              <p className="text-[13px] text-mg-muted mt-1">
                 Gate de prontidão por família: exibe pendências com motivo, dono e data. A aprovação
                 exige vínculos verificáveis e só é assinada por Engenharia/Admin.
               </p>
@@ -2087,7 +2095,7 @@ export const Dashboard: React.FC = () => {
 
           {readinessError && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
               role="alert"
               aria-live="assertive"
             >
@@ -2098,7 +2106,7 @@ export const Dashboard: React.FC = () => {
 
           {readinessInfo && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
               role="status"
               aria-live="polite"
             >
@@ -2107,17 +2115,17 @@ export const Dashboard: React.FC = () => {
           )}
 
           {isLoadingReadiness ? (
-            <p className="text-[13px] text-[#5B6B66]">Carregando prontidão...</p>
+            <p className="text-[13px] text-mg-muted">Carregando prontidão...</p>
           ) : readinessStatus ? (
-            <div className="mb-6 p-4 rounded-[12px] border border-[#E1E8E5] bg-[#F8FAF9]">
+            <div className="mb-6 p-4 rounded-[12px] border border-mg-line bg-mg-surface-2">
               <div className="flex items-center gap-2 mb-2">
                 <span
                   className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-bold ${
                     readinessStatus.status === 'aprovado'
-                      ? 'bg-[#ECFDF5] text-[#047857]'
+                      ? 'bg-mg-brand-soft text-mg-brand'
                       : readinessStatus.status === 'invalidado'
-                        ? 'bg-[#FEF2F2] text-[#B91C1C]'
-                        : 'bg-[#FFF7ED] text-[#C2410C]'
+                        ? 'bg-mg-crit-bg text-mg-crit'
+                        : 'bg-mg-warn-bg text-mg-warn'
                   }`}
                 >
                   {readinessStatus.status === 'aprovado'
@@ -2127,16 +2135,16 @@ export const Dashboard: React.FC = () => {
                       : 'BLOQUEADO'}
                 </span>{' '}
                 {readinessStatus.family && (
-                  <span className="text-[12px] font-semibold text-[#0F1F1C]">
+                  <span className="text-[12px] font-semibold text-mg-ink">
                     Família: {readinessStatus.family}
                   </span>
                 )}
               </div>
-              <p className="text-[13px] text-[#5B6B66]">{readinessStatus.detail}</p>
+              <p className="text-[13px] text-mg-muted">{readinessStatus.detail}</p>
               {readinessStatus.blockers.length > 0 && (
                 <ul className="mt-3 space-y-1.5">
                   {readinessStatus.blockers.map((blocker, index) => (
-                    <li key={index} className="text-[12px] text-[#0F1F1C]">
+                    <li key={index} className="text-[12px] text-mg-ink">
                       <span className="font-semibold">{blocker.key}</span> — {blocker.reason} ·
                       dono: {blocker.owner} · aberto em {blocker.openedAt}
                     </li>
@@ -2149,30 +2157,30 @@ export const Dashboard: React.FC = () => {
           {canApproveReadiness && (
             <form onSubmit={handleReadinessApprove} className="space-y-4" noValidate>
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Família-piloto *
                   <input
                     required
                     maxLength={120}
                     value={readinessForm.pilot_family}
                     onChange={(event) => handleReadinessChange('pilot_family', event.target.value)}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="Ex.: geotecnia"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Dono da decisão de piloto *
                   <input
                     required
                     maxLength={200}
                     value={readinessForm.pilot_owner}
                     onChange={(event) => handleReadinessChange('pilot_owner', event.target.value)}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="Quem decidiu o piloto"
                   />
                 </label>
               </div>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Motivo da decisão de piloto *
                 <textarea
                   required
@@ -2180,18 +2188,18 @@ export const Dashboard: React.FC = () => {
                   rows={2}
                   value={readinessForm.pilot_reason}
                   onChange={(event) => handleReadinessChange('pilot_reason', event.target.value)}
-                  className="mt-1.5 w-full px-3 py-2.5 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full px-3 py-2.5 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Justificativa da escolha da família"
                 />
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   SLA homologado *
                   <select
                     required
                     value={readinessForm.sla_record_id}
                     onChange={(event) => handleReadinessChange('sla_record_id', event.target.value)}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   >
                     <option value="">
                       {slaOptions.length === 0
@@ -2207,19 +2215,19 @@ export const Dashboard: React.FC = () => {
                     {/* rótulo construído por slaOptionLabel — ver src/lib/readinessOptions.ts */}
                   </select>
                   {slaOptions.length === 0 && (
-                    <span className="mt-1 block text-[12px] text-[#B45309]">
+                    <span className="mt-1 block text-[12px] text-mg-warn">
                       Nenhum parâmetro de SLA homologado. Homologue em Administração → Regras e SLA
                       do piloto antes de assinar a prontidão.
                     </span>
                   )}
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Baseline congelado *
                   <select
                     required
                     value={readinessForm.baseline_id}
                     onChange={(event) => handleReadinessChange('baseline_id', event.target.value)}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   >
                     <option value="">
                       {baselineOptions.length === 0
@@ -2234,7 +2242,7 @@ export const Dashboard: React.FC = () => {
                     ))}
                   </select>
                   {baselineOptions.length === 0 && (
-                    <span className="mt-1 block text-[12px] text-[#B45309]">
+                    <span className="mt-1 block text-[12px] text-mg-warn">
                       Nenhum baseline congelado visível para você (a consulta mostra apenas os
                       seus). Congele um baseline em Administração → Baseline antes de assinar a
                       prontidão.
@@ -2242,7 +2250,7 @@ export const Dashboard: React.FC = () => {
                   )}
                 </label>
               </div>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Evidência de recuperação real (CA-1-13) *
                 <input
                   required
@@ -2251,11 +2259,11 @@ export const Dashboard: React.FC = () => {
                   onChange={(event) =>
                     handleReadinessChange('recovery_evidence_ref', event.target.value)
                   }
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Referência da prova de restauração isolada"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Recibo da Fase 1 *
                 <input
                   required
@@ -2264,14 +2272,14 @@ export const Dashboard: React.FC = () => {
                   onChange={(event) =>
                     handleReadinessChange('phase1_receipt_ref', event.target.value)
                   }
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Ex.: 05_entregas/fase-1/RECIBO-T1.17.md"
                 />
               </label>
               <button
                 type="submit"
                 disabled={isApprovingReadiness}
-                className="h-[44px] px-5 rounded-[10px] bg-[#10B981] text-white text-[13px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                className="h-[44px] px-5 rounded-[10px] bg-mg-brand-fill text-white text-[13px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
               >
                 {isApprovingReadiness ? 'Assinando...' : 'Assinar prontidão'}
               </button>
@@ -2279,9 +2287,9 @@ export const Dashboard: React.FC = () => {
           )}
         </section>
 
-        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
               <HardDriveDownload className="w-5 h-5" />
             </div>
             <div>
@@ -2289,11 +2297,11 @@ export const Dashboard: React.FC = () => {
                 id="secao-backup"
                 tabIndex={-1}
                 style={{ scrollMarginTop: '5rem' }}
-                className="text-xl font-extrabold text-[#0F1F1C]"
+                className="text-xl font-extrabold text-mg-ink"
               >
                 Backup e exportação
               </h2>
-              <p className="text-[13px] text-[#5B6B66] mt-1">
+              <p className="text-[13px] text-mg-muted mt-1">
                 Demonstração com recibo auditado e hash de integridade: backup inválido bloqueia a
                 restauração (falha segura); hash válido comprova a restauração.
               </p>
@@ -2302,7 +2310,7 @@ export const Dashboard: React.FC = () => {
 
           {backupError && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
               role="alert"
               aria-live="assertive"
             >
@@ -2313,7 +2321,7 @@ export const Dashboard: React.FC = () => {
 
           {backupInfo && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
               role="status"
               aria-live="polite"
             >
@@ -2326,7 +2334,7 @@ export const Dashboard: React.FC = () => {
               type="button"
               onClick={() => void handleBackupExport()}
               disabled={isSubmittingBackup}
-              className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2"
+              className="h-[46px] px-5 rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2"
             >
               <HardDriveDownload className="w-4 h-4" />
               {isSubmittingBackup ? 'Gerando...' : 'Exportar / Gerar backup'}
@@ -2334,16 +2342,16 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {backupHash && backupCounts && (
-            <div className="mb-5 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4">
-              <h3 className="text-[13px] font-bold text-[#0F1F1C]">Snapshot atual</h3>
-              <p className="text-[12px] text-[#5B6B66] mt-1 break-all">
+            <div className="mb-5 rounded-[12px] border border-mg-line bg-mg-canvas p-4">
+              <h3 className="text-[13px] font-bold text-mg-ink">Snapshot atual</h3>
+              <p className="text-[12px] text-mg-muted mt-1 break-all">
                 Hash: <span className="font-mono">{backupHash}</span>
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {Object.entries(backupCounts).map(([name, count]) => (
                   <span
                     key={name}
-                    className="text-[11px] bg-white border border-[#E1E8E5] rounded-full px-2.5 py-1 text-[#5B6B66]"
+                    className="text-[11px] bg-mg-surface border border-mg-line rounded-full px-2.5 py-1 text-mg-muted"
                   >
                     {name}: {count}
                   </span>
@@ -2352,13 +2360,13 @@ export const Dashboard: React.FC = () => {
             </div>
           )}
 
-          <div className="rounded-[12px] border border-[#E1E8E5] bg-white p-4 mb-5">
-            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+          <div className="rounded-[12px] border border-mg-line bg-mg-surface p-4 mb-5">
+            <label className="block text-[13px] font-semibold text-mg-ink">
               Hash do backup
               <input
                 value={backupInputHash}
                 onChange={(event) => setBackupInputHash(event.target.value)}
-                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-mono outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-mono outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 placeholder="Cole o hash do backup (ou use o gerado acima)"
               />
             </label>
@@ -2367,7 +2375,7 @@ export const Dashboard: React.FC = () => {
                 type="button"
                 onClick={() => void handleBackupVerify()}
                 disabled={isSubmittingBackup || !backupInputHash.trim()}
-                className="h-[38px] px-4 rounded-[9px] bg-[#064E3B] text-white text-[12px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                className="h-[38px] px-4 rounded-[9px] bg-mg-sidebar text-white text-[12px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
               >
                 Verificar integridade
               </button>
@@ -2375,31 +2383,31 @@ export const Dashboard: React.FC = () => {
                 type="button"
                 onClick={() => void handleBackupRestore()}
                 disabled={isSubmittingBackup || !backupInputHash.trim()}
-                className="h-[38px] px-4 rounded-[9px] bg-[#1D4ED8] text-white text-[12px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                className="h-[38px] px-4 rounded-[9px] bg-mg-brand-fill text-white text-[12px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
               >
                 Testar restauração
               </button>
             </div>
-            <p className="mt-2 text-[12px] text-[#5B6B66]">
+            <p className="mt-2 text-[12px] text-mg-muted">
               Dica: altere um caractere do hash para provar a falha segura (RED-012).
             </p>
           </div>
 
-          <div className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4">
+          <div className="rounded-[12px] border border-mg-line bg-mg-canvas p-4">
             <div className="flex items-center justify-between gap-3 mb-3">
-              <h3 className="text-[14px] font-bold text-[#0F1F1C]">Recibos de demonstração</h3>
+              <h3 className="text-[14px] font-bold text-mg-ink">Recibos de demonstração</h3>
               <button
                 type="button"
                 onClick={() => void loadBackupReceipts()}
-                className="text-[12px] font-semibold text-[#047857] hover:underline"
+                className="text-[12px] font-semibold text-mg-brand hover:underline"
               >
                 Atualizar
               </button>
             </div>
             {isLoadingBackup ? (
-              <p className="text-[12px] text-[#5B6B66]">Carregando recibos...</p>
+              <p className="text-[12px] text-mg-muted">Carregando recibos...</p>
             ) : backupReceipts.length === 0 ? (
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 Nenhum recibo ainda — gere uma exportação para começar.
               </p>
             ) : (
@@ -2407,24 +2415,24 @@ export const Dashboard: React.FC = () => {
                 {backupReceipts.map((receipt) => (
                   <div
                     key={receipt.id}
-                    className="flex items-center justify-between gap-2 rounded-[9px] border border-[#E1E8E5] bg-white px-3 py-2"
+                    className="flex items-center justify-between gap-2 rounded-[9px] border border-mg-line bg-mg-surface px-3 py-2"
                   >
                     <div className="min-w-0">
-                      <span className="text-[12px] font-bold text-[#0F1F1C] capitalize">
+                      <span className="text-[12px] font-bold text-mg-ink capitalize">
                         {receipt.kind}
                       </span>
-                      <span className="text-[11px] text-[#5B6B66] ml-2">
+                      <span className="text-[11px] text-mg-muted ml-2">
                         {new Date(receipt.created).toLocaleString('pt-BR')}
                       </span>
                       {receipt.errorDetail && (
-                        <p className="text-[11px] text-[#C2410C] truncate">{receipt.errorDetail}</p>
+                        <p className="text-[11px] text-mg-warn truncate">{receipt.errorDetail}</p>
                       )}
                     </div>
                     <span
                       className={`shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                         receipt.result === 'sucesso'
-                          ? 'bg-[#ECFDF5] text-[#047857]'
-                          : 'bg-[#FEF2F2] text-[#B91C1C]'
+                          ? 'bg-mg-brand-soft text-mg-brand'
+                          : 'bg-mg-crit-bg text-mg-crit'
                       }`}
                     >
                       {receipt.result}
@@ -2436,9 +2444,9 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5" />
             </div>
             <div>
@@ -2446,11 +2454,11 @@ export const Dashboard: React.FC = () => {
                 id="secao-modelos"
                 tabIndex={-1}
                 style={{ scrollMarginTop: '5rem' }}
-                className="text-xl font-extrabold text-[#0F1F1C]"
+                className="text-xl font-extrabold text-mg-ink"
               >
                 Modelos reais de proposta
               </h2>
-              <p className="text-[13px] text-[#5B6B66] mt-1">
+              <p className="text-[13px] text-mg-muted mt-1">
                 T1.13 — envie os modelos DOCX reais da Mercogeo. Eles entram como rascunho; somente
                 Engenharia/Admin aprova. Nenhum template é inventado e a T1.14 usará apenas modelos
                 aprovados.
@@ -2460,7 +2468,7 @@ export const Dashboard: React.FC = () => {
 
           {proposalTemplateError && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
               role="alert"
               aria-live="assertive"
             >
@@ -2471,7 +2479,7 @@ export const Dashboard: React.FC = () => {
 
           {proposalTemplateInfo && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
               role="status"
               aria-live="polite"
             >
@@ -2481,7 +2489,7 @@ export const Dashboard: React.FC = () => {
 
           <form onSubmit={handleProposalTemplateSubmit} className="space-y-4" noValidate>
             <div className="grid gap-4 sm:grid-cols-3">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Família *
                 <select
                   value={proposalTemplateForm.family}
@@ -2491,13 +2499,13 @@ export const Dashboard: React.FC = () => {
                       family: event.target.value as 'poliureia' | 'geotecnia',
                     }))
                   }
-                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 >
                   <option value="poliureia">Poliureia</option>
                   <option value="geotecnia">Geotecnia</option>
                 </select>
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Nome do modelo *
                 <input
                   required
@@ -2506,11 +2514,11 @@ export const Dashboard: React.FC = () => {
                   onChange={(event) =>
                     setProposalTemplateForm((current) => ({ ...current, name: event.target.value }))
                   }
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Modelo real — Poliureia"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Nº do modelo
                 <input
                   maxLength={60}
@@ -2521,13 +2529,13 @@ export const Dashboard: React.FC = () => {
                       model_number: event.target.value,
                     }))
                   }
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="NR..."
                 />
               </label>
             </div>
 
-            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+            <label className="block text-[13px] font-semibold text-mg-ink">
               Arquivo DOCX real *
               <input
                 required
@@ -2539,22 +2547,22 @@ export const Dashboard: React.FC = () => {
                     file: event.target.files?.[0] || null,
                   }))
                 }
-                className="mt-1.5 block w-full rounded-[10px] border border-[#E1E8E5] bg-white px-3 py-2.5 text-[13px] font-normal file:mr-3 file:rounded-[7px] file:border-0 file:bg-[#ECFDF5] file:px-3 file:py-1.5 file:text-[12px] file:font-semibold file:text-[#047857]"
+                className="mt-1.5 block w-full rounded-[10px] border border-mg-line bg-mg-surface px-3 py-2.5 text-[13px] font-normal file:mr-3 file:rounded-[7px] file:border-0 file:bg-mg-brand-soft file:px-3 file:py-1.5 file:text-[12px] file:font-semibold file:text-mg-brand"
               />
-              <span className="mt-1 block text-[11px] font-normal text-[#5B6B66]">
+              <span className="mt-1 block text-[11px] font-normal text-mg-muted">
                 O arquivo original é preservado; a prévia sem preço será uma etapa posterior.
               </span>
             </label>
 
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 Campos mapeados: cliente, obra, áreas/patologias, solução, prazo, família e dados do
                 cabeçalho.
               </p>
               <button
                 type="submit"
                 disabled={isSubmittingProposalTemplate}
-                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                className="h-[46px] px-5 rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
               >
                 <FileText className="w-4 h-4" />
                 {isSubmittingProposalTemplate ? 'Enviando...' : 'Enviar modelo como rascunho'}
@@ -2562,26 +2570,26 @@ export const Dashboard: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+          <div className="mt-6 rounded-[12px] border border-mg-line bg-mg-canvas p-4 text-left">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Modelos registrados</h3>
-                <p className="text-[12px] text-[#5B6B66] mt-1">
+                <h3 className="text-[14px] font-bold text-mg-ink">Modelos registrados</h3>
+                <p className="text-[12px] text-mg-muted mt-1">
                   A aprovação é uma decisão explícita e auditada de Engenharia/Admin.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => void loadProposalTemplates()}
-                className="text-[12px] font-semibold text-[#047857] hover:underline"
+                className="text-[12px] font-semibold text-mg-brand hover:underline"
               >
                 Atualizar
               </button>
             </div>
             {isLoadingProposalTemplates ? (
-              <p className="text-[12px] text-[#5B6B66]">Carregando modelos...</p>
+              <p className="text-[12px] text-mg-muted">Carregando modelos...</p>
             ) : proposalTemplates.length === 0 ? (
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 Nenhum modelo registrado ainda. A T1.14 permanece bloqueada até aprovação.
               </p>
             ) : (
@@ -2589,25 +2597,25 @@ export const Dashboard: React.FC = () => {
                 {proposalTemplates.map((template) => (
                   <div
                     key={template.id}
-                    className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                    className="rounded-[9px] border border-mg-line bg-mg-surface p-3"
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-[13px] font-bold text-[#0F1F1C]">
+                      <span className="text-[13px] font-bold text-mg-ink">
                         {template.name} · {template.family}
                       </span>
                       <span
                         className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                           template.status === 'aprovado'
-                            ? 'bg-[#ECFDF5] text-[#047857]'
+                            ? 'bg-mg-brand-soft text-mg-brand'
                             : template.status === 'inativo'
-                              ? 'bg-[#FFF7ED] text-[#C2410C]'
-                              : 'bg-[#F1F5F4] text-[#5B6B66]'
+                              ? 'bg-mg-warn-bg text-mg-warn'
+                              : 'bg-mg-surface-2 text-mg-muted'
                         }`}
                       >
                         {template.status}
                       </span>
                     </div>
-                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-mg-muted sm:grid-cols-2">
                       <span>Modelo: {template.model_number || 'não informado'}</span>
                       <span>Versão: {template.version}</span>
                       <span>Arquivo: {template.file}</span>
@@ -2622,7 +2630,7 @@ export const Dashboard: React.FC = () => {
                         target="_blank"
                         rel="noreferrer"
                         download={template.file}
-                        className="mt-3 inline-flex h-[34px] items-center gap-1.5 rounded-[8px] border border-[#A7F3D0] bg-[#ECFDF5] px-3 text-[11px] font-semibold text-[#047857] hover:bg-[#D1FAE5]"
+                        className="mt-3 inline-flex h-[34px] items-center gap-1.5 rounded-[8px] border border-mg-brand-soft-2 bg-mg-brand-soft px-3 text-[11px] font-semibold text-mg-brand hover:bg-mg-brand-soft-2"
                       >
                         <FileText className="w-3.5 h-3.5" />
                         Abrir / baixar DOCX
@@ -2633,7 +2641,7 @@ export const Dashboard: React.FC = () => {
                         type="button"
                         onClick={() => void handleProposalTemplateApprove(template.id)}
                         disabled={isSubmittingProposalTemplate}
-                        className="mt-2 h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                        className="mt-2 h-[30px] px-3 rounded-[8px] bg-mg-sidebar text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                       >
                         Aprovar modelo
                       </button>
@@ -2645,9 +2653,9 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-11 h-11 rounded-[12px] bg-[#FFF7ED] text-[#C2410C] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[12px] bg-mg-warn-bg text-mg-warn flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5" />
             </div>
             <div>
@@ -2655,22 +2663,22 @@ export const Dashboard: React.FC = () => {
                 id="secao-previa"
                 tabIndex={-1}
                 style={{ scrollMarginTop: '5rem' }}
-                className="text-xl font-extrabold text-[#0F1F1C]"
+                className="text-xl font-extrabold text-mg-ink"
               >
                 Prévia de proposta sem preço
               </h2>
-              <p className="text-[13px] text-[#5B6B66] mt-1">
+              <p className="text-[13px] text-mg-muted mt-1">
                 T1.14 — selecione uma demanda e um modelo aprovado, preencha os dados variáveis e
                 gere uma prévia imprimível. O envio permanece bloqueado.
               </p>
             </div>
           </div>
 
-          <div className="mb-5 rounded-[12px] border border-[#FDBA74] bg-[#FFF7ED] p-4" role="note">
-            <p className="text-[14px] font-extrabold tracking-wide text-[#9A3412]">
+          <div className="mb-5 rounded-[12px] border border-mg-warn-line bg-mg-warn-bg p-4" role="note">
+            <p className="text-[14px] font-extrabold tracking-wide text-mg-warn">
               SEM PREÇO — NÃO ENVIAR
             </p>
-            <p className="mt-1 text-[12px] text-[#C2410C]">
+            <p className="mt-1 text-[12px] text-mg-warn">
               Esta etapa não calcula nem aceita valores, faturamento, condições de pagamento ou
               envio ao cliente.
             </p>
@@ -2678,7 +2686,7 @@ export const Dashboard: React.FC = () => {
 
           {proposalPreviewError && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
               role="alert"
               aria-live="assertive"
             >
@@ -2689,7 +2697,7 @@ export const Dashboard: React.FC = () => {
 
           {proposalPreviewInfo && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
               role="status"
               aria-live="polite"
             >
@@ -2699,7 +2707,7 @@ export const Dashboard: React.FC = () => {
 
           <form onSubmit={handleProposalPreviewSubmit} className="space-y-5" noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Demanda *
                 <select
                   required
@@ -2707,7 +2715,7 @@ export const Dashboard: React.FC = () => {
                   onChange={(event) => {
                     if (event.target.value) syncProposalFormWithOpportunity(event.target.value)
                   }}
-                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 >
                   <option value="">Selecione uma demanda registrada</option>
                   {opportunities.map((item) => (
@@ -2717,7 +2725,7 @@ export const Dashboard: React.FC = () => {
                   ))}
                 </select>
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Modelo aprovado *
                 <select
                   required
@@ -2728,7 +2736,7 @@ export const Dashboard: React.FC = () => {
                       template_id: event.target.value,
                     }))
                   }
-                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 >
                   <option value="">
                     {isLoadingApprovedProposalTemplates
@@ -2747,7 +2755,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-4">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Família *
                 <select
                   value={proposalPreviewForm.family}
@@ -2756,13 +2764,13 @@ export const Dashboard: React.FC = () => {
                       event.target.value as 'poliureia' | 'geotecnia',
                     )
                   }
-                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 >
                   <option value="poliureia">Poliureia</option>
                   <option value="geotecnia">Geotecnia</option>
                 </select>
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C] sm:col-span-2">
+              <label className="block text-[13px] font-semibold text-mg-ink sm:col-span-2">
                 Número da proposta *
                 <input
                   required
@@ -2771,11 +2779,11 @@ export const Dashboard: React.FC = () => {
                   onChange={(event) =>
                     handleProposalPreviewFieldChange('proposal_number', event.target.value)
                   }
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Ex.: NR2026XXX"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Revisão *
                 <input
                   required
@@ -2784,14 +2792,14 @@ export const Dashboard: React.FC = () => {
                   onChange={(event) =>
                     handleProposalPreviewFieldChange('revision', event.target.value)
                   }
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="REV 00"
                 />
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Data da proposta *
                 <input
                   required
@@ -2800,46 +2808,46 @@ export const Dashboard: React.FC = () => {
                   onChange={(event) =>
                     handleProposalPreviewFieldChange('proposal_date', event.target.value)
                   }
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C] sm:col-span-2">
+              <label className="block text-[13px] font-semibold text-mg-ink sm:col-span-2">
                 Cidade *
                 <input
                   required
                   maxLength={120}
                   value={proposalPreviewForm.city}
                   onChange={(event) => handleProposalPreviewFieldChange('city', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="São Paulo - SP"
                 />
               </label>
             </div>
 
-            <div className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4">
-              <h3 className="text-[14px] font-bold text-[#0F1F1C]">Cliente e obra</h3>
-              <p className="mt-1 text-[11px] text-[#5B6B66]">
+            <div className="rounded-[12px] border border-mg-line bg-mg-canvas p-4">
+              <h3 className="text-[14px] font-bold text-mg-ink">Cliente e obra</h3>
+              <p className="mt-1 text-[11px] text-mg-muted">
                 Cliente, contato e e-mail vêm da demanda selecionada. O servidor confere que não
                 sejam trocados por outra demanda.
               </p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Cliente
                   <input
                     readOnly
                     value={proposalPreviewForm.customer_name}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#D1FAE5] bg-[#ECFDF5] text-[13px] font-normal outline-none"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-brand-soft-2 bg-mg-brand-soft text-[13px] font-normal outline-none"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Contato
                   <input
                     readOnly
                     value={proposalPreviewForm.contact_name}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#D1FAE5] bg-[#ECFDF5] text-[13px] font-normal outline-none"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-brand-soft-2 bg-mg-brand-soft text-[13px] font-normal outline-none"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   CNPJ do cliente *
                   <input
                     required
@@ -2848,21 +2856,21 @@ export const Dashboard: React.FC = () => {
                     onChange={(event) =>
                       handleProposalPreviewFieldChange('customer_cnpj', event.target.value)
                     }
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="00.000.000/0000-00"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   E-mail do contato
                   <input
                     type="email"
                     maxLength={200}
                     readOnly
                     value={proposalPreviewForm.contact_email}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#D1FAE5] bg-[#ECFDF5] text-[13px] font-normal outline-none"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-brand-soft-2 bg-mg-brand-soft text-[13px] font-normal outline-none"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C] sm:col-span-2">
+                <label className="block text-[13px] font-semibold text-mg-ink sm:col-span-2">
                   Endereço do cliente *
                   <input
                     required
@@ -2871,11 +2879,11 @@ export const Dashboard: React.FC = () => {
                     onChange={(event) =>
                       handleProposalPreviewFieldChange('customer_address', event.target.value)
                     }
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="Rua, número, cidade, estado e CEP"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C] sm:col-span-2">
+                <label className="block text-[13px] font-semibold text-mg-ink sm:col-span-2">
                   Local da obra *
                   <input
                     required
@@ -2884,7 +2892,7 @@ export const Dashboard: React.FC = () => {
                     onChange={(event) =>
                       handleProposalPreviewFieldChange('local_obra', event.target.value)
                     }
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="Nome da obra ou unidade"
                   />
                 </label>
@@ -2892,7 +2900,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Tipo de superfície *
                 <input
                   required
@@ -2901,11 +2909,11 @@ export const Dashboard: React.FC = () => {
                   onChange={(event) =>
                     handleProposalPreviewFieldChange('surface_type', event.target.value)
                   }
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Concreto, solo..."
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Início da execução *
                 <input
                   required
@@ -2914,13 +2922,13 @@ export const Dashboard: React.FC = () => {
                   onChange={(event) =>
                     handleProposalPreviewFieldChange('execution_start', event.target.value)
                   }
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Mobilização"
                 />
               </label>
             </div>
 
-            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+            <label className="block text-[13px] font-semibold text-mg-ink">
               Prazo de execução *
               <input
                 required
@@ -2929,16 +2937,16 @@ export const Dashboard: React.FC = () => {
                 onChange={(event) =>
                   handleProposalPreviewFieldChange('execution_deadline', event.target.value)
                 }
-                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 placeholder="Em até ... dias úteis"
               />
             </label>
 
-            <div className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4">
+            <div className="rounded-[12px] border border-mg-line bg-mg-canvas p-4">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div>
-                  <h3 className="text-[14px] font-bold text-[#0F1F1C]">Áreas e ações</h3>
-                  <p className="mt-1 text-[11px] text-[#5B6B66]">
+                  <h3 className="text-[14px] font-bold text-mg-ink">Áreas e ações</h3>
+                  <p className="mt-1 text-[11px] text-mg-muted">
                     Não inclua preços, faturamento ou condições de pagamento nesta tabela.
                   </p>
                 </div>
@@ -2946,7 +2954,7 @@ export const Dashboard: React.FC = () => {
                   type="button"
                   onClick={handleProposalPreviewAddArea}
                   disabled={proposalPreviewForm.areas.length >= 50}
-                  className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] border border-[#A7F3D0] bg-white px-3 text-[11px] font-semibold text-[#047857] disabled:opacity-60"
+                  className="inline-flex h-[34px] items-center gap-1.5 rounded-[8px] border border-mg-brand-soft-2 bg-mg-surface px-3 text-[11px] font-semibold text-mg-brand disabled:opacity-60"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Adicionar área
@@ -2956,15 +2964,15 @@ export const Dashboard: React.FC = () => {
                 {proposalPreviewForm.areas.map((area, index) => (
                   <div
                     key={`${area.item}-${index}`}
-                    className="rounded-[10px] border border-[#E1E8E5] bg-white p-3"
+                    className="rounded-[10px] border border-mg-line bg-mg-surface p-3"
                   >
                     <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="text-[12px] font-bold text-[#0F1F1C]">Área {index + 1}</span>
+                      <span className="text-[12px] font-bold text-mg-ink">Área {index + 1}</span>
                       {proposalPreviewForm.areas.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleProposalPreviewRemoveArea(index)}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#B91C1C] hover:underline"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-mg-crit hover:underline"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Remover
                         </button>
@@ -2982,7 +2990,7 @@ export const Dashboard: React.FC = () => {
                       ).map(([field, label, placeholder]) => (
                         <label
                           key={field}
-                          className="block text-[11px] font-semibold text-[#0F1F1C]"
+                          className="block text-[11px] font-semibold text-mg-ink"
                         >
                           {label} *
                           <input
@@ -3000,7 +3008,7 @@ export const Dashboard: React.FC = () => {
                             onChange={(event) =>
                               handleProposalPreviewAreaChange(index, field, event.target.value)
                             }
-                            className="mt-1.5 w-full h-[38px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[11px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                            className="mt-1.5 w-full h-[38px] px-2.5 rounded-[8px] border border-mg-line bg-mg-surface text-[11px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                             placeholder={placeholder}
                           />
                         </label>
@@ -3011,7 +3019,7 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+            <label className="block text-[13px] font-semibold text-mg-ink">
               Solução proposta *
               <textarea
                 required
@@ -3020,19 +3028,19 @@ export const Dashboard: React.FC = () => {
                 onChange={(event) =>
                   handleProposalPreviewFieldChange('solution_proposed', event.target.value)
                 }
-                className="mt-1.5 w-full min-h-[110px] rounded-[10px] border border-[#E1E8E5] bg-white p-3 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                className="mt-1.5 w-full min-h-[110px] rounded-[10px] border border-mg-line bg-mg-surface p-3 text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 placeholder="Descreva a solução técnica para esta demanda, sem valores comerciais."
               />
             </label>
 
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 O modelo e a demanda serão validados novamente pelo servidor.
               </p>
               <button
                 type="submit"
                 disabled={isSubmittingProposalPreview || isLoadingApprovedProposalTemplates}
-                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#EA580C] to-[#C2410C] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(234,88,12,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                className="h-[46px] px-5 rounded-[10px] bg-mg-action hover:bg-mg-action-hover text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(194,65,12,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
               >
                 <FileText className="w-4 h-4" />
                 {isSubmittingProposalPreview ? 'Gerando prévia...' : 'Gerar prévia sem preço'}
@@ -3040,13 +3048,13 @@ export const Dashboard: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4">
+          <div className="mt-6 rounded-[12px] border border-mg-line bg-mg-canvas p-4">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <h3 className="text-[14px] font-bold text-[#0F1F1C]">
+                <h3 className="text-[14px] font-bold text-mg-ink">
                   Pré-visualizações desta demanda
                 </h3>
-                <p className="text-[11px] text-[#5B6B66] mt-1">
+                <p className="text-[11px] text-mg-muted mt-1">
                   Registros gerados sem preço e vinculados ao usuário.
                 </p>
               </div>
@@ -3055,15 +3063,15 @@ export const Dashboard: React.FC = () => {
                 onClick={() =>
                   void loadProposalPreviews(proposalPreviewForm.opportunity_id || undefined)
                 }
-                className="text-[12px] font-semibold text-[#047857] hover:underline"
+                className="text-[12px] font-semibold text-mg-brand hover:underline"
               >
                 Atualizar
               </button>
             </div>
             {isLoadingProposalPreviews ? (
-              <p className="text-[12px] text-[#5B6B66]">Carregando prévias...</p>
+              <p className="text-[12px] text-mg-muted">Carregando prévias...</p>
             ) : proposalPreviews.length === 0 ? (
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 Nenhuma prévia gerada para a demanda selecionada.
               </p>
             ) : (
@@ -3075,19 +3083,19 @@ export const Dashboard: React.FC = () => {
                     onClick={() => setActiveProposalPreview(preview)}
                     className={`w-full rounded-[9px] border p-3 text-left ${
                       activeProposalPreview?.id === preview.id
-                        ? 'border-[#EA580C] bg-[#FFF7ED]'
-                        : 'border-[#E1E8E5] bg-white hover:border-[#FDBA74]'
+                        ? 'border-mg-action bg-mg-warn-bg'
+                        : 'border-mg-line bg-mg-surface hover:border-mg-warn-line'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[12px] font-bold text-[#0F1F1C]">
+                      <span className="text-[12px] font-bold text-mg-ink">
                         {preview.proposalNumber} · {proposalFamilyLabel(preview.family)}
                       </span>
-                      <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[10px] font-bold uppercase text-[#C2410C]">
+                      <span className="rounded-full bg-mg-warn-bg px-2 py-0.5 text-[10px] font-bold uppercase text-mg-warn">
                         SEM PREÇO
                       </span>
                     </div>
-                    <p className="mt-1 text-[11px] text-[#5B6B66]">
+                    <p className="mt-1 text-[11px] text-mg-muted">
                       Modelo: {preview.templateName} ·{' '}
                       {new Date(preview.createdAt).toLocaleString('pt-BR')}
                     </p>
@@ -3100,23 +3108,23 @@ export const Dashboard: React.FC = () => {
           {activeProposalPreview && (
             <div
               id="proposal-preview-print"
-              className="mt-6 rounded-[12px] border border-[#CBD5D1] bg-white p-5 text-left shadow-sm"
+              className="mt-6 rounded-[12px] border border-mg-line-strong bg-mg-surface p-5 text-left shadow-sm"
             >
-              <div className="flex flex-col gap-3 border-b border-[#E1E8E5] pb-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-3 border-b border-mg-line pb-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#C2410C]">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-mg-warn">
                     Prévia documental
                   </p>
-                  <h3 className="mt-1 text-xl font-extrabold text-[#0F1F1C]">MERCO GEOPOLÍMEROS</h3>
-                  <p className="mt-1 text-[12px] text-[#5B6B66]">
+                  <h3 className="mt-1 text-xl font-extrabold text-mg-ink">MERCO GEOPOLÍMEROS</h3>
+                  <p className="mt-1 text-[12px] text-mg-muted">
                     {activeProposalPreview.templateName} ·{' '}
                     {activeProposalPreview.templateModelNumber || 'modelo aprovado'} · v
                     {activeProposalPreview.templateVersion}
                   </p>
                 </div>
-                <div className="rounded-[9px] border-2 border-[#EA580C] px-3 py-2 text-center">
-                  <p className="text-[12px] font-extrabold text-[#C2410C]">SEM PREÇO</p>
-                  <p className="text-[10px] font-bold text-[#C2410C]">NÃO ENVIAR</p>
+                <div className="rounded-[9px] border-2 border-mg-action px-3 py-2 text-center">
+                  <p className="text-[12px] font-extrabold text-mg-warn">SEM PREÇO</p>
+                  <p className="text-[10px] font-bold text-mg-warn">NÃO ENVIAR</p>
                 </div>
               </div>
               <div className="mt-5 grid gap-x-5 gap-y-2 text-[12px] sm:grid-cols-2">
@@ -3149,13 +3157,13 @@ export const Dashboard: React.FC = () => {
                 </p>
               </div>
               <div className="mt-5">
-                <h4 className="text-[13px] font-extrabold text-[#0F1F1C]">
+                <h4 className="text-[13px] font-extrabold text-mg-ink">
                   Descrição das áreas e ações
                 </h4>
-                <div className="mt-2 overflow-x-auto rounded-[8px] border border-[#E1E8E5]">
+                <div className="mt-2 overflow-x-auto rounded-[8px] border border-mg-line">
                   <table className="w-full min-w-[680px] text-left text-[11px]">
                     <thead
-                      className="bg-[#F6F8F7] text-[#5B6B66]
+                      className="bg-mg-canvas text-mg-muted
                       "
                     >
                       <tr>
@@ -3168,7 +3176,7 @@ export const Dashboard: React.FC = () => {
                     </thead>
                     <tbody>
                       {activeProposalPreview.areas.map((area) => (
-                        <tr key={area.item} className="border-t border-[#E1E8E5]">
+                        <tr key={area.item} className="border-t border-mg-line">
                           <td className="p-2">{area.item}</td>
                           <td className="p-2">{area.local}</td>
                           <td className="p-2">{area.area}</td>
@@ -3181,22 +3189,22 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
               <div className="mt-5">
-                <h4 className="text-[13px] font-extrabold text-[#0F1F1C]">Solução proposta</h4>
-                <p className="mt-2 whitespace-pre-wrap text-[12px] leading-6 text-[#33443F]">
+                <h4 className="text-[13px] font-extrabold text-mg-ink">Solução proposta</h4>
+                <p className="mt-2 whitespace-pre-wrap text-[12px] leading-6 text-mg-ink">
                   {activeProposalPreview.solutionProposed}
                 </p>
               </div>
               <div className="mt-5">
-                <h4 className="text-[13px] font-extrabold text-[#0F1F1C]">
+                <h4 className="text-[13px] font-extrabold text-mg-ink">
                   Descrição do sistema — {proposalFamilyLabel(activeProposalPreview.family)}
                 </h4>
-                <div className="mt-2 space-y-2 text-[12px] leading-6 text-[#33443F]">
+                <div className="mt-2 space-y-2 text-[12px] leading-6 text-mg-ink">
                   {proposalFixedSystemCopy(activeProposalPreview.family).map((paragraph) => (
                     <p key={paragraph}>{paragraph}</p>
                   ))}
                 </div>
               </div>
-              <div className="mt-5 grid gap-3 rounded-[9px] bg-[#F6F8F7] p-3 text-[12px] sm:grid-cols-2">
+              <div className="mt-5 grid gap-3 rounded-[9px] bg-mg-canvas p-3 text-[12px] sm:grid-cols-2">
                 <p>
                   <strong>Início:</strong> {activeProposalPreview.executionStart}
                 </p>
@@ -3204,7 +3212,7 @@ export const Dashboard: React.FC = () => {
                   <strong>Prazo de execução:</strong> {activeProposalPreview.executionDeadline}
                 </p>
               </div>
-              <p className="mt-5 border-t border-[#E1E8E5] pt-4 text-[11px] italic text-[#5B6B66]">
+              <p className="mt-5 border-t border-mg-line pt-4 text-[11px] italic text-mg-muted">
                 Esta prévia não contém preço, faturamento ou condições de pagamento. A tentativa de
                 envio é bloqueada pelo servidor.
               </p>
@@ -3212,7 +3220,7 @@ export const Dashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleProposalPreviewPrint}
-                  className="inline-flex h-[38px] items-center gap-1.5 rounded-[8px] bg-[#064E3B] px-4 text-[12px] font-semibold text-white"
+                  className="inline-flex h-[38px] items-center gap-1.5 rounded-[8px] bg-mg-sidebar px-4 text-[12px] font-semibold text-white"
                 >
                   <Printer className="w-4 h-4" /> Imprimir / salvar PDF
                 </button>
@@ -3220,7 +3228,7 @@ export const Dashboard: React.FC = () => {
                   type="button"
                   onClick={() => void handleProposalPreviewSendAttempt()}
                   disabled={isSubmittingProposalPreview}
-                  className="inline-flex h-[38px] items-center gap-1.5 rounded-[8px] border border-[#FCA5A5] bg-[#FEF2F2] px-4 text-[12px] font-semibold text-[#B91C1C] disabled:opacity-60"
+                  className="inline-flex h-[38px] items-center gap-1.5 rounded-[8px] border border-mg-crit-line bg-mg-crit-bg px-4 text-[12px] font-semibold text-mg-crit disabled:opacity-60"
                 >
                   <Send className="w-4 h-4" /> Tentar enviar (deve bloquear)
                 </button>
@@ -3229,9 +3237,9 @@ export const Dashboard: React.FC = () => {
           )}
         </section>
 
-        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
               <DatabaseZap className="w-5 h-5" />
             </div>
             <div>
@@ -3239,11 +3247,11 @@ export const Dashboard: React.FC = () => {
                 id="secao-fontes"
                 tabIndex={-1}
                 style={{ scrollMarginTop: '5rem' }}
-                className="text-xl font-extrabold text-[#0F1F1C]"
+                className="text-xl font-extrabold text-mg-ink"
               >
                 Auditoria VOBI/OMIE
               </h2>
-              <p className="text-[13px] text-[#5B6B66] mt-1">
+              <p className="text-[13px] text-mg-muted mt-1">
                 Cobertura, fonte de verdade, forma de acesso e decisão de fonte (integrar, importar
                 ou não usar) — auditada antes de qualquer duplicação ou integração.
               </p>
@@ -3252,7 +3260,7 @@ export const Dashboard: React.FC = () => {
 
           {sourceError && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
               role="alert"
               aria-live="assertive"
             >
@@ -3263,7 +3271,7 @@ export const Dashboard: React.FC = () => {
 
           {sourceInfo && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
               role="status"
               aria-live="polite"
             >
@@ -3275,21 +3283,21 @@ export const Dashboard: React.FC = () => {
             {sourceMatrix.map((item) => (
               <div
                 key={item.system}
-                className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4"
+                className="rounded-[12px] border border-mg-line bg-mg-canvas p-4"
               >
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <span className="text-[14px] font-bold text-[#0F1F1C] uppercase">
+                  <span className="text-[14px] font-bold text-mg-ink uppercase">
                     {item.system === 'vobi' ? 'VOBI' : 'OMIE'}
                   </span>
                   <span
                     className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                       item.decision === 'integrar'
-                        ? 'bg-[#ECFDF5] text-[#047857]'
+                        ? 'bg-mg-brand-soft text-mg-brand'
                         : item.decision === 'importar'
-                          ? 'bg-[#EFF6FF] text-[#1D4ED8]'
+                          ? 'bg-mg-brand-soft text-mg-brand'
                           : item.decision === 'nao_usar'
-                            ? 'bg-[#FFF7ED] text-[#C2410C]'
-                            : 'bg-[#F1F5F4] text-[#5B6B66]'
+                            ? 'bg-mg-warn-bg text-mg-warn'
+                            : 'bg-mg-surface-2 text-mg-muted'
                     }`}
                   >
                     {item.decision === 'nao_auditado'
@@ -3298,7 +3306,7 @@ export const Dashboard: React.FC = () => {
                   </span>
                 </div>
                 {item.decision !== 'nao_auditado' && (
-                  <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66]">
+                  <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-mg-muted">
                     <span>Cobertura: {item.coverage}</span>
                     <span>Fonte de verdade: {item.sourceOfTruth}</span>
                     <span>Acesso: {item.accessMethod}</span>
@@ -3329,15 +3337,15 @@ export const Dashboard: React.FC = () => {
                       })
                     }}
                     disabled={isSubmittingSource}
-                    className="mt-2 h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                    className="mt-2 h-[30px] px-3 rounded-[8px] bg-mg-sidebar text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                   >
                     Atualizar decisão
                   </button>
                 )}
                 {item.id && sourceDecideTarget === item.id && (
-                  <div className="mt-2 space-y-2 pt-2 border-t border-[#E1E8E5]">
+                  <div className="mt-2 space-y-2 pt-2 border-t border-mg-line">
                     <div className="grid gap-2 sm:grid-cols-2">
-                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                      <label className="block text-[12px] font-semibold text-mg-ink">
                         Nova decisão *
                         <select
                           value={sourceDecideForm.decision}
@@ -3347,14 +3355,14 @@ export const Dashboard: React.FC = () => {
                               decision: event.target.value as 'integrar' | 'importar' | 'nao_usar',
                             }))
                           }
-                          className="mt-1.5 w-full h-[36px] rounded-[8px] border border-[#E1E8E5] bg-white px-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          className="mt-1.5 w-full h-[36px] rounded-[8px] border border-mg-line bg-mg-surface px-2.5 text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                         >
                           <option value="integrar">Integrar</option>
                           <option value="importar">Importar</option>
                           <option value="nao_usar">Não usar</option>
                         </select>
                       </label>
-                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                      <label className="block text-[12px] font-semibold text-mg-ink">
                         Dono *
                         <input
                           value={sourceDecideForm.decision_owner}
@@ -3364,13 +3372,13 @@ export const Dashboard: React.FC = () => {
                               decision_owner: event.target.value,
                             }))
                           }
-                          className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-mg-line bg-mg-surface text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                           placeholder="Quem decide"
                         />
                       </label>
                     </div>
                     <div className="grid gap-2 sm:grid-cols-2">
-                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                      <label className="block text-[12px] font-semibold text-mg-ink">
                         Data *
                         <input
                           type="date"
@@ -3381,10 +3389,10 @@ export const Dashboard: React.FC = () => {
                               decision_date: event.target.value,
                             }))
                           }
-                          className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-mg-line bg-mg-surface text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                         />
                       </label>
-                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                      <label className="block text-[12px] font-semibold text-mg-ink">
                         Justificativa *
                         <input
                           minLength={10}
@@ -3396,7 +3404,7 @@ export const Dashboard: React.FC = () => {
                               decision_reason: event.target.value,
                             }))
                           }
-                          className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-mg-line bg-mg-surface text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                           placeholder="Por que a decisão mudou"
                         />
                       </label>
@@ -3411,14 +3419,14 @@ export const Dashboard: React.FC = () => {
                           !sourceDecideForm.decision_owner.trim() ||
                           !sourceDecideForm.decision_date
                         }
-                        className="h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                        className="h-[30px] px-3 rounded-[8px] bg-mg-sidebar text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                       >
                         Confirmar decisão
                       </button>
                       <button
                         type="button"
                         onClick={() => setSourceDecideTarget(null)}
-                        className="h-[30px] px-3 rounded-[8px] bg-white border border-[#E1E8E5] text-[#5B6B66] text-[11px] font-semibold"
+                        className="h-[30px] px-3 rounded-[8px] bg-mg-surface border border-mg-line text-mg-muted text-[11px] font-semibold"
                       >
                         Cancelar
                       </button>
@@ -3431,35 +3439,35 @@ export const Dashboard: React.FC = () => {
 
           <form onSubmit={handleSourceSubmit} className="space-y-4" noValidate>
             <div className="grid gap-4 sm:grid-cols-3">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Sistema *
                 <select
                   value={sourceForm.system}
                   onChange={(event) => handleSourceChange('system', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 >
                   <option value="vobi">VOBI</option>
                   <option value="omie">OMIE</option>
                 </select>
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Forma de acesso *
                 <select
                   value={sourceForm.access_method}
                   onChange={(event) => handleSourceChange('access_method', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 >
                   <option value="manual">Manual</option>
                   <option value="exportacao">Exportação</option>
                   <option value="api">API</option>
                 </select>
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Decisão de fonte *
                 <select
                   value={sourceForm.decision}
                   onChange={(event) => handleSourceChange('decision', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 >
                   <option value="integrar">Integrar</option>
                   <option value="importar">Importar</option>
@@ -3468,55 +3476,55 @@ export const Dashboard: React.FC = () => {
               </label>
             </div>
 
-            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+            <label className="block text-[13px] font-semibold text-mg-ink">
               Cobertura *
               <input
                 required
                 maxLength={1000}
                 value={sourceForm.coverage}
                 onChange={(event) => handleSourceChange('coverage', event.target.value)}
-                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 placeholder="O que o sistema cobre hoje no processo"
               />
             </label>
 
-            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+            <label className="block text-[13px] font-semibold text-mg-ink">
               Fonte de verdade *
               <input
                 required
                 maxLength={500}
                 value={sourceForm.source_of_truth}
                 onChange={(event) => handleSourceChange('source_of_truth', event.target.value)}
-                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 placeholder="Qual dado vem daqui (ex.: orçamentos, clientes)"
               />
             </label>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Campos disponíveis
                 <input
                   maxLength={2000}
                   value={sourceForm.fields_available}
                   onChange={(event) => handleSourceChange('fields_available', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Campos relevantes que o sistema exporta"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Lacunas
                 <input
                   maxLength={2000}
                   value={sourceForm.gaps}
                   onChange={(event) => handleSourceChange('gaps', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="O que falta ou não é confiável"
                 />
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Justificativa da decisão *
                 <input
                   required
@@ -3524,42 +3532,42 @@ export const Dashboard: React.FC = () => {
                   maxLength={1000}
                   value={sourceForm.decision_reason}
                   onChange={(event) => handleSourceChange('decision_reason', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Por que integrar, importar ou não usar"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Dono da decisão *
                 <input
                   required
                   maxLength={200}
                   value={sourceForm.decision_owner}
                   onChange={(event) => handleSourceChange('decision_owner', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Quem decide"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Data da decisão *
                 <input
                   required
                   type="date"
                   value={sourceForm.decision_date}
                   onChange={(event) => handleSourceChange('decision_date', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 />
               </label>
             </div>
 
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 Auditoria incompleta é negada (RED-011); a decisão é auditada e o histórico é
                 preservado.
               </p>
               <button
                 type="submit"
                 disabled={isSubmittingSource}
-                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                className="h-[46px] px-5 rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
               >
                 <DatabaseZap className="w-4 h-4" />
                 {isSubmittingSource ? 'Registrando...' : 'Registrar auditoria'}
@@ -3568,9 +3576,9 @@ export const Dashboard: React.FC = () => {
           </form>
         </section>
 
-        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
               <OctagonAlert className="w-5 h-5" />
             </div>
             <div>
@@ -3578,11 +3586,11 @@ export const Dashboard: React.FC = () => {
                 id="secao-gates"
                 tabIndex={-1}
                 style={{ scrollMarginTop: '5rem' }}
-                className="text-xl font-extrabold text-[#0F1F1C]"
+                className="text-xl font-extrabold text-mg-ink"
               >
                 Gates e cortes
               </h2>
-              <p className="text-[13px] text-[#5B6B66] mt-1">
+              <p className="text-[13px] text-mg-muted mt-1">
                 Bloqueios críticos com dono e data-limite. Atraso aciona escalonamento; a ordem de
                 corte do PRD é fixa e nunca editável.
               </p>
@@ -3591,7 +3599,7 @@ export const Dashboard: React.FC = () => {
 
           {gateError && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
               role="alert"
               aria-live="assertive"
             >
@@ -3602,7 +3610,7 @@ export const Dashboard: React.FC = () => {
 
           {gateInfo && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
               role="status"
               aria-live="polite"
             >
@@ -3612,61 +3620,61 @@ export const Dashboard: React.FC = () => {
 
           <form onSubmit={handleGateSubmit} className="space-y-4" noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Título do bloqueio *
                 <input
                   required
                   maxLength={200}
                   value={gateForm.title}
                   onChange={(event) => handleGateChange('title', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Ex.: Homologação da família-piloto"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Dono da decisão *
                 <input
                   required
                   maxLength={200}
                   value={gateForm.owner}
                   onChange={(event) => handleGateChange('owner', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Quem decide"
                 />
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Data-limite de decisão *
                 <input
                   required
                   type="date"
                   value={gateForm.decision_deadline}
                   onChange={(event) => handleGateChange('decision_deadline', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Descrição
                 <input
                   maxLength={1000}
                   value={gateForm.description}
                   onChange={(event) => handleGateChange('description', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Contexto do bloqueio"
                 />
               </label>
             </div>
 
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 Bloqueio sem dono ou sem data é negado (CA-1-17); o registro é auditado.
               </p>
               <button
                 type="submit"
                 disabled={isSubmittingGate}
-                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                className="h-[46px] px-5 rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
               >
                 <OctagonAlert className="w-4 h-4" />
                 {isSubmittingGate ? 'Registrando...' : 'Registrar bloqueio'}
@@ -3674,26 +3682,26 @@ export const Dashboard: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+          <div className="mt-6 rounded-[12px] border border-mg-line bg-mg-canvas p-4 text-left">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Bloqueios registrados</h3>
-                <p className="text-[12px] text-[#5B6B66] mt-1">
+                <h3 className="text-[14px] font-bold text-mg-ink">Bloqueios registrados</h3>
+                <p className="text-[12px] text-mg-muted mt-1">
                   Resolução aparece somente para quem tem permissão no servidor.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => void loadGates()}
-                className="text-[12px] font-semibold text-[#047857] hover:underline"
+                className="text-[12px] font-semibold text-mg-brand hover:underline"
               >
                 Atualizar
               </button>
             </div>
             {isLoadingGates ? (
-              <p className="text-[12px] text-[#5B6B66]">Carregando bloqueios...</p>
+              <p className="text-[12px] text-mg-muted">Carregando bloqueios...</p>
             ) : gates.length === 0 ? (
-              <p className="text-[12px] text-[#5B6B66]">Nenhum bloqueio registrado ainda.</p>
+              <p className="text-[12px] text-mg-muted">Nenhum bloqueio registrado ainda.</p>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {gates.map((gate) => {
@@ -3702,25 +3710,25 @@ export const Dashboard: React.FC = () => {
                   return (
                     <div
                       key={gate.id}
-                      className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                      className="rounded-[9px] border border-mg-line bg-mg-surface p-3"
                     >
                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className="text-[13px] font-bold text-[#0F1F1C]">{gate.title}</span>
+                        <span className="text-[13px] font-bold text-mg-ink">{gate.title}</span>
                         <span
                           className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                             gate.status === 'resolvido'
-                              ? 'bg-[#ECFDF5] text-[#047857]'
+                              ? 'bg-mg-brand-soft text-mg-brand'
                               : gate.status === 'escalonado'
-                                ? 'bg-[#FEF2F2] text-[#B91C1C]'
+                                ? 'bg-mg-crit-bg text-mg-crit'
                                 : overdue
-                                  ? 'bg-[#FFF7ED] text-[#C2410C]'
-                                  : 'bg-[#F1F5F4] text-[#5B6B66]'
+                                  ? 'bg-mg-warn-bg text-mg-warn'
+                                  : 'bg-mg-surface-2 text-mg-muted'
                           }`}
                         >
                           {gate.status === 'aberto' && overdue ? 'vencido' : gate.status}
                         </span>
                       </div>
-                      <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                      <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-mg-muted sm:grid-cols-2">
                         <span>Dono: {gate.owner}</span>
                         <span>Data-limite: {gate.decision_deadline.slice(0, 10)}</span>
                         {(statusInfo?.escalations ?? 0) > 0 && (
@@ -3739,30 +3747,30 @@ export const Dashboard: React.FC = () => {
                             setEscalateNote('')
                           }}
                           disabled={isSubmittingGate}
-                          className="mt-2 h-[30px] px-3 rounded-[8px] bg-[#B91C1C] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                          className="mt-2 h-[30px] px-3 rounded-[8px] bg-mg-crit text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                         >
                           Escalonar (atraso)
                         </button>
                       )}
                       {escalateTarget === gate.id && (
-                        <div className="mt-2 space-y-2 pt-2 border-t border-[#E1E8E5]">
+                        <div className="mt-2 space-y-2 pt-2 border-t border-mg-line">
                           <div className="grid gap-2 sm:grid-cols-2">
-                            <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                            <label className="block text-[12px] font-semibold text-mg-ink">
                               Quem está escalando *
                               <input
                                 value={escalateName}
                                 onChange={(event) => setEscalateName(event.target.value)}
-                                className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                                className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-mg-line bg-mg-surface text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                                 placeholder="Seu nome"
                               />
                             </label>
-                            <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                            <label className="block text-[12px] font-semibold text-mg-ink">
                               Nota
                               <input
                                 maxLength={1000}
                                 value={escalateNote}
                                 onChange={(event) => setEscalateNote(event.target.value)}
-                                className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                                className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-mg-line bg-mg-surface text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                                 placeholder="Contexto do escalonamento"
                               />
                             </label>
@@ -3772,14 +3780,14 @@ export const Dashboard: React.FC = () => {
                               type="button"
                               onClick={() => void handleEscalate(gate.id)}
                               disabled={isSubmittingGate || !escalateName.trim()}
-                              className="h-[30px] px-3 rounded-[8px] bg-[#B91C1C] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                              className="h-[30px] px-3 rounded-[8px] bg-mg-crit text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                             >
                               Confirmar escalonamento
                             </button>
                             <button
                               type="button"
                               onClick={() => setEscalateTarget(null)}
-                              className="h-[30px] px-3 rounded-[8px] bg-white border border-[#E1E8E5] text-[#5B6B66] text-[11px] font-semibold"
+                              className="h-[30px] px-3 rounded-[8px] bg-mg-surface border border-mg-line text-mg-muted text-[11px] font-semibold"
                             >
                               Cancelar
                             </button>
@@ -3795,22 +3803,22 @@ export const Dashboard: React.FC = () => {
                               setResolveText('')
                             }}
                             disabled={isSubmittingGate}
-                            className="h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                            className="h-[30px] px-3 rounded-[8px] bg-mg-sidebar text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                           >
                             Resolver
                           </button>
                         </div>
                       )}
                       {resolveTarget === gate.id && (
-                        <div className="mt-2 space-y-2 pt-2 border-t border-[#E1E8E5]">
-                          <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                        <div className="mt-2 space-y-2 pt-2 border-t border-mg-line">
+                          <label className="block text-[12px] font-semibold text-mg-ink">
                             Decisão de resolução *
                             <textarea
                               minLength={10}
                               maxLength={1000}
                               value={resolveText}
                               onChange={(event) => setResolveText(event.target.value)}
-                              className="mt-1.5 w-full min-h-[60px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                              className="mt-1.5 w-full min-h-[60px] rounded-[9px] border border-mg-line bg-mg-surface p-2.5 text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                               placeholder="Como o bloqueio foi decidido."
                             />
                           </label>
@@ -3819,7 +3827,7 @@ export const Dashboard: React.FC = () => {
                               type="button"
                               onClick={() => void handleResolve(gate.id)}
                               disabled={isSubmittingGate || resolveText.trim().length < 10}
-                              className="h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                              className="h-[30px] px-3 rounded-[8px] bg-mg-sidebar text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                             >
                               Confirmar resolução
                             </button>
@@ -3829,7 +3837,7 @@ export const Dashboard: React.FC = () => {
                                 setResolveTarget(null)
                                 setResolveText('')
                               }}
-                              className="h-[30px] px-3 rounded-[8px] bg-white border border-[#E1E8E5] text-[#5B6B66] text-[11px] font-semibold"
+                              className="h-[30px] px-3 rounded-[8px] bg-mg-surface border border-mg-line text-mg-muted text-[11px] font-semibold"
                             >
                               Cancelar
                             </button>
@@ -3843,11 +3851,11 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
 
-          <div className="mt-4 rounded-[12px] border border-[#E1E8E5] bg-white p-4 text-left">
-            <h3 className="text-[14px] font-bold text-[#0F1F1C]">
+          <div className="mt-4 rounded-[12px] border border-mg-line bg-mg-surface p-4 text-left">
+            <h3 className="text-[14px] font-bold text-mg-ink">
               Ordem de corte (PRD, seção 11) — fixa
             </h3>
-            <p className="text-[12px] text-[#5B6B66] mt-1">
+            <p className="text-[12px] text-mg-muted mt-1">
               Se a homologação da família-piloto atrasar, corta-se nesta ordem. Estes itens nunca se
               cortam: baseline, catálogo homologado, memória de cálculo, aprovação, documento
               completo, segurança e auditoria.
@@ -3857,13 +3865,13 @@ export const Dashboard: React.FC = () => {
                 <li key={cut.position} className="flex items-start gap-2 text-[12px]">
                   <span
                     className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                      cut.cuttable ? 'bg-[#FFF7ED] text-[#C2410C]' : 'bg-[#ECFDF5] text-[#047857]'
+                      cut.cuttable ? 'bg-mg-warn-bg text-mg-warn' : 'bg-mg-brand-soft text-mg-brand'
                     }`}
                   >
                     {cut.position}
                   </span>
                   <span
-                    className={cut.cuttable ? 'text-[#5B6B66]' : 'text-[#047857] font-semibold'}
+                    className={cut.cuttable ? 'text-mg-muted' : 'text-mg-brand font-semibold'}
                   >
                     {cut.item}
                     {!cut.cuttable && ' — nunca se corta'}
@@ -3874,9 +3882,9 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
               <Scale className="w-5 h-5" />
             </div>
             <div>
@@ -3884,11 +3892,11 @@ export const Dashboard: React.FC = () => {
                 id="secao-sla"
                 tabIndex={-1}
                 style={{ scrollMarginTop: '5rem' }}
-                className="text-xl font-extrabold text-[#0F1F1C]"
+                className="text-xl font-extrabold text-mg-ink"
               >
                 Regras e SLA do piloto
               </h2>
-              <p className="text-[13px] text-[#5B6B66] mt-1">
+              <p className="text-[13px] text-mg-muted mt-1">
                 BDI, ISS, margem, SLA, alçadas e arredondamento precisam de decisão homologada ou
                 bloqueio explícito com dono e data. O SLA da família-piloto é obrigatório para
                 liberar a Fase 2.
@@ -3900,8 +3908,8 @@ export const Dashboard: React.FC = () => {
             <div
               className={`mb-5 p-3.5 rounded-[12px] text-[13px] font-medium flex items-start gap-2.5 ${
                 paramStatus.gate.open
-                  ? 'bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857]'
-                  : 'bg-[#FFF7ED] border-l-4 border-[#EA580C] text-[#C2410C]'
+                  ? 'bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand'
+                  : 'bg-mg-warn-bg border-l-4 border-mg-action text-mg-warn'
               }`}
               role="status"
               aria-live="polite"
@@ -3922,7 +3930,7 @@ export const Dashboard: React.FC = () => {
 
           {paramError && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
               role="alert"
               aria-live="assertive"
             >
@@ -3933,7 +3941,7 @@ export const Dashboard: React.FC = () => {
 
           {paramInfo && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
               role="status"
               aria-live="polite"
             >
@@ -3943,7 +3951,7 @@ export const Dashboard: React.FC = () => {
 
           <form onSubmit={handleParamSubmit} className="space-y-4" noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Parâmetro *
                 <select
                   value={paramForm.param_type}
@@ -3959,7 +3967,7 @@ export const Dashboard: React.FC = () => {
                         | 'arredondamento',
                     )
                   }
-                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 >
                   <option value="bdi">BDI</option>
                   <option value="iss">ISS</option>
@@ -3969,39 +3977,39 @@ export const Dashboard: React.FC = () => {
                   <option value="arredondamento">Arredondamento</option>
                 </select>
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Família *
                 <input
                   required
                   maxLength={120}
                   value={paramForm.family}
                   onChange={(event) => handleParamChange('family', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Família do parâmetro, sem presumir o piloto"
                 />
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Fonte da decisão *
                 <input
                   required
                   maxLength={200}
                   value={paramForm.source}
                   onChange={(event) => handleParamChange('source', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="De onde vem a decisão (ata, e-mail, documento)"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Decisão *
                 <select
                   value={paramForm.decision}
                   onChange={(event) =>
                     handleParamChange('decision', event.target.value as 'rascunho' | 'bloqueado')
                   }
-                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 >
                   <option value="rascunho">Rascunho (aguarda homologação)</option>
                   <option value="bloqueado">Bloqueado (com dono e data-limite)</option>
@@ -4010,82 +4018,82 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Valor (opcional no rascunho)
                 <input
                   maxLength={200}
                   value={paramForm.value}
                   onChange={(event) => handleParamChange('value', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Valor proposto, se houver"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Unidade
                 <input
                   maxLength={40}
                   value={paramForm.unit}
                   onChange={(event) => handleParamChange('unit', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Ex.: %, dias, R$"
                 />
               </label>
             </div>
 
             {paramForm.decision === 'bloqueado' && (
-              <div className="grid gap-4 sm:grid-cols-3 p-4 rounded-[12px] bg-[#FFF7ED] border border-[#FED7AA]">
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <div className="grid gap-4 sm:grid-cols-3 p-4 rounded-[12px] bg-mg-warn-bg border border-mg-warn-line">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Motivo do bloqueio *
                   <input
                     minLength={10}
                     maxLength={1000}
                     value={paramForm.blocked_reason}
                     onChange={(event) => handleParamChange('blocked_reason', event.target.value)}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#FED7AA] bg-white text-[14px] font-normal outline-none focus:border-[#EA580C] focus:ring-4 focus:ring-[#EA580C]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-warn-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-action focus:ring-4 focus:ring-mg-warn/15"
                     placeholder="Por que a decisão está bloqueada"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Dono do desbloqueio *
                   <input
                     maxLength={200}
                     value={paramForm.blocked_owner}
                     onChange={(event) => handleParamChange('blocked_owner', event.target.value)}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#FED7AA] bg-white text-[14px] font-normal outline-none focus:border-[#EA580C] focus:ring-4 focus:ring-[#EA580C]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-warn-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-action focus:ring-4 focus:ring-mg-warn/15"
                     placeholder="Quem resolve"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Data-limite *
                   <input
                     type="date"
                     value={paramForm.blocked_deadline}
                     onChange={(event) => handleParamChange('blocked_deadline', event.target.value)}
-                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#FED7AA] bg-white text-[14px] font-normal outline-none focus:border-[#EA580C] focus:ring-4 focus:ring-[#EA580C]/15"
+                    className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-warn-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-action focus:ring-4 focus:ring-mg-warn/15"
                   />
                 </label>
               </div>
             )}
 
-            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+            <label className="block text-[13px] font-semibold text-mg-ink">
               Observações
               <input
                 maxLength={1000}
                 value={paramForm.notes}
                 onChange={(event) => handleParamChange('notes', event.target.value)}
-                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 placeholder="Contexto adicional opcional"
               />
             </label>
 
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 O registro é auditado; a homologação do valor é feita por Engenharia/Admin.
               </p>
               <button
                 type="submit"
                 disabled={isSubmittingParam}
-                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                className="h-[46px] px-5 rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
               >
                 <Scale className="w-4 h-4" />
                 {isSubmittingParam ? 'Registrando...' : 'Registrar parâmetro'}
@@ -4093,50 +4101,50 @@ export const Dashboard: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+          <div className="mt-6 rounded-[12px] border border-mg-line bg-mg-canvas p-4 text-left">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Parâmetros registrados</h3>
-                <p className="text-[12px] text-[#5B6B66] mt-1">
+                <h3 className="text-[14px] font-bold text-mg-ink">Parâmetros registrados</h3>
+                <p className="text-[12px] text-mg-muted mt-1">
                   Homologação aparece somente para quem tem permissão no servidor.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => void loadPilotParams()}
-                className="text-[12px] font-semibold text-[#047857] hover:underline"
+                className="text-[12px] font-semibold text-mg-brand hover:underline"
               >
                 Atualizar
               </button>
             </div>
             {isLoadingParams ? (
-              <p className="text-[12px] text-[#5B6B66]">Carregando parâmetros...</p>
+              <p className="text-[12px] text-mg-muted">Carregando parâmetros...</p>
             ) : pilotParams.length === 0 ? (
-              <p className="text-[12px] text-[#5B6B66]">Nenhum parâmetro registrado ainda.</p>
+              <p className="text-[12px] text-mg-muted">Nenhum parâmetro registrado ainda.</p>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {pilotParams.map((param) => (
                   <div
                     key={param.id}
-                    className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                    className="rounded-[9px] border border-mg-line bg-mg-surface p-3"
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-[13px] font-bold text-[#0F1F1C]">
+                      <span className="text-[13px] font-bold text-mg-ink">
                         {param.param_type} · {param.family}
                       </span>
                       <span
                         className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                           param.decision === 'homologado'
-                            ? 'bg-[#ECFDF5] text-[#047857]'
+                            ? 'bg-mg-brand-soft text-mg-brand'
                             : param.decision === 'bloqueado'
-                              ? 'bg-[#FFF7ED] text-[#C2410C]'
-                              : 'bg-[#F1F5F4] text-[#5B6B66]'
+                              ? 'bg-mg-warn-bg text-mg-warn'
+                              : 'bg-mg-surface-2 text-mg-muted'
                         }`}
                       >
                         {param.decision}
                       </span>
                     </div>
-                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-mg-muted sm:grid-cols-2">
                       {param.value && (
                         <span>
                           Valor: {param.value} {param.unit}
@@ -4159,29 +4167,29 @@ export const Dashboard: React.FC = () => {
                             setHomologateParamUnit(param.unit)
                           }}
                           disabled={isSubmittingParam}
-                          className="mt-2 h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                          className="mt-2 h-[30px] px-3 rounded-[8px] bg-mg-sidebar text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                         >
                           Homologar valor
                         </button>
                         {homologateParamTarget === param.id && (
-                          <div className="mt-2 space-y-2 pt-2 border-t border-[#E1E8E5]">
+                          <div className="mt-2 space-y-2 pt-2 border-t border-mg-line">
                             <div className="grid gap-2 sm:grid-cols-2">
-                              <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                              <label className="block text-[12px] font-semibold text-mg-ink">
                                 Valor homologado *
                                 <input
                                   value={homologateParamValue}
                                   onChange={(event) => setHomologateParamValue(event.target.value)}
-                                  className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                                  className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-mg-line bg-mg-surface text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                                   placeholder="Valor decidido"
                                 />
                               </label>
-                              <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                              <label className="block text-[12px] font-semibold text-mg-ink">
                                 Unidade
                                 <input
                                   maxLength={40}
                                   value={homologateParamUnit}
                                   onChange={(event) => setHomologateParamUnit(event.target.value)}
-                                  className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-[#E1E8E5] bg-white text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                                  className="mt-1.5 w-full h-[36px] px-2.5 rounded-[8px] border border-mg-line bg-mg-surface text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                                   placeholder="Ex.: %, dias"
                                 />
                               </label>
@@ -4191,7 +4199,7 @@ export const Dashboard: React.FC = () => {
                                 type="button"
                                 onClick={() => void handleHomologateParam(param.id)}
                                 disabled={isSubmittingParam || !homologateParamValue.trim()}
-                                className="h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                                className="h-[30px] px-3 rounded-[8px] bg-mg-sidebar text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                               >
                                 Confirmar homologação
                               </button>
@@ -4202,7 +4210,7 @@ export const Dashboard: React.FC = () => {
                                   setHomologateParamValue('')
                                   setHomologateParamUnit('')
                                 }}
-                                className="h-[30px] px-3 rounded-[8px] bg-white border border-[#E1E8E5] text-[#5B6B66] text-[11px] font-semibold"
+                                className="h-[30px] px-3 rounded-[8px] bg-mg-surface border border-mg-line text-mg-muted text-[11px] font-semibold"
                               >
                                 Cancelar
                               </button>
@@ -4218,9 +4226,9 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
               <Boxes className="w-5 h-5" />
             </div>
             <div>
@@ -4228,11 +4236,11 @@ export const Dashboard: React.FC = () => {
                 id="secao-catalogo"
                 tabIndex={-1}
                 style={{ scrollMarginTop: '5rem' }}
-                className="text-xl font-extrabold text-[#0F1F1C]"
+                className="text-xl font-extrabold text-mg-ink"
               >
                 Catálogo
               </h2>
-              <p className="text-[13px] text-[#5B6B66] mt-1">
+              <p className="text-[13px] text-mg-muted mt-1">
                 Itens nascem em rascunho; somente Engenharia/Admin homologam ou inativam (com
                 justificativa). Itens homologados/inativos são imutáveis e apenas homologados
                 vigentes são utilizáveis.
@@ -4242,7 +4250,7 @@ export const Dashboard: React.FC = () => {
 
           {catalogError && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
               role="alert"
               aria-live="assertive"
             >
@@ -4253,7 +4261,7 @@ export const Dashboard: React.FC = () => {
 
           {catalogInfo && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
               role="status"
               aria-live="polite"
             >
@@ -4263,18 +4271,18 @@ export const Dashboard: React.FC = () => {
 
           <form onSubmit={handleCatalogSubmit} className="space-y-4" noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Família de serviço *
                 <input
                   required
                   maxLength={120}
                   value={catalogForm.family}
                   onChange={(event) => handleCatalogChange('family', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Informe a família, sem presumir o piloto"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Tipo *
                 <select
                   value={catalogForm.item_type}
@@ -4284,7 +4292,7 @@ export const Dashboard: React.FC = () => {
                       event.target.value as 'servico' | 'composicao' | 'recurso',
                     )
                   }
-                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-[#E1E8E5] bg-white px-3 text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] rounded-[10px] border border-mg-line bg-mg-surface px-3 text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 >
                   <option value="servico">Serviço</option>
                   <option value="composicao">Composição</option>
@@ -4294,96 +4302,96 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Nome *
                 <input
                   required
                   maxLength={200}
                   value={catalogForm.name}
                   onChange={(event) => handleCatalogChange('name', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Nome do serviço, composição ou recurso"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Unidade *
                 <input
                   required
                   maxLength={40}
                   value={catalogForm.unit}
                   onChange={(event) => handleCatalogChange('unit', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Ex.: m², kg, un"
                 />
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Fonte *
                 <input
                   required
                   maxLength={200}
                   value={catalogForm.source}
                   onChange={(event) => handleCatalogChange('source', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="De onde vem a informação"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Coeficiente
                 <input
                   maxLength={100}
                   value={catalogForm.coefficient}
                   onChange={(event) => handleCatalogChange('coefficient', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Texto descritivo, sem cálculo nesta task"
                 />
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Vigência - início *
                 <input
                   required
                   type="date"
                   value={catalogForm.valid_from}
                   onChange={(event) => handleCatalogChange('valid_from', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Vigência - fim *
                 <input
                   required
                   type="date"
                   value={catalogForm.valid_until}
                   onChange={(event) => handleCatalogChange('valid_until', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Descrição
                 <input
                   maxLength={1000}
                   value={catalogForm.description}
                   onChange={(event) => handleCatalogChange('description', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Detalhe opcional"
                 />
               </label>
             </div>
 
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 O cadastro é auditado; o item entra como rascunho e só um homologador autorizado
                 pode liberá-lo.
               </p>
               <button
                 type="submit"
                 disabled={isSubmittingCatalog}
-                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                className="h-[46px] px-5 rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
               >
                 <Boxes className="w-4 h-4" />
                 {isSubmittingCatalog ? 'Cadastrando...' : 'Cadastrar item'}
@@ -4391,47 +4399,47 @@ export const Dashboard: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+          <div className="mt-6 rounded-[12px] border border-mg-line bg-mg-canvas p-4 text-left">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Itens do catálogo</h3>
-                <p className="text-[12px] text-[#5B6B66] mt-1">
+                <h3 className="text-[14px] font-bold text-mg-ink">Itens do catálogo</h3>
+                <p className="text-[12px] text-mg-muted mt-1">
                   Homologação e inativação aparecem somente para quem tem permissão no servidor.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => void loadCatalog()}
-                className="text-[12px] font-semibold text-[#047857] hover:underline"
+                className="text-[12px] font-semibold text-mg-brand hover:underline"
               >
                 Atualizar
               </button>
             </div>
             {isLoadingCatalog ? (
-              <p className="text-[12px] text-[#5B6B66]">Carregando itens...</p>
+              <p className="text-[12px] text-mg-muted">Carregando itens...</p>
             ) : catalogItems.length === 0 ? (
-              <p className="text-[12px] text-[#5B6B66]">Nenhum item cadastrado ainda.</p>
+              <p className="text-[12px] text-mg-muted">Nenhum item cadastrado ainda.</p>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {catalogItems.map((item) => (
-                  <div key={item.id} className="rounded-[9px] border border-[#E1E8E5] bg-white p-3">
+                  <div key={item.id} className="rounded-[9px] border border-mg-line bg-mg-surface p-3">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-[13px] font-bold text-[#0F1F1C]">
+                      <span className="text-[13px] font-bold text-mg-ink">
                         {item.name} · {item.item_type}
                       </span>
                       <span
                         className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                           item.status === 'homologado'
-                            ? 'bg-[#ECFDF5] text-[#047857]'
+                            ? 'bg-mg-brand-soft text-mg-brand'
                             : item.status === 'inativo'
-                              ? 'bg-[#FFF7ED] text-[#C2410C]'
-                              : 'bg-[#F1F5F4] text-[#5B6B66]'
+                              ? 'bg-mg-warn-bg text-mg-warn'
+                              : 'bg-mg-surface-2 text-mg-muted'
                         }`}
                       >
                         {item.status}
                       </span>
                     </div>
-                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-mg-muted sm:grid-cols-2">
                       <span>Família: {item.family}</span>
                       <span>Unidade: {item.unit}</span>
                       <span>Fonte: {item.source}</span>
@@ -4450,7 +4458,7 @@ export const Dashboard: React.FC = () => {
                           type="button"
                           onClick={() => void handleHomologate(item.id)}
                           disabled={isSubmittingCatalog}
-                          className="h-[30px] px-3 rounded-[8px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                          className="h-[30px] px-3 rounded-[8px] bg-mg-sidebar text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                         >
                           Homologar
                         </button>
@@ -4458,7 +4466,7 @@ export const Dashboard: React.FC = () => {
                           type="button"
                           onClick={() => setDeactivateTarget(item.id)}
                           disabled={isSubmittingCatalog}
-                          className="h-[30px] px-3 rounded-[8px] bg-[#FFF7ED] text-[#C2410C] border border-[#FED7AA] text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                          className="h-[30px] px-3 rounded-[8px] bg-mg-warn-bg text-mg-warn border border-mg-warn-line text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                         >
                           Inativar
                         </button>
@@ -4469,21 +4477,21 @@ export const Dashboard: React.FC = () => {
                         type="button"
                         onClick={() => setDeactivateTarget(item.id)}
                         disabled={isSubmittingCatalog}
-                        className="mt-2 h-[30px] px-3 rounded-[8px] bg-[#FFF7ED] text-[#C2410C] border border-[#FED7AA] text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                        className="mt-2 h-[30px] px-3 rounded-[8px] bg-mg-warn-bg text-mg-warn border border-mg-warn-line text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                       >
                         Inativar
                       </button>
                     )}
                     {deactivateTarget === item.id && (
-                      <div className="mt-2 space-y-2 pt-2 border-t border-[#E1E8E5]">
-                        <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                      <div className="mt-2 space-y-2 pt-2 border-t border-mg-line">
+                        <label className="block text-[12px] font-semibold text-mg-ink">
                           Justificativa da inativação *
                           <textarea
                             minLength={10}
                             maxLength={1000}
                             value={deactivateReason}
                             onChange={(event) => setDeactivateReason(event.target.value)}
-                            className="mt-1.5 w-full min-h-[60px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                            className="mt-1.5 w-full min-h-[60px] rounded-[9px] border border-mg-line bg-mg-surface p-2.5 text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                             placeholder="Explique por que o item está sendo inativado."
                           />
                         </label>
@@ -4492,7 +4500,7 @@ export const Dashboard: React.FC = () => {
                             type="button"
                             onClick={() => void handleDeactivate(item.id)}
                             disabled={isSubmittingCatalog || deactivateReason.trim().length < 10}
-                            className="h-[30px] px-3 rounded-[8px] bg-[#EA580C] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                            className="h-[30px] px-3 rounded-[8px] bg-mg-action text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                           >
                             Confirmar inativação
                           </button>
@@ -4502,7 +4510,7 @@ export const Dashboard: React.FC = () => {
                               setDeactivateTarget(null)
                               setDeactivateReason('')
                             }}
-                            className="h-[30px] px-3 rounded-[8px] bg-white border border-[#E1E8E5] text-[#5B6B66] text-[11px] font-semibold"
+                            className="h-[30px] px-3 rounded-[8px] bg-mg-surface border border-mg-line text-mg-muted text-[11px] font-semibold"
                           >
                             Cancelar
                           </button>
@@ -4516,9 +4524,9 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
               <Snowflake className="w-5 h-5" />
             </div>
             <div>
@@ -4526,11 +4534,11 @@ export const Dashboard: React.FC = () => {
                 id="secao-baseline"
                 tabIndex={-1}
                 style={{ scrollMarginTop: '5rem' }}
-                className="text-xl font-extrabold text-[#0F1F1C]"
+                className="text-xl font-extrabold text-mg-ink"
               >
                 Baseline
               </h2>
-              <p className="text-[13px] text-[#5B6B66] mt-1">
+              <p className="text-[13px] text-mg-muted mt-1">
                 Congela o "antes" por família e classe de complexidade, usando a timeline e o tempo
                 ativo já registrados. Snapshots são imutáveis e comparáveis pela mesma fronteira.
               </p>
@@ -4539,7 +4547,7 @@ export const Dashboard: React.FC = () => {
 
           {baselineError && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
               role="alert"
               aria-live="assertive"
             >
@@ -4550,7 +4558,7 @@ export const Dashboard: React.FC = () => {
 
           {baselineInfo && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
               role="status"
               aria-live="polite"
             >
@@ -4560,65 +4568,65 @@ export const Dashboard: React.FC = () => {
 
           <form onSubmit={handleBaselineFreeze} className="space-y-4" noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Família de serviço *
                 <input
                   required
                   maxLength={120}
                   value={baselineForm.service_family}
                   onChange={(event) => handleBaselineChange('service_family', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Informe a família, sem presumir o piloto"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Classe de complexidade *
                 <input
                   required
                   maxLength={120}
                   value={baselineForm.complexity_class}
                   onChange={(event) => handleBaselineChange('complexity_class', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Ex.: baixa, média, alta"
                 />
               </label>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Janela - início *
                 <input
                   required
                   type="date"
                   value={baselineForm.window_start}
                   onChange={(event) => handleBaselineChange('window_start', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Janela - fim *
                 <input
                   required
                   type="date"
                   value={baselineForm.window_end}
                   onChange={(event) => handleBaselineChange('window_end', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Calendário *
                 <input
                   required
                   maxLength={120}
                   value={baselineForm.calendar}
                   onChange={(event) => handleBaselineChange('calendar', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                   placeholder="Ex.: dias úteis, 8h/dia"
                 />
               </label>
             </div>
 
-            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+            <label className="block text-[13px] font-semibold text-mg-ink">
               Critérios de confiabilidade *
               <textarea
                 required
@@ -4628,12 +4636,12 @@ export const Dashboard: React.FC = () => {
                 onChange={(event) =>
                   handleBaselineChange('reliability_criteria', event.target.value)
                 }
-                className="mt-1.5 w-full min-h-[70px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                className="mt-1.5 w-full min-h-[70px] rounded-[9px] border border-mg-line bg-mg-surface p-2.5 text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 placeholder="Ex.: demandas com recebida e apta registradas; pausas justificadas excluídas"
               />
             </label>
 
-            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+            <label className="block text-[13px] font-semibold text-mg-ink">
               Motivo do congelamento *
               <textarea
                 required
@@ -4641,20 +4649,20 @@ export const Dashboard: React.FC = () => {
                 maxLength={1000}
                 value={baselineForm.freeze_reason}
                 onChange={(event) => handleBaselineChange('freeze_reason', event.target.value)}
-                className="mt-1.5 w-full min-h-[70px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                className="mt-1.5 w-full min-h-[70px] rounded-[9px] border border-mg-line bg-mg-surface p-2.5 text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 placeholder="Ex.: congelar o antes antes de usar dimensionamento e preço"
               />
             </label>
 
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 Os números são agregados pelo servidor a partir da timeline real; snapshots não
                 podem ser editados.
               </p>
               <button
                 type="submit"
                 disabled={isSubmittingBaseline}
-                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                className="h-[46px] px-5 rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
               >
                 <Snowflake className="w-4 h-4" />
                 {isSubmittingBaseline ? 'Congelando...' : 'Congelar baseline'}
@@ -4662,42 +4670,42 @@ export const Dashboard: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+          <div className="mt-6 rounded-[12px] border border-mg-line bg-mg-canvas p-4 text-left">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Baselines congelados</h3>
-                <p className="text-[12px] text-[#5B6B66] mt-1">
+                <h3 className="text-[14px] font-bold text-mg-ink">Baselines congelados</h3>
+                <p className="text-[12px] text-mg-muted mt-1">
                   Snapshots imutáveis; a comparação com o resultado entra nas próximas tasks.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => void loadBaselines()}
-                className="text-[12px] font-semibold text-[#047857] hover:underline"
+                className="text-[12px] font-semibold text-mg-brand hover:underline"
               >
                 Atualizar
               </button>
             </div>
             {isLoadingBaselines ? (
-              <p className="text-[12px] text-[#5B6B66]">Carregando baselines...</p>
+              <p className="text-[12px] text-mg-muted">Carregando baselines...</p>
             ) : baselines.length === 0 ? (
-              <p className="text-[12px] text-[#5B6B66]">Nenhum baseline congelado ainda.</p>
+              <p className="text-[12px] text-mg-muted">Nenhum baseline congelado ainda.</p>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {baselines.map((baseline) => (
                   <div
                     key={baseline.id}
-                    className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                    className="rounded-[9px] border border-mg-line bg-mg-surface p-3"
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-[13px] font-bold text-[#0F1F1C]">
+                      <span className="text-[13px] font-bold text-mg-ink">
                         {baseline.service_family} · {baseline.complexity_class}
                       </span>
-                      <span className="text-[10px] font-semibold text-[#5B6B66]">
+                      <span className="text-[10px] font-semibold text-mg-muted">
                         congelado em {baseline.frozen_at}
                       </span>
                     </div>
-                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-mg-muted sm:grid-cols-2">
                       <span>
                         Janela: {baseline.window_start} a {baseline.window_end}
                       </span>
@@ -4708,12 +4716,12 @@ export const Dashboard: React.FC = () => {
                       <span>Pronta→Enviada: {formatDuration(baseline.ready_to_sent_ms)}</span>
                       <span>Tempo ativo somado: {formatDuration(baseline.active_time_ms)}</span>
                     </div>
-                    <p className="mt-2 text-[11px] text-[#5B6B66]">
-                      <span className="font-semibold text-[#0F1F1C]">Confiabilidade:</span>{' '}
+                    <p className="mt-2 text-[11px] text-mg-muted">
+                      <span className="font-semibold text-mg-ink">Confiabilidade:</span>{' '}
                       {baseline.reliability_criteria}
                     </p>
-                    <p className="mt-1 text-[11px] text-[#5B6B66]">
-                      <span className="font-semibold text-[#0F1F1C]">Motivo:</span>{' '}
+                    <p className="mt-1 text-[11px] text-mg-muted">
+                      <span className="font-semibold text-mg-ink">Motivo:</span>{' '}
                       {baseline.freeze_reason}
                     </p>
                   </div>
@@ -4723,9 +4731,9 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+        <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -4733,11 +4741,11 @@ export const Dashboard: React.FC = () => {
                 id="secao-qualidade"
                 tabIndex={-1}
                 style={{ scrollMarginTop: '5rem' }}
-                className="text-xl font-extrabold text-[#0F1F1C]"
+                className="text-xl font-extrabold text-mg-ink"
               >
                 Revisão semanal da qualidade do tempo
               </h2>
-              <p className="text-[13px] text-[#5B6B66] mt-1">
+              <p className="text-[13px] text-mg-muted mt-1">
                 Relatório assinado pelo servidor: intervalos abertos ou inválidos e timelines não
                 comparáveis ficam explícitos.
               </p>
@@ -4746,7 +4754,7 @@ export const Dashboard: React.FC = () => {
 
           {timeQualityError && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
               role="alert"
               aria-live="assertive"
             >
@@ -4757,7 +4765,7 @@ export const Dashboard: React.FC = () => {
 
           {timeQualityInfo && (
             <div
-              className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+              className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
               role="status"
               aria-live="polite"
             >
@@ -4767,28 +4775,28 @@ export const Dashboard: React.FC = () => {
 
           <form onSubmit={handleTimeQualityReview} className="space-y-4" noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Semana - início *
                 <input
                   required
                   type="date"
                   value={timeQualityForm.week_start}
                   onChange={(event) => handleTimeQualityChange('week_start', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 />
               </label>
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Semana - fim *
                 <input
                   required
                   type="date"
                   value={timeQualityForm.week_end}
                   onChange={(event) => handleTimeQualityChange('week_end', event.target.value)}
-                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-[#E1E8E5] bg-white text-[14px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                  className="mt-1.5 w-full h-[44px] px-3 rounded-[10px] border border-mg-line bg-mg-surface text-[14px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                 />
               </label>
             </div>
-            <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+            <label className="block text-[13px] font-semibold text-mg-ink">
               Critérios usados na revisão *
               <textarea
                 required
@@ -4796,17 +4804,17 @@ export const Dashboard: React.FC = () => {
                 maxLength={4000}
                 value={timeQualityForm.criteria}
                 onChange={(event) => handleTimeQualityChange('criteria', event.target.value)}
-                className="mt-1.5 w-full min-h-[90px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                className="mt-1.5 w-full min-h-[90px] rounded-[9px] border border-mg-line bg-mg-surface p-2.5 text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
               />
             </label>
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-[12px] text-[#5B6B66]">
+              <p className="text-[12px] text-mg-muted">
                 O servidor calcula a revisão e grava uma assinatura; o relatório é imutável.
               </p>
               <button
                 type="submit"
                 disabled={isSubmittingTimeQuality}
-                className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                className="h-[46px] px-5 rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
               >
                 <ShieldCheck className="w-4 h-4" />
                 {isSubmittingTimeQuality ? 'Revisando...' : 'Assinar revisão semanal'}
@@ -4814,50 +4822,50 @@ export const Dashboard: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+          <div className="mt-6 rounded-[12px] border border-mg-line bg-mg-canvas p-4 text-left">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <h3 className="text-[14px] font-bold text-[#0F1F1C]">Relatórios assinados</h3>
-                <p className="text-[12px] text-[#5B6B66] mt-1">
+                <h3 className="text-[14px] font-bold text-mg-ink">Relatórios assinados</h3>
+                <p className="text-[12px] text-mg-muted mt-1">
                   A comparação só é liberada quando a revisão não encontra bloqueios ou pendências.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => void loadTimeQualityReviews()}
-                className="text-[12px] font-semibold text-[#047857] hover:underline"
+                className="text-[12px] font-semibold text-mg-brand hover:underline"
               >
                 Atualizar
               </button>
             </div>
             {isLoadingTimeQuality ? (
-              <p className="text-[12px] text-[#5B6B66]">Carregando revisões...</p>
+              <p className="text-[12px] text-mg-muted">Carregando revisões...</p>
             ) : timeQualityReviews.length === 0 ? (
-              <p className="text-[12px] text-[#5B6B66]">Nenhuma revisão semanal assinada ainda.</p>
+              <p className="text-[12px] text-mg-muted">Nenhuma revisão semanal assinada ainda.</p>
             ) : (
               <div className="space-y-3 max-h-[32rem] overflow-y-auto">
                 {timeQualityReviews.map((review) => (
                   <div
                     key={review.id}
-                    className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                    className="rounded-[9px] border border-mg-line bg-mg-surface p-3"
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-[13px] font-bold text-[#0F1F1C]">
+                      <span className="text-[13px] font-bold text-mg-ink">
                         {review.weekStart} a {review.weekEnd}
                       </span>
                       <span
                         className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                           review.status === 'aprovado'
-                            ? 'bg-[#ECFDF5] text-[#047857]'
+                            ? 'bg-mg-brand-soft text-mg-brand'
                             : review.status === 'sem_amostra'
-                              ? 'bg-[#F1F5F4] text-[#5B6B66]'
-                              : 'bg-[#FFF7ED] text-[#C2410C]'
+                              ? 'bg-mg-surface-2 text-mg-muted'
+                              : 'bg-mg-warn-bg text-mg-warn'
                         }`}
                       >
                         {review.status === 'sem_amostra' ? 'sem amostra' : review.status}
                       </span>
                     </div>
-                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                    <div className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-mg-muted sm:grid-cols-2">
                       <span>Demandas revisadas: {review.reviewedOpportunities}</span>
                       <span>Elegíveis: {review.eligibleBaselineOpportunities}</span>
                       <span>Não comparáveis: {review.nonComparableOpportunities}</span>
@@ -4867,20 +4875,20 @@ export const Dashboard: React.FC = () => {
                     </div>
                     {review.findings.length > 0 && (
                       <div className="mt-3 space-y-1">
-                        <p className="text-[11px] font-semibold text-[#0F1F1C]">Achados</p>
+                        <p className="text-[11px] font-semibold text-mg-ink">Achados</p>
                         {review.findings.map((finding) => (
-                          <p key={finding.code} className="text-[11px] text-[#5B6B66]">
-                            <span className="font-semibold text-[#C2410C]">{finding.count}×</span>{' '}
+                          <p key={finding.code} className="text-[11px] text-mg-muted">
+                            <span className="font-semibold text-mg-warn">{finding.count}×</span>{' '}
                             {finding.description}
                           </p>
                         ))}
                       </div>
                     )}
-                    <p className="mt-3 text-[11px] text-[#5B6B66]">
-                      <span className="font-semibold text-[#0F1F1C]">Decisão:</span>{' '}
+                    <p className="mt-3 text-[11px] text-mg-muted">
+                      <span className="font-semibold text-mg-ink">Decisão:</span>{' '}
                       {review.decision}
                     </p>
-                    <p className="mt-1 text-[10px] text-[#5B6B66] break-all">
+                    <p className="mt-1 text-[10px] text-mg-muted break-all">
                       Assinado em {review.signedAt} · assinatura {review.signature.slice(0, 16)}…
                     </p>
                   </div>
@@ -4891,9 +4899,9 @@ export const Dashboard: React.FC = () => {
         </section>
 
         {createdOpportunity && (
-          <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
             <div className="flex items-start gap-3 mb-6">
-              <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
                 <Timer className="w-5 h-5" />
               </div>
               <div>
@@ -4901,11 +4909,11 @@ export const Dashboard: React.FC = () => {
                   id="secao-tempo"
                   tabIndex={-1}
                   style={{ scrollMarginTop: '5rem' }}
-                  className="text-xl font-extrabold text-[#0F1F1C]"
+                  className="text-xl font-extrabold text-mg-ink"
                 >
                   Marcos e tempo
                 </h2>
-                <p className="text-[13px] text-[#5B6B66] mt-1">
+                <p className="text-[13px] text-mg-muted mt-1">
                   Timeline com timestamps do servidor e tempo ativo por etapa; a pausa exige
                   justificativa.
                 </p>
@@ -4914,7 +4922,7 @@ export const Dashboard: React.FC = () => {
 
             {trackingError && (
               <div
-                className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+                className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
                 role="alert"
                 aria-live="assertive"
               >
@@ -4925,7 +4933,7 @@ export const Dashboard: React.FC = () => {
 
             {trackingInfo && (
               <div
-                className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium"
+                className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium"
                 role="status"
                 aria-live="polite"
               >
@@ -4934,10 +4942,10 @@ export const Dashboard: React.FC = () => {
             )}
 
             <div className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
-                <h3 className="text-[14px] font-bold text-[#0F1F1C] mb-3">Timeline de marcos</h3>
+              <div className="rounded-[12px] border border-mg-line bg-mg-canvas p-4 text-left">
+                <h3 className="text-[14px] font-bold text-mg-ink mb-3">Timeline de marcos</h3>
                 {events.length === 0 ? (
-                  <p className="text-[12px] text-[#5B6B66]">
+                  <p className="text-[12px] text-mg-muted">
                     Nenhum marco registrado para esta oportunidade.
                   </p>
                 ) : (
@@ -4947,16 +4955,16 @@ export const Dashboard: React.FC = () => {
                         <span
                           className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${
                             event.milestone === 'sent'
-                              ? 'bg-[#10B981]'
+                              ? 'bg-mg-brand-fill'
                               : event.milestone === 'ready'
-                                ? 'bg-[#059669]'
+                                ? 'bg-mg-brand-fill/90'
                                 : event.milestone === 'apt'
-                                  ? 'bg-[#0EA5E9]'
-                                  : 'bg-[#5B6B66]'
+                                  ? 'bg-mg-brand-fill'
+                                  : 'bg-mg-muted'
                           }`}
                         />
                         <div>
-                          <p className="text-[12px] font-semibold text-[#0F1F1C]">
+                          <p className="text-[12px] font-semibold text-mg-ink">
                             {event.milestone === 'received'
                               ? 'Recebida'
                               : event.milestone === 'apt'
@@ -4964,12 +4972,12 @@ export const Dashboard: React.FC = () => {
                                 : event.milestone === 'ready'
                                   ? 'Pronta'
                                   : 'Enviada'}
-                            <span className="font-normal text-[#5B6B66]">
+                            <span className="font-normal text-mg-muted">
                               {' '}
                               · {event.occurred_at}
                             </span>
                           </p>
-                          {event.note && <p className="text-[11px] text-[#5B6B66]">{event.note}</p>}
+                          {event.note && <p className="text-[11px] text-mg-muted">{event.note}</p>}
                         </div>
                       </li>
                     ))}
@@ -4980,7 +4988,7 @@ export const Dashboard: React.FC = () => {
                     type="button"
                     onClick={() => void handleRecordMilestone('ready')}
                     disabled={isSubmittingTracking}
-                    className="h-[34px] px-3 rounded-[9px] bg-[#064E3B] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                    className="h-[34px] px-3 rounded-[9px] bg-mg-sidebar text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                   >
                     Marcar pronta
                   </button>
@@ -4988,24 +4996,24 @@ export const Dashboard: React.FC = () => {
                     type="button"
                     onClick={() => void handleRecordMilestone('sent')}
                     disabled={isSubmittingTracking}
-                    className="h-[34px] px-3 rounded-[9px] bg-[#10B981] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
+                    className="h-[34px] px-3 rounded-[9px] bg-mg-brand-fill text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none"
                   >
                     Marcar enviada
                   </button>
                 </div>
               </div>
 
-              <div className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
-                <h3 className="text-[14px] font-bold text-[#0F1F1C] mb-3">Tempo ativo</h3>
+              <div className="rounded-[12px] border border-mg-line bg-mg-canvas p-4 text-left">
+                <h3 className="text-[14px] font-bold text-mg-ink mb-3">Tempo ativo</h3>
                 {timeEntries.length === 0 ? (
-                  <p className="text-[12px] text-[#5B6B66]">
+                  <p className="text-[12px] text-mg-muted">
                     Nenhum registro de tempo para esta oportunidade.
                   </p>
                 ) : (
                   <ul className="space-y-2 max-h-40 overflow-y-auto">
                     {timeEntries.map((entry) => (
-                      <li key={entry.id} className="text-[11px] text-[#5B6B66]">
-                        <span className="font-semibold text-[#0F1F1C]">{entry.stage}</span> · início{' '}
+                      <li key={entry.id} className="text-[11px] text-mg-muted">
+                        <span className="font-semibold text-mg-ink">{entry.stage}</span> · início{' '}
                         {entry.started_at}
                         {entry.ended_at ? ` · fim ${entry.ended_at}` : ' · em andamento'}
                         {entry.pause_reason && ` · pausa: ${entry.pause_reason}`}
@@ -5014,13 +5022,13 @@ export const Dashboard: React.FC = () => {
                   </ul>
                 )}
                 <div className="mt-4 space-y-2">
-                  <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                  <label className="block text-[12px] font-semibold text-mg-ink">
                     Etapa
                     <select
                       value={timeStage}
                       onChange={(event) => setTimeStage(event.target.value)}
                       disabled={!!openTimeEntry}
-                      className="mt-1 w-full h-[38px] rounded-[9px] border border-[#E1E8E5] bg-white px-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15 disabled:opacity-60"
+                      className="mt-1 w-full h-[38px] rounded-[9px] border border-mg-line bg-mg-surface px-2.5 text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15 disabled:opacity-60"
                     >
                       <option value="qualificacao">Qualificação</option>
                       <option value="portal">Portal</option>
@@ -5030,13 +5038,13 @@ export const Dashboard: React.FC = () => {
                     </select>
                   </label>
                   {openTimeEntry && (
-                    <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                    <label className="block text-[12px] font-semibold text-mg-ink">
                       Justificativa da pausa *
                       <textarea
                         maxLength={500}
                         value={pauseReason}
                         onChange={(event) => setPauseReason(event.target.value)}
-                        className="mt-1 w-full min-h-[60px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[12px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                        className="mt-1 w-full min-h-[60px] rounded-[9px] border border-mg-line bg-mg-surface p-2.5 text-[12px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                         placeholder="Ex.: aguardando retorno do cliente"
                       />
                     </label>
@@ -5046,7 +5054,7 @@ export const Dashboard: React.FC = () => {
                     onClick={() => void handleStartStopTime()}
                     disabled={isSubmittingTracking}
                     className={`h-[34px] px-3 rounded-[9px] text-white text-[11px] font-semibold disabled:opacity-60 disabled:pointer-events-none ${
-                      openTimeEntry ? 'bg-[#EA580C]' : 'bg-[#0EA5E9]'
+                      openTimeEntry ? 'bg-mg-action' : 'bg-mg-brand-fill'
                     }`}
                   >
                     {openTimeEntry ? 'Encerrar tempo com justificativa' : 'Iniciar tempo'}
@@ -5058,9 +5066,9 @@ export const Dashboard: React.FC = () => {
         )}
 
         {createdOpportunity && (
-          <section className="mx-auto w-full max-w-5xl mt-6 bg-white rounded-[16px] p-6 sm:p-8 border border-[#E1E8E5] shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
+          <section className="mx-auto w-full max-w-5xl mt-6 bg-mg-surface rounded-[16px] p-6 sm:p-8 border border-mg-line shadow-[0_12px_40px_rgba(2,44,34,0.06)]">
             <div className="flex items-start gap-3 mb-6">
-              <div className="w-11 h-11 rounded-[12px] bg-[#ECFDF5] text-[#047857] flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-[12px] bg-mg-brand-soft text-mg-brand flex items-center justify-center shrink-0">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
@@ -5068,11 +5076,11 @@ export const Dashboard: React.FC = () => {
                   id="secao-ficha"
                   tabIndex={-1}
                   style={{ scrollMarginTop: '5rem' }}
-                  className="text-xl font-extrabold text-[#0F1F1C]"
+                  className="text-xl font-extrabold text-mg-ink"
                 >
                   Ficha técnica
                 </h2>
-                <p className="text-[13px] text-[#5B6B66] mt-1">
+                <p className="text-[13px] text-mg-muted mt-1">
                   Cada salvamento cria uma nova versão com autor e origem definidos pelo servidor.
                   Versões anteriores permanecem intactas.
                 </p>
@@ -5081,7 +5089,7 @@ export const Dashboard: React.FC = () => {
 
             {techSheetError && (
               <div
-                className="mb-5 p-3.5 rounded-[12px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#B91C1C] text-[13px] font-medium flex items-start gap-2.5"
+                className="mb-5 p-3.5 rounded-[12px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] font-medium flex items-start gap-2.5"
                 role="alert"
                 aria-live="assertive"
               >
@@ -5092,7 +5100,7 @@ export const Dashboard: React.FC = () => {
 
             {techSheetCreated && (
               <div
-                className="mb-5 p-3.5 rounded-[12px] bg-[#ECFDF5] border-l-4 border-[#10B981] text-[#047857] text-[13px] font-medium flex items-start gap-2.5"
+                className="mb-5 p-3.5 rounded-[12px] bg-mg-brand-soft border-l-4 border-mg-brand text-mg-brand text-[13px] font-medium flex items-start gap-2.5"
                 role="status"
                 aria-live="polite"
               >
@@ -5111,22 +5119,22 @@ export const Dashboard: React.FC = () => {
                 {techSheetForm.map((parameter, index) => (
                   <div
                     key={index}
-                    className="rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4"
+                    className="rounded-[12px] border border-mg-line bg-mg-canvas p-4"
                   >
                     <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="text-[12px] font-bold uppercase tracking-wider text-[#5B6B66]">
+                      <span className="text-[12px] font-bold uppercase tracking-wider text-mg-muted">
                         Parâmetro {index + 1}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleTechSheetRemoveParameter(index)}
-                        className="text-[11px] font-semibold text-[#EA580C] hover:underline"
+                        className="text-[11px] font-semibold text-mg-warn hover:underline"
                       >
                         Remover
                       </button>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                      <label className="block text-[12px] font-semibold text-mg-ink">
                         Nome *
                         <input
                           required
@@ -5135,11 +5143,11 @@ export const Dashboard: React.FC = () => {
                           onChange={(event) =>
                             handleTechSheetParameterChange(index, 'name', event.target.value)
                           }
-                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                           placeholder="Ex.: espessura da camada"
                         />
                       </label>
-                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                      <label className="block text-[12px] font-semibold text-mg-ink">
                         Valor *
                         <input
                           required
@@ -5148,11 +5156,11 @@ export const Dashboard: React.FC = () => {
                           onChange={(event) =>
                             handleTechSheetParameterChange(index, 'value', event.target.value)
                           }
-                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                           placeholder="Ex.: 3,0"
                         />
                       </label>
-                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                      <label className="block text-[12px] font-semibold text-mg-ink">
                         Unidade *
                         <input
                           required
@@ -5161,11 +5169,11 @@ export const Dashboard: React.FC = () => {
                           onChange={(event) =>
                             handleTechSheetParameterChange(index, 'unit', event.target.value)
                           }
-                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                           placeholder="Ex.: mm"
                         />
                       </label>
-                      <label className="block text-[12px] font-semibold text-[#0F1F1C]">
+                      <label className="block text-[12px] font-semibold text-mg-ink">
                         Origem *
                         <input
                           required
@@ -5174,7 +5182,7 @@ export const Dashboard: React.FC = () => {
                           onChange={(event) =>
                             handleTechSheetParameterChange(index, 'origin', event.target.value)
                           }
-                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-[#E1E8E5] bg-white text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                          className="mt-1.5 w-full h-[40px] px-3 rounded-[9px] border border-mg-line bg-mg-surface text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                           placeholder="Ex.: visita técnica, planta, cliente"
                         />
                       </label>
@@ -5186,52 +5194,52 @@ export const Dashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={handleTechSheetAddParameter}
-                className="text-[12px] font-semibold text-[#047857] hover:underline"
+                className="text-[12px] font-semibold text-mg-brand hover:underline"
               >
                 + Adicionar parâmetro
               </button>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Pendências (uma por linha)
                   <textarea
                     maxLength={3000}
                     value={techSheetPending}
                     onChange={(event) => setTechSheetPending(event.target.value)}
-                    className="mt-1.5 w-full min-h-[76px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full min-h-[76px] rounded-[9px] border border-mg-line bg-mg-surface p-2.5 text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="Ex.: aguardando planta atualizada"
                   />
                 </label>
-                <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+                <label className="block text-[13px] font-semibold text-mg-ink">
                   Observações
                   <textarea
                     maxLength={2000}
                     value={techSheetNotes}
                     onChange={(event) => setTechSheetNotes(event.target.value)}
-                    className="mt-1.5 w-full min-h-[76px] rounded-[9px] border border-[#E1E8E5] bg-white p-2.5 text-[13px] font-normal outline-none focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15"
+                    className="mt-1.5 w-full min-h-[76px] rounded-[9px] border border-mg-line bg-mg-surface p-2.5 text-[13px] font-normal outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
                     placeholder="Contexto adicional da versão"
                   />
                 </label>
               </div>
 
-              <label className="block text-[13px] font-semibold text-[#0F1F1C]">
+              <label className="block text-[13px] font-semibold text-mg-ink">
                 Anexos (até 10 arquivos)
                 <input
                   type="file"
                   multiple
                   onChange={(event) => setTechSheetFiles(Array.from(event.target.files ?? []))}
-                  className="mt-1.5 w-full text-[13px] text-[#5B6B66] file:mr-3 file:h-[38px] file:px-3 file:rounded-[9px] file:border-0 file:bg-[#064E3B] file:text-white file:text-[12px] file:font-semibold file:cursor-pointer"
+                  className="mt-1.5 w-full text-[13px] text-mg-muted file:mr-3 file:h-[38px] file:px-3 file:rounded-[9px] file:border-0 file:bg-mg-sidebar file:text-white file:text-[12px] file:font-semibold file:cursor-pointer"
                 />
               </label>
 
               <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <p className="text-[12px] text-[#5B6B66]">
+                <p className="text-[12px] text-mg-muted">
                   O autor e o número da versão são definidos pelo servidor.
                 </p>
                 <button
                   type="submit"
                   disabled={isSubmittingTechSheet}
-                  className="h-[46px] px-5 rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
+                  className="h-[46px] px-5 rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[14px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all disabled:opacity-70 disabled:pointer-events-none inline-flex items-center justify-center gap-2 shrink-0"
                 >
                   <FileText className="w-4 h-4" />
                   {isSubmittingTechSheet ? 'Salvando...' : 'Salvar nova versão'}
@@ -5239,11 +5247,11 @@ export const Dashboard: React.FC = () => {
               </div>
             </form>
 
-            <div className="mt-6 rounded-[12px] border border-[#E1E8E5] bg-[#F6F8F7] p-4 text-left">
+            <div className="mt-6 rounded-[12px] border border-mg-line bg-mg-canvas p-4 text-left">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div>
-                  <h3 className="text-[14px] font-bold text-[#0F1F1C]">Histórico de versões</h3>
-                  <p className="text-[12px] text-[#5B6B66] mt-1">
+                  <h3 className="text-[14px] font-bold text-mg-ink">Histórico de versões</h3>
+                  <p className="text-[12px] text-mg-muted mt-1">
                     Versões anteriores são imutáveis e mantêm autor e origem.
                   </p>
                 </div>
@@ -5251,16 +5259,16 @@ export const Dashboard: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => void loadTechSheets(createdOpportunity.id)}
-                    className="text-[12px] font-semibold text-[#047857] hover:underline"
+                    className="text-[12px] font-semibold text-mg-brand hover:underline"
                   >
                     Atualizar
                   </button>
                 )}
               </div>
               {isLoadingTechSheets ? (
-                <p className="text-[12px] text-[#5B6B66]">Carregando histórico...</p>
+                <p className="text-[12px] text-mg-muted">Carregando histórico...</p>
               ) : techSheetHistory.length === 0 ? (
-                <p className="text-[12px] text-[#5B6B66]">
+                <p className="text-[12px] text-mg-muted">
                   Nenhuma versão registrada para esta oportunidade.
                 </p>
               ) : (
@@ -5268,18 +5276,18 @@ export const Dashboard: React.FC = () => {
                   {techSheetHistory.map((sheet) => (
                     <div
                       key={sheet.id}
-                      className="rounded-[9px] border border-[#E1E8E5] bg-white p-3"
+                      className="rounded-[9px] border border-mg-line bg-mg-surface p-3"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[13px] font-bold text-[#0F1F1C]">
+                        <span className="text-[13px] font-bold text-mg-ink">
                           Versão {sheet.version}
                         </span>
-                        <span className="text-[10px] font-semibold text-[#5B6B66]">
+                        <span className="text-[10px] font-semibold text-mg-muted">
                           {sheet.createdAt}
                         </span>
                       </div>
-                      <div className="mt-2 text-[11px] text-[#5B6B66]">
-                        <p className="font-semibold text-[#0F1F1C]">Parâmetros</p>
+                      <div className="mt-2 text-[11px] text-mg-muted">
+                        <p className="font-semibold text-mg-ink">Parâmetros</p>
                         <ul className="mt-1 space-y-0.5">
                           {sheet.parameters.map((parameter, parameterIndex) => (
                             <li key={parameterIndex}>
@@ -5290,7 +5298,7 @@ export const Dashboard: React.FC = () => {
                         </ul>
                         {sheet.pendingItems.length > 0 && (
                           <div className="mt-2">
-                            <p className="font-semibold text-[#C2410C]">Pendências</p>
+                            <p className="font-semibold text-mg-warn">Pendências</p>
                             <ul className="list-disc pl-5 mt-1 space-y-0.5">
                               {sheet.pendingItems.map((item, itemIndex) => (
                                 <li key={itemIndex}>{item}</li>
@@ -5301,7 +5309,7 @@ export const Dashboard: React.FC = () => {
                         {sheet.notes && <p className="mt-2">Observações: {sheet.notes}</p>}
                         {sheet.attachments.length > 0 && (
                           <div className="mt-2">
-                            <p className="font-semibold text-[#0F1F1C]">Anexos</p>
+                            <p className="font-semibold text-mg-ink">Anexos</p>
                             <ul className="mt-1 space-y-0.5">
                               {sheet.attachments.map((filename) => (
                                 <li key={filename}>
@@ -5309,7 +5317,7 @@ export const Dashboard: React.FC = () => {
                                     href={techSheetFileUrl(sheet, filename)}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="text-[#047857] hover:underline break-all"
+                                    className="text-mg-brand hover:underline break-all"
                                   >
                                     {filename}
                                   </a>

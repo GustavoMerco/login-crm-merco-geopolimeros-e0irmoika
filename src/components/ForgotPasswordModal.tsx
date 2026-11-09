@@ -69,19 +69,19 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       aria-labelledby="modal-title"
     >
       <div
-        className="absolute inset-0 bg-[#022C22]/55 backdrop-blur-[4px] transition-opacity"
+        className="absolute inset-0 bg-mg-sidebar/55 backdrop-blur-[4px] transition-opacity"
         onClick={handleClose}
         aria-hidden="true"
       />
 
       <div
-        className="relative w-full max-w-[440px] bg-white rounded-[20px] p-6 sm:p-8 shadow-[0_12px_40px_rgba(2,44,34,0.16)] border border-[#E1E8E5] z-10 animate-assemble"
+        className="relative w-full max-w-[440px] bg-mg-surface rounded-[20px] p-6 sm:p-8 shadow-[0_12px_40px_rgba(2,44,34,0.16)] border border-mg-line z-10 animate-assemble"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={handleClose}
-          className="absolute top-5 right-5 p-1.5 text-[#5B6B66] hover:text-[#0F1F1C] hover:bg-[#F6F8F7] rounded-full transition-colors"
+          className="absolute top-5 right-5 p-1.5 text-mg-muted hover:text-mg-ink hover:bg-mg-canvas rounded-full transition-colors"
           aria-label="Fechar modal"
         >
           <X className="w-5 h-5" />
@@ -89,18 +89,18 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
         {isSuccess ? (
           <div className="flex flex-col items-center text-center py-3">
-            <div className="w-14 h-14 rounded-full bg-[#10B981]/15 text-[#10B981] flex items-center justify-center mb-4 animate-check-in">
+            <div className="w-14 h-14 rounded-full bg-mg-brand-fill/15 text-mg-brand flex items-center justify-center mb-4 animate-check-in">
               <CheckCircle className="w-8 h-8" />
             </div>
 
             <h3
               id="modal-title"
-              className="text-2xl font-extrabold text-[#0F1F1C] tracking-tight mb-2"
+              className="text-2xl font-extrabold text-mg-ink tracking-tight mb-2"
             >
               Link enviado!
             </h3>
 
-            <p className="text-[14px] text-[#5B6B66] leading-relaxed mb-6 max-w-sm">
+            <p className="text-[14px] text-mg-muted leading-relaxed mb-6 max-w-sm">
               Se o e-mail informado estiver cadastrado, você receberá as instruções para redefinir
               sua senha em instantes.
             </p>
@@ -108,7 +108,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="w-full h-[48px] rounded-[12px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[15px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98]"
+              className="w-full h-[48px] rounded-[12px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[15px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] transition-all active:scale-[0.98]"
             >
               Fechar
             </button>
@@ -116,16 +116,16 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         ) : (
           <div>
             <div className="mb-6 text-left">
-              <span className="text-[11px] font-bold tracking-[0.14em] uppercase text-[#EA580C] mb-1.5 block">
+              <span className="text-[11px] font-bold tracking-[0.14em] uppercase text-mg-warn mb-1.5 block">
                 RECUPERAÇÃO DE ACESSO
               </span>
               <h3
                 id="modal-title"
-                className="text-2xl font-extrabold text-[#0F1F1C] tracking-tight mb-2"
+                className="text-2xl font-extrabold text-mg-ink tracking-tight mb-2"
               >
                 Recuperar senha
               </h3>
-              <p className="text-[14px] text-[#5B6B66] leading-relaxed">
+              <p className="text-[14px] text-mg-muted leading-relaxed">
                 Informe o e-mail cadastrado na sua conta e enviaremos um link para redefinir sua
                 senha.
               </p>
@@ -133,7 +133,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
             {errorMessage && (
               <div
-                className="mb-5 p-3 rounded-[10px] bg-[#FEF2F2] border-l-4 border-[#DC2626] text-[#DC2626] text-[13px] flex items-center gap-2 animate-shake"
+                className="mb-5 p-3 rounded-[10px] bg-mg-crit-bg border-l-4 border-mg-crit text-mg-crit text-[13px] flex items-center gap-2 animate-shake"
                 role="alert"
                 aria-live="polite"
               >
@@ -146,12 +146,12 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               <div>
                 <label
                   htmlFor="recovery-email"
-                  className="block text-[13px] font-semibold text-[#0F1F1C] mb-1.5"
+                  className="block text-[13px] font-semibold text-mg-ink mb-1.5"
                 >
                   E-mail cadastrado
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5B6B66]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-mg-muted">
                     <Mail className="w-5 h-5" />
                   </div>
                   <input
@@ -162,7 +162,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                     placeholder="voce@mercogeo.com.br"
                     autoComplete="email"
                     disabled={loading}
-                    className="w-full h-[48px] pl-11 pr-4 rounded-[12px] border border-[#E1E8E5] bg-white text-[15px] text-[#0F1F1C] placeholder:text-[#5B6B66]/60 focus:border-[#10B981] focus:ring-4 focus:ring-[#10B981]/15 transition-all outline-none"
+                    className="w-full h-[48px] pl-11 pr-4 rounded-[12px] border border-mg-line bg-mg-surface text-[15px] text-mg-ink placeholder:text-mg-muted/60 focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15 transition-all outline-none"
                     required
                   />
                 </div>
@@ -172,7 +172,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full sm:flex-1 h-[48px] rounded-[12px] bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-semibold text-[15px] hover:shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 transition-all active:scale-[0.98] disabled:opacity-75 disabled:pointer-events-none flex items-center justify-center gap-2"
+                  className="w-full sm:flex-1 h-[48px] rounded-[12px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 text-white font-semibold text-[15px] hover:shadow-[0_4px_16px_rgba(23,103,122,0.3)] hover:-translate-y-0.5 transition-all active:scale-[0.98] disabled:opacity-75 disabled:pointer-events-none flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -188,7 +188,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   type="button"
                   onClick={handleClose}
                   disabled={loading}
-                  className="w-full sm:w-auto px-5 h-[48px] rounded-[12px] bg-transparent text-[#5B6B66] hover:text-[#0F1F1C] hover:bg-[#F6F8F7] font-semibold text-[14px] transition-all"
+                  className="w-full sm:w-auto px-5 h-[48px] rounded-[12px] bg-transparent text-mg-muted hover:text-mg-ink hover:bg-mg-canvas font-semibold text-[14px] transition-all"
                 >
                   Cancelar
                 </button>

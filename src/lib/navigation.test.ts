@@ -6,6 +6,11 @@ import {
   sectionUrl,
   sectionsForRole,
   legacySectionRedirect,
+  navForRole,
+  homeForRole,
+  activeNavItem,
+  pageTitle,
+  activeNavItemFor,
 } from './navigation'
 import { ROLES } from './auth/permissions'
 
@@ -103,5 +108,58 @@ describe('T2.36 — índice administrativo', () => {
 
   it('url do índice é constante estável para menu e testes', () => {
     expect(ADMIN_INDEX_URL).toBe('/administracao')
+  })
+})
+
+describe('navegação por perfil (CRM de propostas)', () => {
+  const ids = (role: Parameters<typeof navForRole>[0]) => navForRole(role).flatMap((g) => g.items.map((i) => i.id))
+
+  it('comercial trabalha pelo funil e não vê evidências nem configurações', () => {
+    expect(ids('comercial')).toEqual(['hoje', 'funil', 'demandas', 'clientes', 'ficha', 'biblioteca', 'painel'])
+  })
+
+  it('engenharia vê o trabalho, a engenharia, configurações e evidências', () => {
+    expect(ids('engenharia')).toEqual(['hoje', 'funil', 'demandas', 'clientes', 'ficha', 'biblioteca', 'painel', 'configuracoes', 'evidencias'])
+  })
+
+  it('financeiro, aprovador e gestão começam pelo painel', () => {
+    expect(homeForRole('financeiro')).toBe('/painel')
+    expect(homeForRole('aprovador')).toBe('/painel')
+    expect(homeForRole('gestao')).toBe('/painel')
+    expect(homeForRole('comercial')).toBe('/hoje')
+    expect(homeForRole(undefined)).toBe('/funil')
+  })
+
+  it('nenhum grupo vazio e nenhum grupo com mais de 7 itens', () => {
+    for (const role of ['comercial', 'engenharia', 'financeiro', 'aprovador', 'gestao', 'admin'] as const) {
+      for (const group of navForRole(role)) {
+        expect(group.items.length).toBeGreaterThan(0)
+        expect(group.items.length).toBeLessThanOrEqual(7)
+      }
+    }
+    expect(navForRole(undefined)).toEqual([])
+  })
+
+  it('card, unidades e evidências marcam o item certo do menu', () => {
+    expect(activeNavItem('/oportunidade')?.id).toBe('funil')
+    expect(activeNavItem('/administracao/prova-calculo')?.id).toBe('evidencias')
+    expect(activeNavItem('/unidades')?.id).toBe('configuracoes')
+    expect(pageTitle('/funil')).toBe('Funil de propostas')
+    expect(pageTitle('/oportunidade')).toBe('Oportunidade')
+  })
+})
+
+describe('seções técnicas abrem como página própria', () => {
+  it('título é o nome da função, sem "legado"', () => {
+    expect(pageTitle('/painel-tecnico', '?secao=catalogo')).toBe('Catálogo')
+    expect(pageTitle('/painel-tecnico', '?secao=baseline')).toBe('Baseline')
+    expect(pageTitle('/painel-tecnico', '?secao=inexistente')).toBe('Funções técnicas')
+  })
+
+  it('menu marca de onde a seção veio', () => {
+    expect(activeNavItemFor('/painel-tecnico', '?secao=sla')?.id).toBe('configuracoes')
+    expect(activeNavItemFor('/painel-tecnico', '?secao=gates')?.id).toBe('evidencias')
+    expect(activeNavItemFor('/painel-tecnico', '?secao=demanda')?.id).toBe('demandas')
+    expect(activeNavItemFor('/funil')?.id).toBe('funil')
   })
 })

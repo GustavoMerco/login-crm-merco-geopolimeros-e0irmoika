@@ -1,6 +1,6 @@
 import pb from '@/lib/pocketbase/client'
 
-export type MilestoneValue = 'received' | 'apt' | 'ready' | 'sent'
+export type MilestoneValue = 'received' | 'apt' | 'ready' | 'sent' | 'won' | 'lost'
 
 export type OpportunityEventRecord = {
   id: string
@@ -67,6 +67,14 @@ export const recordMilestone = (
       headers: { 'Content-Type': 'application/json' },
     },
   )
+
+// Desfecho (RF-22): ganha ou perdida; perda exige motivo (RN-17).
+export const recordOutcome = (opportunityId: string, outcome: 'won' | 'lost', reason: string) =>
+  pb.send<{ id: string; outcome: string; occurredAt: string }>('/backend/v1/opportunities/outcome', {
+    method: 'POST',
+    body: JSON.stringify({ opportunity_id: opportunityId, outcome, reason }),
+    headers: { 'Content-Type': 'application/json' },
+  })
 
 export const startTimeEntry = (opportunityId: string, stage: string) =>
   pb.send<TimeEntryStarted>('/backend/v1/opportunities/time/start', {

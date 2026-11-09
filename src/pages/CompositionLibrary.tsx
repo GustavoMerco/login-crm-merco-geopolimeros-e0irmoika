@@ -43,10 +43,10 @@ import { AlertTriangle, Boxes } from 'lucide-react'
 type ServerPermissionState = 'loading' | 'allowed' | 'denied' | 'unavailable'
 
 const inputBase =
-  'mt-1.5 min-h-[44px] w-full rounded-[10px] border bg-white px-3 text-[14px] font-normal outline-none focus:ring-4 disabled:bg-[#F1F5F4]'
-const inputOk = 'border-[#E1E8E5] focus:border-[#10B981] focus:ring-[#10B981]/15'
-const inputBad = 'border-[#DC2626] focus:border-[#DC2626] focus:ring-[#DC2626]/15'
-const labelClass = 'block text-[13px] font-semibold text-[#0F1F1C]'
+  'mt-1.5 min-h-[44px] w-full rounded-[10px] border bg-mg-surface px-3 text-[14px] font-normal outline-none focus:ring-4 disabled:bg-mg-surface-2'
+const inputOk = 'border-mg-line focus:border-mg-brand focus:ring-mg-brand/15'
+const inputBad = 'border-mg-crit focus:border-mg-crit focus:ring-mg-crit/15'
+const labelClass = 'block text-[13px] font-semibold text-mg-ink'
 
 function fieldClass(hasError: boolean): string {
   return `${inputBase} ${hasError ? inputBad : inputOk}`
@@ -55,7 +55,7 @@ function fieldClass(hasError: boolean): string {
 function FieldMessage({ message }: { message: string | null }) {
   if (!message) return null
   return (
-    <p className="mt-1 text-[12px] font-medium text-[#B91C1C]" role="alert">
+    <p className="mt-1 text-[12px] font-medium text-mg-crit" role="alert">
       {message}
     </p>
   )
@@ -341,9 +341,9 @@ export default function CompositionLibrary() {
         : 'Somente Engenharia/Admin podem criar composições; seu papel tem acesso de visualização.'
 
   return (
-    <section className="mx-auto mt-0 w-full max-w-6xl rounded-[16px] border border-[#E1E8E5] bg-white p-6 shadow-[0_12px_40px_rgba(2,44,34,0.06)] sm:p-8">
+    <section className="mx-auto mt-0 w-full max-w-6xl rounded-[16px] border border-mg-line bg-mg-surface p-6 shadow-[0_12px_40px_rgba(2,44,34,0.06)] sm:p-8">
       <div className="mb-6 flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#ECFDF5] text-[#047857]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-mg-brand-soft text-mg-brand">
           <Boxes className="h-5 w-5" />
         </div>
         <div>
@@ -352,11 +352,11 @@ export default function CompositionLibrary() {
             ref={headingRef}
             tabIndex={-1}
             style={{ scrollMarginTop: '5rem' }}
-            className="text-xl font-extrabold text-[#0F1F1C] outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#064E3B]"
+            className="text-xl font-extrabold text-mg-ink outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand-strong"
           >
             Biblioteca de composições
           </h2>
-          <p className="mt-1 text-[13px] text-[#5B6B66]">
+          <p className="mt-1 text-[13px] text-mg-muted">
             Consulte versões salvas e crie novos rascunhos. Insumos e recursos são preenchidos em
             tabelas, com o catálogo escolhido por nome; cada insumo pode ser vinculado ao parâmetro
             da ficha técnica por nome, unidade e origem. Reabrir ou editar uma versão salva ainda
@@ -367,7 +367,7 @@ export default function CompositionLibrary() {
 
       {compositionError && (
         <div
-          className="mb-5 flex items-start gap-2.5 rounded-[12px] border-l-4 border-[#DC2626] bg-[#FEF2F2] p-3.5 text-[13px] font-medium text-[#B91C1C]"
+          className="mb-5 flex items-start gap-2.5 rounded-[12px] border-l-4 border-mg-crit bg-mg-crit-bg p-3.5 text-[13px] font-medium text-mg-crit"
           role="alert"
           aria-live="assertive"
         >
@@ -378,7 +378,7 @@ export default function CompositionLibrary() {
 
       {compositionInfo && (
         <div
-          className="mb-5 rounded-[12px] border-l-4 border-[#10B981] bg-[#ECFDF5] p-3.5 text-[13px] font-medium text-[#047857]"
+          className="mb-5 rounded-[12px] border-l-4 border-mg-brand bg-mg-brand-soft p-3.5 text-[13px] font-medium text-mg-brand"
           role="status"
           aria-live="polite"
         >
@@ -388,7 +388,7 @@ export default function CompositionLibrary() {
 
       {compositionLoadError && !isLoadingCompositions && (
         <div
-          className="mb-5 rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#991B1B]"
+          className="mb-5 rounded-[12px] border border-mg-crit-line bg-mg-crit-bg p-4 text-sm text-mg-crit"
           role="alert"
           aria-live="assertive"
         >
@@ -397,7 +397,7 @@ export default function CompositionLibrary() {
           <button
             type="button"
             onClick={() => void loadCompositions()}
-            className="mt-3 min-h-[44px] rounded-lg border border-[#B91C1C] px-4 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#991B1B]"
+            className="mt-3 min-h-[44px] rounded-lg border border-mg-crit px-4 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-crit"
           >
             Tentar novamente
           </button>
@@ -406,22 +406,22 @@ export default function CompositionLibrary() {
 
       <div className="mb-6">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-[15px] font-bold text-[#0F1F1C]">Versões registradas</h3>
+          <h3 className="text-[15px] font-bold text-mg-ink">Versões registradas</h3>
           <button
             type="button"
             onClick={() => void loadCompositions()}
             disabled={isLoadingCompositions || isSubmittingComposition}
-            className="min-h-[44px] rounded-lg border border-[#CBD5D1] bg-white px-4 text-sm font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:opacity-60"
+            className="min-h-[44px] rounded-lg border border-mg-line-strong bg-mg-surface px-4 text-sm font-semibold text-mg-brand-strong hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
           >
             {isLoadingCompositions ? 'Atualizando…' : 'Atualizar versões salvas'}
           </button>
         </div>
         {isLoadingCompositions ? (
-          <p className="text-[13px] text-[#5B6B66]" role="status" aria-live="polite">
+          <p className="text-[13px] text-mg-muted" role="status" aria-live="polite">
             Carregando versões salvas…
           </p>
         ) : compositionLoadError ? null : compositions.length === 0 ? (
-          <p className="text-[13px] text-[#5B6B66]" role="status">
+          <p className="text-[13px] text-mg-muted" role="status">
             Nenhuma composição registrada ainda. O primeiro rascunho nasce como versão 1.
           </p>
         ) : (
@@ -429,14 +429,14 @@ export default function CompositionLibrary() {
             {compositions.map((composition) => (
               <div
                 key={composition.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#E1E8E5] bg-[#F8FAF9] p-3.5"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-mg-line bg-mg-surface-2 p-3.5"
               >
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold text-[#0F1F1C]">
+                  <p className="text-[13px] font-semibold text-mg-ink">
                     {composition.code} · v{composition.version} ·{' '}
-                    <span className="font-normal text-[#5B6B66]">{composition.family}</span>
+                    <span className="font-normal text-mg-muted">{composition.family}</span>
                   </p>
-                  <p className="text-[12px] text-[#5B6B66]">
+                  <p className="text-[12px] text-mg-muted">
                     {composition.outputUnit} · {composition.inputsCount} insumo(s) ·{' '}
                     {composition.resourcesCount} recurso(s) · vigência {composition.validFrom} a{' '}
                     {composition.validUntil} · fonte: {composition.source}
@@ -445,10 +445,10 @@ export default function CompositionLibrary() {
                 <span
                   className={`inline-block shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${
                     composition.status === 'homologado'
-                      ? 'bg-[#ECFDF5] text-[#047857]'
+                      ? 'bg-mg-brand-soft text-mg-brand'
                       : composition.status === 'inativo'
-                        ? 'bg-[#F1F5F4] text-[#5B6B66]'
-                        : 'bg-[#FFF7ED] text-[#C2410C]'
+                        ? 'bg-mg-surface-2 text-mg-muted'
+                        : 'bg-mg-warn-bg text-mg-warn'
                   }`}
                 >
                   {composition.status === 'homologado'
@@ -503,7 +503,7 @@ export default function CompositionLibrary() {
 
           {catalogItemsError && (
             <div
-              className="rounded-[10px] border border-[#FECACA] bg-[#FEF2F2] p-3 text-sm text-[#991B1B]"
+              className="rounded-[10px] border border-mg-crit-line bg-mg-crit-bg p-3 text-sm text-mg-crit"
               role="alert"
               aria-live="assertive"
             >
@@ -513,7 +513,7 @@ export default function CompositionLibrary() {
                 type="button"
                 onClick={() => void loadCatalogItems()}
                 disabled={isLoadingCatalogItems || isSubmittingComposition}
-                className="mt-2 min-h-[44px] rounded border border-[#B91C1C] px-3 font-semibold disabled:opacity-60"
+                className="mt-2 min-h-[44px] rounded border border-mg-crit px-3 font-semibold disabled:opacity-60"
               >
                 Tentar carregar catálogo novamente
               </button>
@@ -521,7 +521,7 @@ export default function CompositionLibrary() {
           )}
           {!catalogItemsError && !isLoadingCatalogItems && catalogItems.length === 0 && (
             <p
-              className="rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] p-3 text-sm text-[#9A3412]"
+              className="rounded-[10px] border border-mg-warn-line bg-mg-warn-bg p-3 text-sm text-mg-warn"
               role="status"
             >
               Não há itens no catálogo para vincular. Um item de teste autorizado precisa estar
@@ -565,20 +565,20 @@ export default function CompositionLibrary() {
               />
               <FieldMessage message={errorFor(COMPOSITION_FIELD_IDS.outputUnit)} />
               {unitsError ? (
-                <p className="mt-1 text-[11px] text-[#9A3412]" role="status">
+                <p className="mt-1 text-[11px] text-mg-warn" role="status">
                   Não foi possível consultar as unidades homologadas; o servidor pode recusar a
                   unidade digitada.
                 </p>
               ) : isLoadingUnits ? (
-                <p className="mt-1 text-[11px] text-[#5B6B66]" role="status">
+                <p className="mt-1 text-[11px] text-mg-muted" role="status">
                   Carregando unidades homologadas…
                 </p>
               ) : units.length === 0 ? (
-                <p className="mt-1 text-[11px] text-[#9A3412]" role="status">
+                <p className="mt-1 text-[11px] text-mg-warn" role="status">
                   Nenhuma unidade homologada. Cadastre e homologue em /unidades antes de salvar.
                 </p>
               ) : (
-                <p className="mt-1 text-[11px] text-[#5B6B66]" role="status">
+                <p className="mt-1 text-[11px] text-mg-muted" role="status">
                   Homologadas: {units.map((unit) => unit.code).join(', ')}
                 </p>
               )}
@@ -669,7 +669,7 @@ export default function CompositionLibrary() {
 
           {!opportunityContext && (
             <p
-              className="rounded-[10px] border border-[#E1E8E5] bg-[#F8FAF9] p-3 text-sm text-[#5B6B66]"
+              className="rounded-[10px] border border-mg-line bg-mg-surface-2 p-3 text-sm text-mg-muted"
               role="status"
             >
               Esta página foi aberta sem oportunidade no contexto, então o seletor não lista os
@@ -680,7 +680,7 @@ export default function CompositionLibrary() {
           )}
           {opportunityContext && sheetError && (
             <div
-              className="rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] p-3 text-sm text-[#9A3412]"
+              className="rounded-[10px] border border-mg-warn-line bg-mg-warn-bg p-3 text-sm text-mg-warn"
               role="alert"
               aria-live="assertive"
             >
@@ -694,20 +694,20 @@ export default function CompositionLibrary() {
                 type="button"
                 onClick={() => void loadSheetParameters(opportunityContext)}
                 disabled={isLoadingSheet || isSubmittingComposition}
-                className="mt-2 min-h-[44px] rounded border border-[#B45309] px-3 font-semibold disabled:opacity-60"
+                className="mt-2 min-h-[44px] rounded border border-mg-warn px-3 font-semibold disabled:opacity-60"
               >
                 Tentar consultar a ficha novamente
               </button>
             </div>
           )}
           {opportunityContext && !sheetError && isLoadingSheet && (
-            <p className="text-[12px] text-[#5B6B66]" role="status" aria-live="polite">
+            <p className="text-[12px] text-mg-muted" role="status" aria-live="polite">
               Carregando parâmetros da ficha da oportunidade…
             </p>
           )}
           {opportunityContext && !sheetError && !isLoadingSheet && sheetParameters.length === 0 && (
             <p
-              className="rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] p-3 text-sm text-[#9A3412]"
+              className="rounded-[10px] border border-mg-warn-line bg-mg-warn-bg p-3 text-sm text-mg-warn"
               role="status"
             >
               Esta oportunidade ainda não tem ficha técnica com parâmetros. O vínculo fica para
@@ -753,7 +753,7 @@ export default function CompositionLibrary() {
                 className={fieldClass(!!errorFor(COMPOSITION_FIELD_IDS.fixtureRef))}
                 placeholder="Ex.: docs/fixtures/COMP-GEO-001.v1.assinada.pdf"
               />
-              <p id="composicao-referencia-ajuda" className="mt-1 text-[11px] text-[#5B6B66]">
+              <p id="composicao-referencia-ajuda" className="mt-1 text-[11px] text-mg-muted">
                 O sistema não escolhe nem cria esse caso por você. Sem uma referência verificável
                 fornecida pela Engenharia, o rascunho não é salvo, e nada é registrado em nome de
                 uma referência fictícia.
@@ -781,7 +781,7 @@ export default function CompositionLibrary() {
                 <option value="up">Para cima</option>
                 <option value="down">Para baixo</option>
               </select>
-              <p className="mt-1 text-[11px] text-[#5B6B66]">
+              <p className="mt-1 text-[11px] text-mg-muted">
                 Opções do contrato atual do servidor (normal, up, down).
               </p>
             </div>
@@ -789,7 +789,7 @@ export default function CompositionLibrary() {
 
           {showErrors && validation.errors.length > 0 && (
             <div
-              className="rounded-[10px] border-l-4 border-[#DC2626] bg-[#FEF2F2] p-3.5 text-[13px] text-[#B91C1C]"
+              className="rounded-[10px] border-l-4 border-mg-crit bg-mg-crit-bg p-3.5 text-[13px] text-mg-crit"
               role="alert"
               aria-live="assertive"
             >
@@ -807,13 +807,13 @@ export default function CompositionLibrary() {
           <button
             type="submit"
             disabled={!canSubmitComposition}
-            className="min-h-[44px] rounded-[10px] bg-[#10B981] px-5 text-[13px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:pointer-events-none disabled:opacity-60"
+            className="min-h-[44px] rounded-[10px] bg-mg-brand-fill px-5 text-[13px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:pointer-events-none disabled:opacity-60"
           >
             {isSubmittingComposition ? 'Salvando...' : 'Criar rascunho (v1)'}
           </button>
         </form>
       ) : (
-        <p className="text-[13px] text-[#5B6B66]" role="status">
+        <p className="text-[13px] text-mg-muted" role="status">
           {readOnlyMessage}
         </p>
       )}

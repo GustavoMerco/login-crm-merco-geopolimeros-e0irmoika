@@ -1,6 +1,6 @@
 /* Global styles - Theme, font, utilities, animations and global components */
 
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,35 +8,65 @@
 
 @layer base {
   :root {
-    --background: 147 14% 97%;
-    --foreground: 168 35% 9%;
+    --background: 180 10% 96%;
+    --foreground: 191 42% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 168 35% 9%;
+    --card-foreground: 191 42% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 168 35% 9%;
+    --popover-foreground: 191 42% 9%;
 
-    --primary: 158 64% 40%;
+    --primary: 191 68% 28%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 150 15% 94%;
-    --secondary-foreground: 168 35% 9%;
+    --secondary: 190 40% 95%;
+    --secondary-foreground: 191 42% 9%;
 
-    --muted: 154 11% 92%;
-    --muted-foreground: 162 8% 39%;
+    --muted: 190 15% 94%;
+    --muted-foreground: 194 10% 37%;
 
-    --accent: 25 95% 53%;
+    --accent: 21 88% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 154 12% 89%;
-    --input: 154 12% 89%;
-    --ring: 158 64% 40%;
+    --border: 192 15% 88%;
+    --input: 193 13% 80%;
+    --ring: 191 68% 28%;
 
     --radius: 0.75rem;
+
+    /* Design system Mercogeo "Laje nivelada" — tokens (RGB) do tema claro.
+       Ver docs/design-system/DESIGN-mercogeo.md. */
+    --mg-canvas: 243 246 246;
+    --mg-surface: 255 255 255;
+    --mg-surface-2: 247 249 250;
+    --mg-ink: 14 30 34;
+    --mg-muted: 84 99 104;
+    --mg-line: 220 228 230;
+    --mg-line-strong: 198 209 212;
+    --mg-brand: 23 103 122;
+    --mg-brand-strong: 11 53 64;
+    --mg-brand-fill: 23 103 122;
+    --mg-brand-soft: 238 247 249;
+    --mg-brand-soft-2: 214 237 242;
+    --mg-action: 194 65 12;
+    --mg-action-hover: 154 52 18;
+    --mg-accent: 249 115 22;
+    --mg-sidebar: 11 53 64;
+    --mg-sidebar-ink: 169 211 221;
+    --mg-ok: 22 101 52;
+    --mg-ok-bg: 220 252 231;
+    --mg-warn: 146 64 14;
+    --mg-warn-bg: 254 243 199;
+    --mg-warn-line: 253 216 138;
+    --mg-crit: 153 27 27;
+    --mg-crit-bg: 254 226 226;
+    --mg-crit-line: 252 165 165;
+    --mg-neutral: 62 90 97;
+    --mg-neutral-bg: 237 242 243;
 
     font-family:
       'Manrope',
@@ -51,9 +81,61 @@
       sans-serif;
   }
 
+
+  /* Tema escuro "Galpão à noite". */
+  .dark {
+    --mg-canvas: 10 20 23;
+    --mg-surface: 16 29 33;
+    --mg-surface-2: 21 38 43;
+    --mg-ink: 230 238 240;
+    --mg-muted: 147 166 171;
+    --mg-line: 34 54 60;
+    --mg-line-strong: 46 70 77;
+    --mg-brand: 79 179 201;
+    --mg-brand-strong: 127 204 220;
+    --mg-brand-fill: 23 103 122;
+    --mg-brand-soft: 18 49 58;
+    --mg-brand-soft-2: 23 65 76;
+    --mg-action: 194 65 12;
+    --mg-action-hover: 154 52 18;
+    --mg-accent: 251 146 60;
+    --mg-sidebar: 7 26 31;
+    --mg-sidebar-ink: 169 211 221;
+    --mg-ok: 134 239 172;
+    --mg-ok-bg: 15 42 26;
+    --mg-warn: 252 211 77;
+    --mg-warn-bg: 43 33 7;
+    --mg-warn-line: 92 70 15;
+    --mg-crit: 252 165 165;
+    --mg-crit-bg: 46 18 18;
+    --mg-crit-line: 110 38 38;
+    --mg-neutral: 169 193 199;
+    --mg-neutral-bg: 24 41 46;
+
+    --background: 194 39% 6%;
+    --foreground: 193 21% 92%;
+    --card: 194 35% 10%;
+    --card-foreground: 193 21% 92%;
+    --popover: 194 35% 10%;
+    --popover-foreground: 193 21% 92%;
+    --primary: 191 52% 55%;
+    --primary-foreground: 194 70% 9%;
+    --secondary: 193 34% 13%;
+    --secondary-foreground: 193 21% 92%;
+    --muted: 193 34% 13%;
+    --muted-foreground: 193 10% 62%;
+    --accent: 21 88% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 193 28% 18%;
+    --input: 193 25% 24%;
+    --ring: 191 52% 55%;
+  }
+
   body {
-    background-color: #f6f8f7;
-    color: #0f1f1c;
+    background-color: rgb(var(--mg-canvas));
+    color: rgb(var(--mg-ink));
     font-feature-settings:
       'rlig' 1,
       'calt' 1;
@@ -65,8 +147,8 @@
   *:focus-visible {
     outline: none;
     box-shadow:
-      0 0 0 2px #ffffff,
-      0 0 0 4px #10b981;
+      0 0 0 2px rgb(var(--mg-surface)),
+      0 0 0 4px rgb(var(--mg-brand));
   }
 
   /* NEVER REMOVE THIS */
@@ -240,5 +322,36 @@
       transform: none !important;
       opacity: 1 !important;
     }
+  }
+}
+
+@layer utilities {
+  /* Números, unidades, códigos e datas de engenharia (IBM Plex Mono). */
+  .mg-num {
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .mg-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mg-enter {
+    animation: mg-enter 200ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+}
+
+@keyframes mg-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }

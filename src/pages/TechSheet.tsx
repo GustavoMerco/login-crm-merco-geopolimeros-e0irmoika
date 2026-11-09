@@ -28,12 +28,12 @@ import {
 import { AlertTriangle, CheckCircle2, ClipboardList, FileText, Search } from 'lucide-react'
 
 const inputClass =
-  'mt-1.5 min-h-[44px] w-full rounded-[10px] border bg-white px-3 text-[14px] font-normal outline-none focus:ring-4 disabled:bg-[#F1F5F4]'
-const inputOk = 'border-[#E1E8E5] focus:border-[#10B981] focus:ring-[#10B981]/15'
-const inputBad = 'border-[#DC2626] focus:border-[#DC2626] focus:ring-[#DC2626]/15'
-const labelClass = 'block text-[13px] font-semibold text-[#0F1F1C]'
+  'mt-1.5 min-h-[44px] w-full rounded-[10px] border bg-mg-surface px-3 text-[14px] font-normal outline-none focus:ring-4 disabled:bg-mg-surface-2'
+const inputOk = 'border-mg-line focus:border-mg-brand focus:ring-mg-brand/15'
+const inputBad = 'border-mg-crit focus:border-mg-crit focus:ring-mg-crit/15'
+const labelClass = 'block text-[13px] font-semibold text-mg-ink'
 const textAreaClass =
-  'mt-1.5 w-full rounded-[10px] border bg-white px-3 py-2.5 text-[14px] font-normal outline-none focus:ring-4 disabled:bg-[#F1F5F4]'
+  'mt-1.5 w-full rounded-[10px] border bg-mg-surface px-3 py-2.5 text-[14px] font-normal outline-none focus:ring-4 disabled:bg-mg-surface-2'
 
 const emptyParameter = (): TechSheetParameter => ({ name: '', value: '', unit: '', origin: '' })
 
@@ -47,7 +47,9 @@ function statusLabel(record: OpportunityRecord): string {
   return record.status
 }
 
-export default function TechSheet() {
+// embedded: aberta como aba do card da oportunidade (o card já mostra o
+// cabeçalho e o contexto da demanda).
+export default function TechSheet({ embedded = false }: { embedded?: boolean } = {}) {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
   const headingRef = useRef<HTMLHeadingElement>(null)
@@ -278,7 +280,7 @@ export default function TechSheet() {
 
   const header = (
     <div className="mb-6 flex items-start gap-3">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#ECFDF5] text-[#047857]">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-mg-brand-soft text-mg-brand">
         <FileText className="h-5 w-5" />
       </div>
       <div className="min-w-0">
@@ -287,11 +289,11 @@ export default function TechSheet() {
           ref={headingRef}
           tabIndex={-1}
           style={{ scrollMarginTop: '5rem' }}
-          className="text-xl font-extrabold text-[#0F1F1C] outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#064E3B]"
+          className="text-xl font-extrabold text-mg-ink outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand-strong"
         >
           Ficha técnica
         </h2>
-        <p className="mt-1 text-[13px] text-[#5B6B66]">
+        <p className="mt-1 text-[13px] text-mg-muted">
           Cada salvamento cria uma nova versão. Autor, data e número da versão são definidos pelo
           servidor; versões anteriores permanecem intactas.
         </p>
@@ -300,16 +302,16 @@ export default function TechSheet() {
   )
 
   const contextBar = opportunity && (
-    <div className="mb-5 rounded-[12px] border border-[#E1E8E5] bg-[#F8FAF9] p-4">
+    <div className="mb-5 rounded-[12px] border border-mg-line bg-mg-surface-2 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-[#5B6B66]">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-mg-muted">
             Demanda em contexto
           </p>
-          <p className="truncate text-[15px] font-bold text-[#0F1F1C]">
+          <p className="truncate text-[15px] font-bold text-mg-ink">
             {opportunity.customer_name}
           </p>
-          <p className="mt-1 grid gap-x-4 gap-y-0.5 text-[12px] text-[#5B6B66] sm:grid-cols-2">
+          <p className="mt-1 grid gap-x-4 gap-y-0.5 text-[12px] text-mg-muted sm:grid-cols-2">
             <span>Família: {opportunity.service_family}</span>
             <span>Local: {opportunity.location}</span>
             <span>Demanda: {opportunity.demand_date}</span>
@@ -319,14 +321,14 @@ export default function TechSheet() {
         <div className="flex flex-wrap gap-2">
           <Link
             to={`/demandas`}
-            className="inline-flex min-h-[44px] items-center rounded-lg border border-[#CBD5D1] bg-white px-4 text-sm font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+            className="inline-flex min-h-[44px] items-center rounded-lg border border-mg-line-strong bg-mg-surface px-4 text-sm font-semibold text-mg-brand-strong hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
           >
             Ver demandas
           </Link>
           <button
             type="button"
             onClick={clearContext}
-            className="inline-flex min-h-[44px] items-center rounded-lg border border-[#CBD5D1] bg-white px-4 text-sm font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+            className="inline-flex min-h-[44px] items-center rounded-lg border border-mg-line-strong bg-mg-surface px-4 text-sm font-semibold text-mg-brand-strong hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
           >
             Trocar demanda
           </button>
@@ -337,8 +339,8 @@ export default function TechSheet() {
 
   const selection = (
     <div>
-      <h3 className="text-[15px] font-bold text-[#0F1F1C]">Escolha a demanda</h3>
-      <p className="mt-1 text-[13px] text-[#5B6B66]">
+      <h3 className="text-[15px] font-bold text-mg-ink">Escolha a demanda</h3>
+      <p className="mt-1 text-[13px] text-mg-muted">
         A ficha pertence a uma demanda. Selecione pelo nome do cliente — não é preciso informar
         identificador.
       </p>
@@ -348,7 +350,7 @@ export default function TechSheet() {
         <span className="relative mt-1.5 block">
           <Search
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5B6B66]"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mg-muted"
           />
           <input
             type="search"
@@ -362,7 +364,7 @@ export default function TechSheet() {
 
       {candidatesError && (
         <div
-          className="mt-4 rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#991B1B]"
+          className="mt-4 rounded-[12px] border border-mg-crit-line bg-mg-crit-bg p-4 text-sm text-mg-crit"
           role="alert"
           aria-live="assertive"
         >
@@ -371,7 +373,7 @@ export default function TechSheet() {
           <button
             type="button"
             onClick={() => void loadMaybe()}
-            className="mt-3 min-h-[44px] rounded-lg border border-[#B91C1C] px-4 font-semibold"
+            className="mt-3 min-h-[44px] rounded-lg border border-mg-crit px-4 font-semibold"
           >
             Tentar novamente
           </button>
@@ -379,13 +381,13 @@ export default function TechSheet() {
       )}
 
       {loadingCandidates && !candidatesError && (
-        <p className="mt-4 text-[13px] text-[#5B6B66]" role="status" aria-live="polite">
+        <p className="mt-4 text-[13px] text-mg-muted" role="status" aria-live="polite">
           Carregando demandas…
         </p>
       )}
 
       {!loadingCandidates && !candidatesError && candidates.length === 0 && (
-        <p className="mt-4 text-[13px] text-[#5B6B66]" role="status">
+        <p className="mt-4 text-[13px] text-mg-muted" role="status">
           Nenhuma demanda disponível para o seu usuário. Registre uma em Oportunidades.
         </p>
       )}
@@ -394,7 +396,7 @@ export default function TechSheet() {
         !candidatesError &&
         candidates.length > 0 &&
         filteredCandidates.length === 0 && (
-          <p className="mt-4 text-[13px] text-[#5B6B66]" role="status">
+          <p className="mt-4 text-[13px] text-mg-muted" role="status">
             Nenhuma demanda corresponde a “{query}”.
           </p>
         )}
@@ -406,19 +408,19 @@ export default function TechSheet() {
               <button
                 type="button"
                 onClick={() => selectOpportunity(item.id)}
-                className="w-full rounded-[12px] border border-[#E1E8E5] bg-white p-3.5 text-left transition-colors hover:border-[#A7F3D0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+                className="w-full rounded-[12px] border border-mg-line bg-mg-surface p-3.5 text-left transition-colors hover:border-mg-brand-soft-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
               >
                 <span className="flex items-center justify-between gap-2">
-                  <span className="truncate text-[13px] font-semibold text-[#0F1F1C]">
+                  <span className="truncate text-[13px] font-semibold text-mg-ink">
                     {item.customer_name}
                   </span>
-                  <span className="shrink-0 text-[10px] font-bold uppercase text-[#047857]">
+                  <span className="shrink-0 text-[10px] font-bold uppercase text-mg-brand">
                     {item.aptitude_status && item.aptitude_status !== 'pending'
                       ? item.aptitude_status
                       : item.status}
                   </span>
                 </span>
-                <span className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-[#5B6B66] sm:grid-cols-2">
+                <span className="mt-2 grid gap-x-3 gap-y-1 text-[11px] text-mg-muted sm:grid-cols-2">
                   <span>Contato: {item.contact_name}</span>
                   <span>Família: {item.service_family}</span>
                   <span>Local: {item.location}</span>
@@ -435,15 +437,15 @@ export default function TechSheet() {
   const form = opportunity && (
     <form ref={formRef} onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-[15px] font-bold text-[#0F1F1C]">Nova versão</h3>
-        <span className="text-[12px] text-[#5B6B66]">
+        <h3 className="text-[15px] font-bold text-mg-ink">Nova versão</h3>
+        <span className="text-[12px] text-mg-muted">
           Preencha os parâmetros desta versão da ficha.
         </span>
       </div>
 
       {formError && (
         <div
-          className="flex items-start gap-2.5 rounded-[12px] border-l-4 border-[#DC2626] bg-[#FEF2F2] p-3.5 text-[13px] font-medium text-[#B91C1C]"
+          className="flex items-start gap-2.5 rounded-[12px] border-l-4 border-mg-crit bg-mg-crit-bg p-3.5 text-[13px] font-medium text-mg-crit"
           role="alert"
           aria-live="assertive"
         >
@@ -454,7 +456,7 @@ export default function TechSheet() {
 
       {savedVersion !== null && (
         <div
-          className="flex items-start gap-2.5 rounded-[12px] border-l-4 border-[#10B981] bg-[#ECFDF5] p-3.5 text-[13px] font-medium text-[#047857]"
+          className="flex items-start gap-2.5 rounded-[12px] border-l-4 border-mg-brand bg-mg-brand-soft p-3.5 text-[13px] font-medium text-mg-brand"
           role="status"
           aria-live="polite"
         >
@@ -468,8 +470,8 @@ export default function TechSheet() {
 
       <div className="space-y-3">
         {parameters.map((parameter, index) => (
-          <fieldset key={index} className="rounded-[12px] border border-[#E1E8E5] bg-[#F8FAF9] p-4">
-            <legend className="px-1 text-[11px] font-bold uppercase tracking-wider text-[#5B6B66]">
+          <fieldset key={index} className="rounded-[12px] border border-mg-line bg-mg-surface-2 p-4">
+            <legend className="px-1 text-[11px] font-bold uppercase tracking-wider text-mg-muted">
               Parâmetro {index + 1}
             </legend>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -520,7 +522,7 @@ export default function TechSheet() {
                     {error && (
                       <p
                         id={describedBy}
-                        className="mt-1 text-[12px] font-medium text-[#B91C1C]"
+                        className="mt-1 text-[12px] font-medium text-mg-crit"
                         role="alert"
                       >
                         {error}
@@ -535,7 +537,7 @@ export default function TechSheet() {
                 type="button"
                 onClick={() => removeParameter(index)}
                 disabled={isSubmitting}
-                className="mt-3 inline-flex min-h-[44px] items-center rounded-lg border border-[#FECACA] px-3 text-[12px] font-semibold text-[#B91C1C] hover:bg-[#FEF2F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#991B1B] disabled:opacity-60"
+                className="mt-3 inline-flex min-h-[44px] items-center rounded-lg border border-mg-crit-line px-3 text-[12px] font-semibold text-mg-crit hover:bg-mg-crit-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-crit disabled:opacity-60"
               >
                 Remover parâmetro {index + 1}
               </button>
@@ -548,7 +550,7 @@ export default function TechSheet() {
         type="button"
         onClick={addParameter}
         disabled={isSubmitting}
-        className="inline-flex min-h-[44px] items-center rounded-lg border border-[#CBD5D1] bg-white px-4 text-[13px] font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:opacity-60"
+        className="inline-flex min-h-[44px] items-center rounded-lg border border-mg-line-strong bg-mg-surface px-4 text-[13px] font-semibold text-mg-brand-strong hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
       >
         + Adicionar parâmetro
       </button>
@@ -575,7 +577,7 @@ export default function TechSheet() {
             placeholder="Ex.: aguardando planta atualizada"
           />
           {errorForField(fieldErrors, -1, 'pending_items') && (
-            <p className="mt-1 text-[12px] font-medium text-[#B91C1C]" role="alert">
+            <p className="mt-1 text-[12px] font-medium text-mg-crit" role="alert">
               {errorForField(fieldErrors, -1, 'pending_items')}
             </p>
           )}
@@ -601,7 +603,7 @@ export default function TechSheet() {
             placeholder="Contexto adicional desta versão"
           />
           {errorForField(fieldErrors, -1, 'notes') && (
-            <p className="mt-1 text-[12px] font-medium text-[#B91C1C]" role="alert">
+            <p className="mt-1 text-[12px] font-medium text-mg-crit" role="alert">
               {errorForField(fieldErrors, -1, 'notes')}
             </p>
           )}
@@ -621,28 +623,28 @@ export default function TechSheet() {
             setFiles(Array.from(event.target.files ?? []))
             setFormError(null)
           }}
-          className="mt-1.5 w-full text-[13px] text-[#5B6B66] file:mr-3 file:min-h-[38px] file:rounded-[9px] file:border-0 file:bg-[#064E3B] file:px-3 file:text-[12px] file:font-semibold file:text-white file:cursor-pointer"
+          className="mt-1.5 w-full text-[13px] text-mg-muted file:mr-3 file:min-h-[38px] file:rounded-[9px] file:border-0 file:bg-mg-sidebar file:px-3 file:text-[12px] file:font-semibold file:text-white file:cursor-pointer"
         />
         {files.length > 0 && (
-          <p className="mt-1 text-[12px] text-[#5B6B66]" role="status">
+          <p className="mt-1 text-[12px] text-mg-muted" role="status">
             {files.length} arquivo(s) selecionado(s): {files.map((file) => file.name).join(', ')}
           </p>
         )}
         {errorForField(fieldErrors, -1, 'attachments') && (
-          <p className="mt-1 text-[12px] font-medium text-[#B91C1C]" role="alert">
+          <p className="mt-1 text-[12px] font-medium text-mg-crit" role="alert">
             {errorForField(fieldErrors, -1, 'attachments')}
           </p>
         )}
       </div>
 
       <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[12px] text-[#5B6B66]">
+        <p className="text-[12px] text-mg-muted">
           O autor e o número da versão são definidos pelo servidor.
         </p>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex min-h-[46px] items-center justify-center rounded-[10px] bg-gradient-to-r from-[#10B981] to-[#059669] px-5 text-[14px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:pointer-events-none disabled:opacity-60"
+          className="inline-flex min-h-[46px] items-center justify-center rounded-[10px] bg-mg-brand-fill hover:bg-mg-brand-fill/90 px-5 text-[14px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:pointer-events-none disabled:opacity-60"
         >
           {isSubmitting ? 'Salvando…' : 'Salvar nova versão'}
         </button>
@@ -654,8 +656,8 @@ export default function TechSheet() {
     <div className="mt-8">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-[15px] font-bold text-[#0F1F1C]">Histórico de versões</h3>
-          <p className="mt-1 text-[12px] text-[#5B6B66]">
+          <h3 className="text-[15px] font-bold text-mg-ink">Histórico de versões</h3>
+          <p className="mt-1 text-[12px] text-mg-muted">
             Versões anteriores são imutáveis e mantêm autor e data de registro.
           </p>
         </div>
@@ -663,7 +665,7 @@ export default function TechSheet() {
           type="button"
           onClick={() => void loadHistory(opportunity.id)}
           disabled={loadingHistory}
-          className="min-h-[44px] rounded-lg border border-[#CBD5D1] bg-white px-4 text-sm font-semibold text-[#064E3B] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 disabled:opacity-60"
+          className="min-h-[44px] rounded-lg border border-mg-line-strong bg-mg-surface px-4 text-sm font-semibold text-mg-brand-strong hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
         >
           {loadingHistory ? 'Atualizando…' : 'Atualizar histórico'}
         </button>
@@ -671,7 +673,7 @@ export default function TechSheet() {
 
       {historyError === 'forbidden' && (
         <p
-          className="rounded-[12px] border border-[#FED7AA] bg-[#FFF7ED] p-4 text-sm text-[#9A3412]"
+          className="rounded-[12px] border border-mg-warn-line bg-mg-warn-bg p-4 text-sm text-mg-warn"
           role="alert"
         >
           {techSheetAccessMessage('forbidden')}
@@ -680,14 +682,14 @@ export default function TechSheet() {
 
       {historyError && historyError !== 'forbidden' && (
         <div
-          className="rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#991B1B]"
+          className="rounded-[12px] border border-mg-crit-line bg-mg-crit-bg p-4 text-sm text-mg-crit"
           role="alert"
         >
           <p>Não foi possível consultar o histórico desta demanda.</p>
           <button
             type="button"
             onClick={() => void loadHistory(opportunity.id)}
-            className="mt-3 min-h-[44px] rounded-lg border border-[#B91C1C] px-4 font-semibold"
+            className="mt-3 min-h-[44px] rounded-lg border border-mg-crit px-4 font-semibold"
           >
             Tentar novamente
           </button>
@@ -695,13 +697,13 @@ export default function TechSheet() {
       )}
 
       {loadingHistory && !historyError && (
-        <p className="text-[13px] text-[#5B6B66]" role="status" aria-live="polite">
+        <p className="text-[13px] text-mg-muted" role="status" aria-live="polite">
           Carregando histórico…
         </p>
       )}
 
       {!loadingHistory && !historyError && history.length === 0 && (
-        <p className="text-[13px] text-[#5B6B66]" role="status">
+        <p className="text-[13px] text-mg-muted" role="status">
           Nenhuma versão registrada para esta demanda. A primeira versão nasce ao salvar acima.
         </p>
       )}
@@ -711,28 +713,28 @@ export default function TechSheet() {
           {history.map((sheet) => (
             <article
               key={sheet.id}
-              className={`rounded-[12px] border bg-white p-3.5 ${
+              className={`rounded-[12px] border bg-mg-surface p-3.5 ${
                 savedVersion === sheet.version
-                  ? 'border-[#10B981] ring-1 ring-[#10B981]/40'
-                  : 'border-[#E1E8E5]'
+                  ? 'border-mg-brand ring-1 ring-mg-brand/40'
+                  : 'border-mg-line'
               }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-[13px] font-bold text-[#0F1F1C]">
+                <span className="text-[13px] font-bold text-mg-ink">
                   Versão {sheet.version}
                   {savedVersion === sheet.version && (
-                    <span className="ml-2 rounded-full bg-[#ECFDF5] px-2 py-0.5 text-[10px] font-bold uppercase text-[#047857]">
+                    <span className="ml-2 rounded-full bg-mg-brand-soft px-2 py-0.5 text-[10px] font-bold uppercase text-mg-brand">
                       salva agora
                     </span>
                   )}
                 </span>
-                <span className="text-[11px] text-[#5B6B66]">{sheet.createdAt}</span>
+                <span className="text-[11px] text-mg-muted">{sheet.createdAt}</span>
               </div>
 
-              <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[#5B6B66]">
+              <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-mg-muted">
                 Parâmetros
               </p>
-              <ul className="mt-1 space-y-0.5 text-[12px] text-[#0F1F1C]">
+              <ul className="mt-1 space-y-0.5 text-[12px] text-mg-ink">
                 {sheet.parameters.map((parameter, parameterIndex) => (
                   <li key={`${sheet.id}-p-${parameterIndex}`}>
                     {parameter.name}: {parameter.value} {parameter.unit} · origem:{' '}
@@ -743,10 +745,10 @@ export default function TechSheet() {
 
               {sheet.pendingItems.length > 0 && (
                 <>
-                  <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[#C2410C]">
+                  <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-mg-warn">
                     Pendências
                   </p>
-                  <ul className="mt-1 list-disc space-y-0.5 pl-5 text-[12px] text-[#0F1F1C]">
+                  <ul className="mt-1 list-disc space-y-0.5 pl-5 text-[12px] text-mg-ink">
                     {sheet.pendingItems.map((item, itemIndex) => (
                       <li key={`${sheet.id}-d-${itemIndex}`}>{item}</li>
                     ))}
@@ -755,12 +757,12 @@ export default function TechSheet() {
               )}
 
               {sheet.notes && (
-                <p className="mt-2 text-[12px] text-[#5B6B66]">Observações: {sheet.notes}</p>
+                <p className="mt-2 text-[12px] text-mg-muted">Observações: {sheet.notes}</p>
               )}
 
               {sheet.attachments.length > 0 && (
                 <>
-                  <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[#5B6B66]">
+                  <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-mg-muted">
                     Anexos
                   </p>
                   <ul className="mt-1 space-y-0.5 text-[12px]">
@@ -770,7 +772,7 @@ export default function TechSheet() {
                           href={techSheetFileUrl(sheet, filename)}
                           target="_blank"
                           rel="noreferrer"
-                          className="break-all text-[#047857] hover:underline"
+                          className="break-all text-mg-brand hover:underline"
                         >
                           {filename}
                         </a>
@@ -789,18 +791,24 @@ export default function TechSheet() {
   const opportunityErrorMessage = techSheetAccessMessage(opportunityError ?? 'other')
 
   return (
-    <section className="mx-auto mt-0 w-full max-w-5xl rounded-[16px] border border-[#E1E8E5] bg-white p-6 shadow-[0_12px_40px_rgba(2,44,34,0.06)] sm:p-8">
-      {header}
+    <section className={embedded ? 'w-full rounded-xl border border-mg-line bg-mg-surface p-5 sm:p-6' : 'mx-auto mt-0 w-full max-w-5xl rounded-xl border border-mg-line bg-mg-surface p-6 sm:p-8'}>
+      {embedded ? (
+        <p className="mb-5 text-[13px] text-mg-muted">
+          Cada salvamento cria uma nova versão da ficha; as anteriores ficam preservadas no histórico abaixo.
+        </p>
+      ) : (
+        header
+      )}
 
       {screenState === 'loading' && (
-        <p className="text-[13px] text-[#5B6B66]" role="status" aria-live="polite">
+        <p className="text-[13px] text-mg-muted" role="status" aria-live="polite">
           Carregando ficha técnica…
         </p>
       )}
 
       {(screenState === 'forbidden' || screenState === 'unavailable') && (
         <div
-          className="rounded-[12px] border border-[#FED7AA] bg-[#FFF7ED] p-4 text-sm text-[#9A3412]"
+          className="rounded-[12px] border border-mg-warn-line bg-mg-warn-bg p-4 text-sm text-mg-warn"
           role="alert"
           aria-live="assertive"
         >
@@ -812,7 +820,7 @@ export default function TechSheet() {
           <button
             type="button"
             onClick={clearContext}
-            className="mt-3 min-h-[44px] rounded-lg border border-[#9A3412] px-4 font-semibold"
+            className="mt-3 min-h-[44px] rounded-lg border border-mg-warn px-4 font-semibold"
           >
             Escolher outra demanda
           </button>
@@ -821,7 +829,7 @@ export default function TechSheet() {
 
       {screenState === 'error' && (
         <div
-          className="rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#991B1B]"
+          className="rounded-[12px] border border-mg-crit-line bg-mg-crit-bg p-4 text-sm text-mg-crit"
           role="alert"
           aria-live="assertive"
         >
@@ -830,7 +838,7 @@ export default function TechSheet() {
           <button
             type="button"
             onClick={clearContext}
-            className="mt-3 min-h-[44px] rounded-lg border border-[#B91C1C] px-4 font-semibold"
+            className="mt-3 min-h-[44px] rounded-lg border border-mg-crit px-4 font-semibold"
           >
             Escolher outra demanda
           </button>
@@ -838,16 +846,16 @@ export default function TechSheet() {
       )}
 
       {screenState === 'no-context' && (
-        <div className="flex items-start gap-3 rounded-[12px] border border-[#E1E8E5] bg-[#F8FAF9] p-4">
-          <ClipboardList className="mt-0.5 h-5 w-5 shrink-0 text-[#5B6B66]" />
-          <p className="text-[13px] text-[#5B6B66]">
+        <div className="flex items-start gap-3 rounded-[12px] border border-mg-line bg-mg-surface-2 p-4">
+          <ClipboardList className="mt-0.5 h-5 w-5 shrink-0 text-mg-muted" />
+          <p className="text-[13px] text-mg-muted">
             Nenhuma demanda em contexto. A ficha técnica pertence a uma demanda — escolha uma abaixo
             ou abra a ficha a partir do detalhe em Oportunidades.
           </p>
         </div>
       )}
 
-      {contextBar}
+      {!embedded && contextBar}
 
       {screenState === 'no-context' && selection}
 

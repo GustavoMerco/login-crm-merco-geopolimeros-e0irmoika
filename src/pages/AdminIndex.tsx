@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { ADMIN_INDEX, sectionsForRole } from '@/lib/navigation'
+import { hasPermission } from '@/lib/auth/permissions'
 
 // T2.36 — índice administrativo: organiza as funções administrativas existentes
 // com destinos autorizados e entradas contextuais. Não extrai nem redesenha as
@@ -45,6 +46,22 @@ export default function AdminIndex() {
           </li>
         ))}
       </ul>
+      {hasPermission(user?.role, 'approveReadiness') && (
+        <section aria-labelledby="provas-tecnicas">
+          <h2 id="provas-tecnicas" className="text-sm font-semibold text-[#0F1F1C]">
+            Provas técnicas
+          </h2>
+          <Link
+            className="mt-2 flex min-h-[44px] flex-col justify-center rounded-lg border border-[#E1E8E5] bg-white p-4 hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 sm:w-1/2"
+            to="/administracao/prova-calculo"
+          >
+            <span className="font-semibold text-[#064E3B]">Prova do cálculo decimal (T2.5)</span>
+            <span className="mt-1 text-[13px] leading-snug text-[#5B6B66]">
+              Roda no servidor os exemplos sintéticos do motor de cálculo; simulação, sem aprovação.
+            </span>
+          </Link>
+        </section>
+      )}
     </div>
   )
 }

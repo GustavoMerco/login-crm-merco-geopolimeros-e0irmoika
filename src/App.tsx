@@ -14,6 +14,7 @@ import TechSheet from './pages/TechSheet'
 import Units from './pages/Units'
 import DashboardLegacy from './pages/Dashboard'
 import AdminIndex from './pages/AdminIndex'
+import CalculationProof from './pages/CalculationProof'
 import NotFound from './pages/NotFound'
 import { legacySectionRedirect } from './lib/navigation'
 
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/biblioteca" element={<CompositionLibrary />} />
             <Route path="/unidades" element={<Units />} />
             <Route path="/administracao" element={<AdminIndex />} />
+            <Route path="/administracao/prova-calculo" element={<CalculationProof />} />
             <Route path="/clientes" element={<Navigate to="/dashboard" replace />} />
             <Route path="/propostas" element={<Navigate to="/dashboard" replace />} />
             <Route path="/projetos" element={<Navigate to="/dashboard" replace />} />

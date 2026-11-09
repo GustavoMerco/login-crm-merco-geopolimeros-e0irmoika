@@ -10,6 +10,7 @@ import {
   homeForRole,
   activeNavItem,
   pageTitle,
+  activeNavItemFor,
 } from './navigation'
 import { ROLES } from './auth/permissions'
 
@@ -145,5 +146,20 @@ describe('navegação por perfil (CRM de propostas)', () => {
     expect(activeNavItem('/unidades')?.id).toBe('configuracoes')
     expect(pageTitle('/funil')).toBe('Funil de propostas')
     expect(pageTitle('/oportunidade')).toBe('Oportunidade')
+  })
+})
+
+describe('seções técnicas abrem como página própria', () => {
+  it('título é o nome da função, sem "legado"', () => {
+    expect(pageTitle('/painel-tecnico', '?secao=catalogo')).toBe('Catálogo')
+    expect(pageTitle('/painel-tecnico', '?secao=baseline')).toBe('Baseline')
+    expect(pageTitle('/painel-tecnico', '?secao=inexistente')).toBe('Funções técnicas')
+  })
+
+  it('menu marca de onde a seção veio', () => {
+    expect(activeNavItemFor('/painel-tecnico', '?secao=sla')?.id).toBe('configuracoes')
+    expect(activeNavItemFor('/painel-tecnico', '?secao=gates')?.id).toBe('evidencias')
+    expect(activeNavItemFor('/painel-tecnico', '?secao=demanda')?.id).toBe('demandas')
+    expect(activeNavItemFor('/funil')?.id).toBe('funil')
   })
 })

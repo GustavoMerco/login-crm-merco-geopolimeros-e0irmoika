@@ -208,7 +208,6 @@ const EXTRA_TITLES: Record<string, string> = {
   '/oportunidade': 'Oportunidade',
   '/unidades': 'Unidades e dimensões',
   '/administracao/prova-calculo': 'Prova do cálculo decimal',
-  '/painel-tecnico': 'Painel técnico (legado)',
 }
 
 // Item ativo e título da página a partir do caminho atual.
@@ -221,6 +220,28 @@ export function activeNavItem(pathname: string): NavItem | undefined {
   return items.find((item) => item.url === pathname)
 }
 
-export function pageTitle(pathname: string): string {
+// Seções do painel técnico abrem como páginas próprias, com o nome da função
+// e o item de menu de onde vieram (Configurações ou Evidências e controles).
+const CONFIG_SECTIONS = new Set(['catalogo', 'sla', 'modelos'])
+
+function legacySection(search: string): string {
+  const id = new URLSearchParams(search).get('secao') ?? ''
+  return SECTIONS.some(([sectionId]) => sectionId === id) ? id : ''
+}
+
+export function pageTitle(pathname: string, search = ''): string {
+  if (pathname === '/painel-tecnico') {
+    const id = legacySection(search)
+    return SECTIONS.find(([sectionId]) => sectionId === id)?.[1] ?? 'Funções técnicas'
+  }
   return EXTRA_TITLES[pathname] ?? activeNavItem(pathname)?.label ?? 'Merco Geopolímeros'
+}
+
+export function activeNavItemFor(pathname: string, search = ''): NavItem | undefined {
+  if (pathname !== '/painel-tecnico') return activeNavItem(pathname)
+  const id = legacySection(search)
+  const items = NAV_GROUPS.flatMap((group) => group.items)
+  if (id === 'demanda') return items.find((item) => item.id === 'demandas')
+  if (id === 'ficha' || id === 'biblioteca') return items.find((item) => item.id === id)
+  return items.find((item) => item.id === (CONFIG_SECTIONS.has(id) ? 'configuracoes' : 'evidencias'))
 }

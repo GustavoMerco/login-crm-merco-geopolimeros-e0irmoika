@@ -1553,8 +1553,16 @@ export const Dashboard: React.FC = () => {
           ? 'Seu papel permite homologar o catálogo.'
           : 'Acesso negado: somente Engenharia ou Administrador podem homologar.'
 
+  // Cada seção abre como página própria: as outras ficam ocultas (antes todas
+  // eram empilhadas numa tela só). O id vem de uma lista fechada, sem injeção.
+  const KNOWN_SECTIONS = ['demanda', 'ficha', 'biblioteca', 'prontidao', 'catalogo', 'backup', 'modelos', 'previa', 'fontes', 'gates', 'sla', 'baseline', 'qualidade', 'tempo']
+  const focusedSection = sectionKey && KNOWN_SECTIONS.includes(sectionKey) ? sectionKey : ''
+
   return (
-    <div className="min-h-screen w-full bg-mg-canvas flex flex-col font-sans antialiased text-mg-ink">
+    <div className="mg-legacy min-h-screen w-full bg-mg-canvas flex flex-col font-sans antialiased text-mg-ink">
+      {focusedSection && (
+        <style>{`.mg-legacy section:has(h2[id^="secao-"]):not(:has(#secao-${focusedSection})) { display: none; }`}</style>
+      )}
       <header
         hidden
         style={{ display: 'none' }}

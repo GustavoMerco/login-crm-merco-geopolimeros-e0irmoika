@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTheme, type ThemePreference } from '@/contexts/ThemeContext'
 import { usePermissions } from '@/contexts/PermissionsContext'
 import { ROLE_LABELS } from '@/lib/auth/permissions'
-import { activeNavItem, homeForRole, navForRole, pageTitle } from '@/lib/navigation'
+import { activeNavItemFor, homeForRole, navForRole, pageTitle } from '@/lib/navigation'
 import { useCompositionDraft } from '@/contexts/CompositionDraftContext'
 import { MercoLogo } from '@/components/MercoLogo'
 
@@ -48,7 +48,7 @@ export default function AppLayout() {
   const [open, setOpen] = useState(false)
   const { can } = usePermissions()
   const groups = navForRole(user?.role, (module) => can(module, 'view'))
-  const active = activeNavItem(location.pathname)
+  const active = activeNavItemFor(location.pathname, location.search)
 
   const signOut = async () => {
     if (
@@ -146,7 +146,7 @@ export default function AppLayout() {
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
-          <h1 className="min-w-0 flex-1 truncate text-[17px] font-bold">{pageTitle(location.pathname)}</h1>
+          <h1 className="min-w-0 flex-1 truncate text-[17px] font-bold">{pageTitle(location.pathname, location.search)}</h1>
           <ThemeSwitch />
         </header>
         <main id="conteudo" className="min-w-0 p-4 sm:p-6 lg:p-8">

@@ -7,6 +7,7 @@ import {
   deactivateUnit,
   getUnits,
   homologateUnit,
+  reactivateUnit,
   type UnitRecord,
 } from '@/services/units'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
@@ -22,6 +23,11 @@ import {
   unitStatusTone,
   validateUnitForm,
 } from '@/lib/unitForm'
+import {
+  MAX_UNIT_REASON,
+  unitLifecycleErrorFor,
+  validateReactivateForm,
+} from '@/lib/unitLifecycle'
 import { AlertTriangle, Ruler } from 'lucide-react'
 
 type ServerPermissionState = 'loading' | 'allowed' | 'denied' | 'unavailable'
@@ -69,6 +75,9 @@ export default function Units() {
   const [deactivating, setDeactivating] = useState<UnitRecord | null>(null)
   const [deactivateReason, setDeactivateReason] = useState('')
   const [deactivateError, setDeactivateError] = useState<string | null>(null)
+  const [reactivating, setReactivating] = useState<UnitRecord | null>(null)
+  const [reactivateReason, setReactivateReason] = useState('')
+  const [reactivateError, setReactivateError] = useState<string | null>(null)
   const [code, setCode] = useState('')
   const [name, setName] = useState('')
   const [dimension, setDimension] = useState('')
@@ -192,6 +201,38 @@ export default function Units() {
       await loadUnits()
     } catch (error: unknown) {
       setDeactivateError(getErrorMessage(error))
+    } finally {
+      setBusyUnitId(null)
+    }
+  }
+
+  const openReactivate = (unit: UnitRecord) => {
+    setReactivating(unit)
+    setReactivateReason('')
+    setReactivateError(null)
+  }
+
+  const confirmReactivate = async () => {
+    if (!reactivating) return
+    // Mesma validação do hook, no campo (T2.37): motivo obrigatório.
+    const validation = validateReactivateForm({ id: reactivating.id, reason: reactivateReason })
+    if (!validation.valid) {
+      setReactivateError(
+        unitLifecycleErrorFor(validation.errors, 'unidade-reativar-motivo') ??
+          validation.errors[0]?.message ??
+          'A reativação exige justificativa.',
+      )
+      return
+    }
+    setReactivateError(null)
+    setBusyUnitId(reactivating.id)
+    try {
+      await reactivateUnit(reactivating.id, reactivateReason.trim())
+      setFormInfo(`Unidade ${reactivating.code} reativada e homologada; motivo registrado na auditoria.`)
+      setReactivating(null)
+      await loadUnits()
+    } catch (error: unknown) {
+      setReactivateError(getErrorMessage(error))
     } finally {
       setBusyUnitId(null)
     }
@@ -337,6 +378,16 @@ export default function Units() {
                         className="min-h-[40px] rounded-lg border border-mg-brand bg-mg-surface px-3 text-[12px] font-semibold text-mg-brand hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
                       >
                         {busy ? 'Homologando…' : 'Homologar'}
+                      </button>
+                    )}
+                    {canManageUnits && unit.status === 'inativo' && (
+                      <button
+                        type="button"
+                        onClick={() => openReactivate(unit)}
+                        disabled={busy}
+                        className="min-h-[40px] rounded-lg border border-mg-brand bg-mg-surface px-3 text-[12px] font-semibold text-mg-brand hover:bg-mg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
+                      >
+                        {busy ? 'Reativando…' : 'Reativar'}
                       </button>
                     )}
                     {canManageUnits && unit.status !== 'inativo' && (
@@ -494,6 +545,59 @@ export default function Units() {
                 className="min-h-[44px] rounded-lg bg-mg-crit px-4 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-700 disabled:opacity-60"
               >
                 {busyUnitId === deactivating.id ? 'Inativando…' : 'Confirmar inativação'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reactivating && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reativar-titulo"
+        >
+          <div className="w-full max-w-md rounded-[16px] bg-mg-surface p-6">
+            <h3 id="reativar-titulo" className="text-[15px] font-bold text-mg-ink">
+              Reativar unidade {reactivating.code}
+            </h3>
+            <p className="mt-1 text-[13px] text-mg-muted">
+              A unidade volta ao estado homologado com o mesmo código; o motivo fica registrado na
+              auditoria. Versões já homologadas não mudam.
+            </p>
+            {reactivateError && (
+              <p className="mt-3 text-[12px] font-medium text-mg-crit" role="alert">
+                {reactivateError}
+              </p>
+            )}
+            <label className={`${labelClass} mt-4 block`} htmlFor="unidade-reativar-motivo">
+              Justificativa *
+            </label>
+            <textarea
+              id="unidade-reativar-motivo"
+              rows={3}
+              maxLength={MAX_UNIT_REASON}
+              value={reactivateReason}
+              onChange={(event) => setReactivateReason(event.target.value)}
+              className="mt-1.5 w-full rounded-[10px] border border-mg-line bg-mg-surface px-3 py-2.5 text-[14px] outline-none focus:border-mg-brand focus:ring-4 focus:ring-mg-brand/15"
+              placeholder="Explique por que esta unidade volta a ser usada."
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setReactivating(null)}
+                className="min-h-[44px] rounded-lg border border-mg-line-strong px-4 text-sm font-semibold text-mg-brand-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmReactivate()}
+                disabled={busyUnitId === reactivating.id}
+                className="min-h-[44px] rounded-lg bg-mg-brand-fill px-4 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-mg-brand disabled:opacity-60"
+              >
+                {busyUnitId === reactivating.id ? 'Reativando…' : 'Confirmar reativação'}
               </button>
             </div>
           </div>

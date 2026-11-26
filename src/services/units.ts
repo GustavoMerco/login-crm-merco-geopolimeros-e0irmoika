@@ -42,3 +42,11 @@ export const deactivateUnit = (id: string, reason: string) =>
     body: JSON.stringify({ id, reason }),
     headers: { 'Content-Type': 'application/json' },
   })
+
+// T2.37 (D-T2.16): reativação de unidade inativa com justificativa auditada.
+export const reactivateUnit = (id: string, reason: string) =>
+  pb.send<{ id: string; status: string; reactivatedAt: string }>('/backend/v1/units/reactivate', {
+    method: 'POST',
+    body: JSON.stringify({ id, reason }),
+    headers: { 'Content-Type': 'application/json' },
+  })

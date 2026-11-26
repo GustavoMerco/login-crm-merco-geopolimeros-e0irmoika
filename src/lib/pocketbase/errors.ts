@@ -24,6 +24,18 @@ export function getErrorMessage(error: unknown): string {
   if (!(error instanceof ClientResponseError)) {
     return error instanceof Error ? error.message : 'An unexpected error occurred.'
   }
+  // T2.13 / SPEC-2-006 (CA-2-11): erros de negócio exibem o motivo real retornado
+  // pelo servidor. Hooks do projeto respondem {error}, {message} ou os dois;
+  // o fallback genérico só vale quando não há corpo de negócio.
+  const response = error.response as { error?: unknown; message?: unknown } | undefined
+  const business: string[] = []
+  if (typeof response?.error === 'string' && response.error.trim()) {
+    business.push(response.error.trim())
+  }
+  if (typeof response?.message === 'string' && response.message.trim()) {
+    business.push(response.message.trim())
+  }
   const msgs = Object.values(extractFieldErrors(error))
-  return msgs.length > 0 ? msgs.join(' ') : error.message || 'An unexpected error occurred.'
+  const all = [...business, ...msgs]
+  return all.length > 0 ? all.join(' ') : error.message || 'An unexpected error occurred.'
 }
